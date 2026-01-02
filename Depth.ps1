@@ -1,4 +1,4 @@
-Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
+﻿Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
 # --- THE CLEANING FUNCTION ---
 # This makes it easy to load any XAML you copy from Visual Studio
 function Load-VisualStudioXaml {
@@ -116,7 +116,48 @@ $Splash.Close()
 $Main = Load-VisualStudioXaml -RawXaml $mainXML
 
 # --- FUNCTIONS SECTION ---
-# COMPILER_INSERT_HERE
+
+# --- Function from InstallDefaultWingetApps.ps1 ---
+function Install-DefaultWingetApps {
+    # Pre-defined list of IDs
+    $Apps = @("Google.Chrome", "7zip.7zip", "VideoLAN.VLC")
+
+    foreach ($App in $Apps) {
+        # Process runs and displays output in its own console window area
+        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements" -Wait -PassThru -NoNewWindow
+    }
+
+    return "Completed"
+}
+
+
+# --- Function from TestFunction.ps1 ---
+function TestFunction {
+	Write-Host "Hello, World!"
+	Start-Sleep -Seconds 10
+	Write-Host "Sleepy!"
+}
+
+
+
+# --- Function from Update-Status.ps1 ---
+function Update-Status {
+    param(
+        [string]$Message,
+        [ValidateSet("Busy", "Ready")]
+        [string]$State
+    )
+
+    $LblStatus.Content = $Message
+
+    if ($State -eq "Busy") {
+        $LblStatus.Foreground = [System.Windows.Media.Brushes]::Red
+    } else {
+        $LblStatus.Foreground = [System.Windows.Media.Brushes]::LimeGreen
+    }
+
+}
+
 
 # --- UI ELEMENT MAPPING ---
 $BtnInstallDefaultWingetApps = $Main.FindName("BtnInstallDefaultWingetApps")
