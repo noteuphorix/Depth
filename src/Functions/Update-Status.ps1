@@ -13,4 +13,5 @@ function Update-Status {
         $LblStatus.Foreground = [System.Windows.Media.Brushes]::LimeGreen
     }
 
+    [System.Windows.Forms.Application]::DoEvents()
 }

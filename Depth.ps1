@@ -1,4 +1,4 @@
-Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
+﻿Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
 # --- THE CLEANING FUNCTION ---
 # This makes it easy to load any XAML you copy from Visual Studio
 function Load-VisualStudioXaml {
@@ -156,6 +156,7 @@ function Update-Status {
         $LblStatus.Foreground = [System.Windows.Media.Brushes]::LimeGreen
     }
 
+    [System.Windows.Forms.Application]::DoEvents()
 }
 
 
