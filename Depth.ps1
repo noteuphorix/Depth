@@ -84,7 +84,7 @@ $mainXML = @"
                 </Ellipse.Effect>
             </Ellipse>
         </Grid>
-        <Grid x:Name="Deployment_Grid" Margin="0,50,0,0">
+        <Grid x:Name="Deployment_Grid" Margin="0,50,0,0" d:IsHidden="True">
             <Border x:Name="Border_Clients" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="168,0,0,10" HorizontalAlignment="Left" Width="142"/>
             <Border x:Name="Border_Actions" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="10,0,0,10" HorizontalAlignment="Left" Width="142"/>
             <Border x:Name="Border_OOBE" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="326,0,0,10" HorizontalAlignment="Left" Width="142"/>
@@ -123,7 +123,9 @@ $mainXML = @"
             </Ellipse>
             <Button x:Name="BtnTest" Content="Testing" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,407,0,0" FontFamily="Leelawadee"/>
         </Grid>
-        <Grid x:Name="Tools_Grid" Margin="0,50,0,0" d:IsHidden="True"/>
+        <Grid x:Name="Tools_Grid" Margin="0,50,0,0">
+            <Image x:Name="Ken" Margin="102,49,102,111" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken.png?raw=true" Width="300" Height="293" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
         <Label x:Name="LblCopyright" Content="Created By: Brandon Swarek" Height="36" VerticalAlignment="Bottom" Width="210" FontFamily="Leelawadee" FontSize="16" Foreground="White" HorizontalAlignment="Right" Margin="0,0,10,4"/>
     </Grid>
 </Window>
