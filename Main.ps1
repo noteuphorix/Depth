@@ -43,7 +43,7 @@ $mainXML = @"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DepthWPFFramework"
         mc:Ignorable="d"
-        Title="Depth" Height="500" Width="800" WindowStartupLocation="CenterScreen" Background="#FF262D2F" SizeToContent="WidthAndHeight" MinHeight="500" MinWidth="850" WindowStyle="ToolWindow">
+        Title="Depth" Height="500" Width="800" WindowStartupLocation="CenterScreen" Background="#FF262D2F" SizeToContent="WidthAndHeight" MinHeight="500" MinWidth="850" WindowStyle="None" AllowsTransparency="True" ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style x:Key="CleanButtons" TargetType="Button">
             <Setter Property="Template">
@@ -66,24 +66,36 @@ $mainXML = @"
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid x:Name="Main_GUI_Grid" MinWidth="800">
-        <Border x:Name="Main_GUI_Border" BorderThickness="5,5,5,5" BorderBrush="#FF2B3842"/>
+    <Grid x:Name="Main_GUI_Grid" MinWidth="800" Background="Transparent">
+        <Border x:Name="Main_GUI_Border" BorderThickness="5,5,5,5" BorderBrush="#FF2B3842">
+            <Border.Effect>
+                <BlurEffect/>
+            </Border.Effect>
+        </Border>
         <Grid x:Name="Title_Bar_Grid" VerticalAlignment="Top" Height="34" MinHeight="50">
             <Button x:Name="BtnTools_Menu" Content="Tools" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="87" Background="#FF454A4C" Foreground="White" BorderBrush="White" BorderThickness="2" Style="{StaticResource CleanButtons}" Margin="117,10,0,0"/>
             <Button x:Name="BtnDeployment_Menu" Content="Deployment" HorizontalAlignment="Left" Height="26" Margin="25,10,0,0" VerticalAlignment="Top" Width="87" Background="#FF454A4C" Foreground="White" BorderThickness="2" Style="{StaticResource CleanButtons}" BorderBrush="White"/>
             <Button x:Name="BtnClose" Content="X" HorizontalAlignment="Right" Height="28" Margin="0,10,5,0" VerticalAlignment="Top" Width="27" FontFamily="Segoe UI Variable Display Semibold" Background="{x:Null}" FontSize="18" Foreground="White" BorderBrush="{x:Null}"/>
             <Button x:Name="BtnMin" Content="-" HorizontalAlignment="Right" Height="28" Margin="0,10,32,0" VerticalAlignment="Top" Width="27" FontFamily="Segoe UI Variable Display Semibold" Background="{x:Null}" FontSize="24" Foreground="White" BorderBrush="{x:Null}"/>
-            <Label x:Name="LblStatus" Content="Waiting..." HorizontalAlignment="Right" Margin="0,1,71,0" VerticalAlignment="Top" Background="{x:Null}" FontFamily="Leelawadee" Foreground="#FF4FF307" FontSize="22"/>
+            <Ellipse x:Name="StatusLight" HorizontalAlignment="Right" Height="22" Stroke="Black" VerticalAlignment="Top" Width="22" Fill="#FF0FFF1E" Margin="0,16,75,0">
+                <Ellipse.Effect>
+                    <BlurEffect/>
+                </Ellipse.Effect>
+            </Ellipse>
         </Grid>
         <Grid x:Name="Deployment_Grid" Margin="0,50,0,0">
             <Border x:Name="Border_Clients" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="168,0,0,10" HorizontalAlignment="Left" Width="142"/>
             <Border x:Name="Border_Actions" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="10,0,0,10" HorizontalAlignment="Left" Width="142"/>
             <Border x:Name="Border_OOBE" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="326,0,0,10" HorizontalAlignment="Left" Width="142"/>
             <Border x:Name="Border_Apps" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="483,0,0,10" HorizontalAlignment="Left" Width="142"/>
+            <Border x:Name="Border_NAS" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="640,1,0,0" Height="167" Width="140" VerticalAlignment="Top" HorizontalAlignment="Left"/>
             <Label x:Name="LblClients_Copy" Content="OOBE" HorizontalAlignment="Left" Height="26" Margin="334,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
             <Label x:Name="LblDeploymentActions" Content="Actions" HorizontalAlignment="Left" Height="26" Margin="20,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
             <Label x:Name="LblClients" Content="Client Select" HorizontalAlignment="Left" Height="26" Margin="176,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
             <Label x:Name="LblApps" Content="Apps" HorizontalAlignment="Left" Height="26" Margin="493,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
+            <Label x:Name="LblNASLogin" Content="NAS Login" HorizontalAlignment="Left" Height="26" Margin="648,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
+            <Label x:Name="LblUsername" Content="Username" HorizontalAlignment="Left" Height="24" Margin="648,42,0,0" VerticalAlignment="Top" Width="82" FontWeight="Bold" Foreground="White" FontSize="10" FontFamily="Leelawadee"/>
+            <Label x:Name="LblPassword" Content="Password" HorizontalAlignment="Left" Height="24" Margin="648,83,0,0" VerticalAlignment="Top" Width="82" FontWeight="Bold" Foreground="White" FontSize="10" FontFamily="Leelawadee"/>
             <ListBox x:Name="ClientListBox" HorizontalAlignment="Left" Margin="178,119,0,17" d:ItemsSource="{d:SampleData ItemCount=5}" Background="Black" Foreground="White" Width="122" ScrollViewer.VerticalScrollBarVisibility="Auto" FontFamily="Leelawadee"/>
             <Button x:Name="BtnRunAll" Content="Run All" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,41,0,0" FontFamily="Leelawadee"/>
             <Button x:Name="BtnRepairWinget" Content="Repair Winget" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,72,0,0" FontFamily="Leelawadee"/>
@@ -97,11 +109,19 @@ $mainXML = @"
             <Button x:Name="BtnSetTimeZone" Content="Set Timezone" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,320,0,0" FontFamily="Leelawadee"/>
             <Button x:Name="BtnClientChooser" Content="Re-Load Clients" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="178,41,0,0" FontFamily="Leelawadee"/>
             <Button x:Name="BtnManualClientSelect" Content="Manual Selection" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="178,81,0,0" FontFamily="Leelawadee"/>
-            <Image x:Name="ImgM5Logo" HorizontalAlignment="Left" Height="110" Margin="640,19,0,0" VerticalAlignment="Top" Width="191" Source="https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Faustinlogodesigns.com%2Fwp-content%2Fuploads%2F2021%2F03%2FMagna5.png&amp;sp=1767385950T18ce8b63c54018ffd07ee97aa3eb381391227e8f9098fcea21e743fca961a19b"/>
-            <Label x:Name="LblCopyright" Content="Created By: Brandon Swarek" Height="27" VerticalAlignment="Bottom" Width="210" FontFamily="Leelawadee" FontSize="16" Foreground="White" HorizontalAlignment="Right"/>
             <Button x:Name="BtnNVIDIAApp" Content="NVIDIA App" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="493,41,0,0" FontFamily="Leelawadee"/>
-            <Button x:Name="BtnAMDApp" Content="AMDApp" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="493,81,0,0" FontFamily="Leelawadee"/>
+            <Button x:Name="BtnAMDApp" Content="AMD App" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="493,81,0,0" FontFamily="Leelawadee"/>
+            <Button x:Name="BtnNASLogin" Content="Login" HorizontalAlignment="Left" Height="24" Margin="648,131,0,0" VerticalAlignment="Top" Width="60" FontFamily="Leelawadee"/>
+            <TextBox x:Name="TxtBoxUsernameNAS" HorizontalAlignment="Left" Margin="648,62,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+            <PasswordBox x:Name="PswrdBoxNAS" HorizontalAlignment="Left" Margin="648,103,0,0" VerticalAlignment="Top" Width="120"/>
+            <CheckBox Content="NAS Connected?" HorizontalAlignment="Left" Margin="640,217,0,0" VerticalAlignment="Top" Width="140" IsEnabled="False" Foreground="White" IsChecked="False" FontFamily="Leelawadee"/>
+            <Ellipse x:Name="NASLoginStatusLight" HorizontalAlignment="Left" Height="16" Stroke="Black" VerticalAlignment="Top" Width="15" Fill="Red" Margin="739,20,0,0" RenderTransformOrigin="2.212,-0.044">
+                <Ellipse.Effect>
+                    <BlurEffect/>
+                </Ellipse.Effect>
+            </Ellipse>
         </Grid>
+        <Label x:Name="LblCopyright" Content="Created By: Brandon Swarek" Height="36" VerticalAlignment="Bottom" Width="210" FontFamily="Leelawadee" FontSize="16" Foreground="White" HorizontalAlignment="Right" Margin="0,0,10,4"/>
     </Grid>
 </Window>
 "@
@@ -109,7 +129,7 @@ $mainXML = @"
 # 1. Show Splashscreen
 $Splash = Load-VisualStudioXaml -RawXaml $splashXML
 $Splash.Show()
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds 1
 $Splash.Close()
 
 # 2. Load main GUI object (This makes $Main exist!)
@@ -119,17 +139,75 @@ $Main = Load-VisualStudioXaml -RawXaml $mainXML
 # COMPILER_INSERT_HERE
 
 # --- UI ELEMENT MAPPING ---
-$BtnInstallDefaultWingetApps = $Main.FindName("BtnInstallDefaultWingetApps")
-$LblStatus         = $Main.FindName("LblStatus")
+
+# Grids
+$Main_GUI_Grid = $Main.FindName("Main_GUI_Grid")
+
+# Navigation Buttons
+$BtnTools_Menu      = $Main.FindName("BtnTools_Menu")
+$BtnDeployment_Menu = $Main.FindName("BtnDeployment_Menu")
+$BtnClose           = $Main.FindName("BtnClose")
+$BtnMin             = $Main.FindName("BtnMin")
+
+# Status Indicators
+$StatusLight         = $Main.FindName("StatusLight")
+$NASLoginStatusLight = $Main.FindName("NASLoginStatusLight")
+
+# Actions Column
+$BtnRunAll                      = $Main.FindName("BtnRunAll")
+$BtnRepairWinget                = $Main.FindName("BtnRepairWinget")
+$BtnInstallOffice               = $Main.FindName("BtnInstallOffice")
+$BtnInstallLocalApps            = $Main.FindName("BtnInstallLocalApps")
+$BtnInstallDefaultWingetApps    = $Main.FindName("BtnInstallDefaultWingetApps")
+$BtnInstallCustomWingetApps     = $Main.FindName("BtnInstallCustomWingetApps")
+$BtnUninstallBloat              = $Main.FindName("BtnUninstallBloat")
+$BtnUninstallLanguagePacks      = $Main.FindName("BtnUninstallLanguagePacks")
+$BtnSetPowerOptions             = $Main.FindName("BtnSetPowerOptions")
+$BtnSetTimeZone                = $Main.FindName("BtnSetTimeZone")
+
+# Client Selection Column
+$ClientListBox          = $Main.FindName("ClientListBox")
+$BtnClientChooser       = $Main.FindName("BtnClientChooser")
+$BtnManualClientSelect  = $Main.FindName("BtnManualClientSelect")
+
+# Apps Column
+$BtnNVIDIAApp = $Main.FindName("BtnNVIDIAApp")
+$BtnAMDApp    = $Main.FindName("BtnAMDApp")
+
+# NAS Login Section
+$BtnNASLogin        = $Main.FindName("BtnNASLogin")
+$TxtBoxUsernameNAS  = $Main.FindName("TxtBoxUsernameNAS")
+$PswrdBoxNAS        = $Main.FindName("PswrdBoxNAS")
 
 
 # --- BUTTON CLICK EVENTS ---
 $BtnInstallDefaultWingetApps.Add_Click({
-    Update-Status -Message "Busy..." -State "Busy"
-    [System.Windows.Forms.Application]::DoEvents()
-    Install-DefaultWingetApps
-    Update-Status -Message "Ready..." -State "Ready"
+    Update-Status -State "Busy"
+    TestFunction
+    Update-Status -State "Ready"
+})
+
+$BtnNASLogin.Add_Click({
+    Update-Status -State "Busy"
+    Connect-NAS
+    Update-Status -State "Ready"
+})
+
+$BtnClose.Add_Click({
+    $Main.Close()
+})
+
+
+# --- GRID EVENTS ---
+$Main_GUI_Grid.Add_MouseLeftButtonDown({
+    $Main.DragMove()
+})
+
+# Minimize Button: Sends the window to the taskbar
+$BtnMin.Add_Click({
+    $Main.WindowState = [System.Windows.WindowState]::Minimized
 })
 
 # 3. OPEN THE WINDOW (Last Step)
-$Main.ShowDialog()
+$Main.ShowDialog() | Out-Null
+Write-Host "Goodbye!" -ForegroundColor Cyan
