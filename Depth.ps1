@@ -120,6 +120,7 @@ $mainXML = @"
                     <BlurEffect/>
                 </Ellipse.Effect>
             </Ellipse>
+            <Button x:Name="BtnTest" Content="Testing" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,407,0,0" FontFamily="Leelawadee"/>
         </Grid>
         <Label x:Name="LblCopyright" Content="Created By: Brandon Swarek" Height="36" VerticalAlignment="Bottom" Width="210" FontFamily="Leelawadee" FontSize="16" Foreground="White" HorizontalAlignment="Right" Margin="0,0,10,4"/>
     </Grid>
@@ -137,6 +138,24 @@ $Main = Load-VisualStudioXaml -RawXaml $mainXML
 
 # --- FUNCTIONS SECTION ---
 
+
+# --- Function from GetUserInput.ps1 ---
+function Get-UserInput {
+    # 1. Minimize the GUI so you can see the terminal behind it
+    $Main.WindowState = "Minimized"
+
+    # 2. Capture the input (The GUI will stay minimized while this waits)
+    Write-Host "`n[INPUT REQUIRED] Please type your input below:" -ForegroundColor Yellow
+    $InputtedText = Read-Host "Enter your value"
+    
+    # 3. Store the value
+    $global:UserTermInput = $InputtedText
+    
+    # 4. Restore the GUI now that the thread is free to draw again
+    $Main.WindowState = "Normal"
+    
+    Write-Host "Input Saved: $global:UserTermInput" -ForegroundColor Green
+}
 
 # --- Function from InstallDefaultWingetApps.ps1 ---
 function Install-DefaultWingetApps {
@@ -229,7 +248,8 @@ $BtnInstallCustomWingetApps     = $Main.FindName("BtnInstallCustomWingetApps")
 $BtnUninstallBloat              = $Main.FindName("BtnUninstallBloat")
 $BtnUninstallLanguagePacks      = $Main.FindName("BtnUninstallLanguagePacks")
 $BtnSetPowerOptions             = $Main.FindName("BtnSetPowerOptions")
-$BtnSetTimeZone                = $Main.FindName("BtnSetTimeZone")
+$BtnSetTimeZone                 = $Main.FindName("BtnSetTimeZone")
+$BtnTest                        = $Main.FindName("BtnTest") 
 
 # Client Selection Column
 $ClientListBox          = $Main.FindName("ClientListBox")
@@ -249,7 +269,7 @@ $PswrdBoxNAS        = $Main.FindName("PswrdBoxNAS")
 # --- BUTTON CLICK EVENTS ---
 $BtnInstallDefaultWingetApps.Add_Click({
     Update-Status -State "Busy"
-    TestFunction
+    Install-DefaultWingetApps
     Update-Status -State "Ready"
 })
 
@@ -257,6 +277,10 @@ $BtnNASLogin.Add_Click({
     Update-Status -State "Busy"
     Connect-NAS
     Update-Status -State "Ready"
+})
+
+$BtnTest.Add_Click({
+    Get-UserInput
 })
 
 $BtnClose.Add_Click({
