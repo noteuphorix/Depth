@@ -6,6 +6,7 @@ function Load-VisualStudioXaml {
     $Cleaned = $RawXaml -replace 'mc:Ignorable="d"','' `
                         -replace "x:Class.*?[^\x20]*",' ' `
                         -replace "xmlns:local.*?[^\x20]*",' ' `
+                        -replace '\s+d:[a-zA-Z]+=".*?"',' ' `
                         -replace 'd:ItemsSource=".*?"',' ' `
                         -replace 'd:SampleData=".*?"',' ' `
                         -replace 'd:DesignHeight=".*?"',' ' `
@@ -122,6 +123,7 @@ $mainXML = @"
             </Ellipse>
             <Button x:Name="BtnTest" Content="Testing" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,407,0,0" FontFamily="Leelawadee"/>
         </Grid>
+        <Grid x:Name="Tools_Grid" Margin="0,50,0,0" d:IsHidden="True"/>
         <Label x:Name="LblCopyright" Content="Created By: Brandon Swarek" Height="36" VerticalAlignment="Bottom" Width="210" FontFamily="Leelawadee" FontSize="16" Foreground="White" HorizontalAlignment="Right" Margin="0,0,10,4"/>
     </Grid>
 </Window>
@@ -195,6 +197,26 @@ function Connect-NAS {
     }
 }
 
+# --- Function from SwitchTabs.ps1 ---
+# --- Function from SwitchTabs.ps1 ---
+function Switch-Tabs {
+    param([string]$Target)
+
+    # 1. Exit if already on the target to prevent flickering
+    if ($Target -eq "Deployment" -and $Deployment_Grid.Visibility -eq "Visible") { return }
+    if ($Target -eq "Tools" -and $Tools_Grid.Visibility -eq "Visible") { return }
+
+    # This ensures only one grid is active at a time
+    $Deployment_Grid.Visibility = "Collapsed"
+    $Tools_Grid.Visibility      = "Collapsed"
+
+    # 3. Show only the target grid
+    switch ($Target) {
+        "Deployment" { $Deployment_Grid.Visibility = "Visible" }
+        "Tools"      { $Tools_Grid.Visibility      = "Visible" }
+    }
+}
+
 # --- Function from TestFunction.ps1 ---
 function TestFunction {
 	Write-Host "Hello, World!"
@@ -227,6 +249,8 @@ function Update-Status {
 
 # Grids
 $Main_GUI_Grid = $Main.FindName("Main_GUI_Grid")
+$Tools_Grid      = $Main.FindName("Tools_Grid")
+$Deployment_Grid = $Main.FindName("Deployment_Grid")
 
 # Navigation Buttons
 $BtnTools_Menu      = $Main.FindName("BtnTools_Menu")
@@ -266,7 +290,7 @@ $TxtBoxUsernameNAS  = $Main.FindName("TxtBoxUsernameNAS")
 $PswrdBoxNAS        = $Main.FindName("PswrdBoxNAS")
 
 
-# --- BUTTON CLICK EVENTS ---
+# --- ACTION BUTTON CLICK EVENTS ---
 $BtnInstallDefaultWingetApps.Add_Click({
     Update-Status -State "Busy"
     Install-DefaultWingetApps
@@ -283,21 +307,30 @@ $BtnTest.Add_Click({
     Get-UserInput
 })
 
+# --- TAB SWITCHING BUTTON CLICK EVENTS ---
+$BtnTools_Menu.Add_Click({
+    Switch-Tabs -Target "Tools"
+})
+
+$BtnDeployment_Menu.Add_Click({
+    Switch-Tabs -Target "Deployment"
+})
+
+# --- TITLE BAR BUTTON CLICK EVENTS ---
 $BtnClose.Add_Click({
     $Main.Close()
 })
 
+$BtnMin.Add_Click({
+    $Main.WindowState = [System.Windows.WindowState]::Minimized
+})
 
 # --- GRID EVENTS ---
 $Main_GUI_Grid.Add_MouseLeftButtonDown({
     $Main.DragMove()
 })
 
-# Minimize Button: Sends the window to the taskbar
-$BtnMin.Add_Click({
-    $Main.WindowState = [System.Windows.WindowState]::Minimized
-})
-
 # 3. OPEN THE WINDOW (Last Step)
+$Tools_Grid.Visibility = "Collapsed"
 $Main.ShowDialog() | Out-Null
 Write-Host "Goodbye!" -ForegroundColor Cyan
