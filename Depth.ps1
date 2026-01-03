@@ -1,4 +1,4 @@
-﻿Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
+Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
 # --- THE CLEANING FUNCTION ---
 # This makes it easy to load any XAML you copy from Visual Studio
 function Load-VisualStudioXaml {
