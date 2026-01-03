@@ -84,7 +84,7 @@ $mainXML = @"
                 </Ellipse.Effect>
             </Ellipse>
         </Grid>
-        <Grid x:Name="Deployment_Grid" Margin="0,50,0,0" d:IsHidden="True">
+        <Grid x:Name="Deployment_Grid" Margin="0,50,0,0">
             <Border x:Name="Border_Clients" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="168,0,0,10" HorizontalAlignment="Left" Width="142"/>
             <Border x:Name="Border_Actions" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="10,0,0,10" HorizontalAlignment="Left" Width="142"/>
             <Border x:Name="Border_OOBE" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="326,0,0,10" HorizontalAlignment="Left" Width="142"/>
@@ -97,7 +97,7 @@ $mainXML = @"
             <Label x:Name="LblNASLogin" Content="NAS Login" HorizontalAlignment="Left" Height="26" Margin="648,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
             <Label x:Name="LblUsername" Content="Username" HorizontalAlignment="Left" Height="24" Margin="648,42,0,0" VerticalAlignment="Top" Width="82" FontWeight="Bold" Foreground="White" FontSize="10" FontFamily="Leelawadee"/>
             <Label x:Name="LblPassword" Content="Password" HorizontalAlignment="Left" Height="24" Margin="648,83,0,0" VerticalAlignment="Top" Width="82" FontWeight="Bold" Foreground="White" FontSize="10" FontFamily="Leelawadee"/>
-            <ListBox x:Name="ClientListBox" HorizontalAlignment="Left" Margin="178,119,0,17" d:ItemsSource="{d:SampleData ItemCount=5}" Background="Black" Foreground="White" Width="122" ScrollViewer.VerticalScrollBarVisibility="Auto" FontFamily="Leelawadee"/>
+            <ListBox x:Name="ClientListBox" HorizontalAlignment="Left" Margin="178,119,0,0" d:ItemsSource="{d:SampleData ItemCount=5}" Background="Black" Foreground="White" Width="122" ScrollViewer.VerticalScrollBarVisibility="Auto" FontFamily="Leelawadee" VerticalAlignment="Top" Height="314"/>
             <Button x:Name="BtnRunAll" Content="Run All" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,41,0,0" FontFamily="Leelawadee"/>
             <Button x:Name="BtnRepairWinget" Content="Repair Winget" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,72,0,0" FontFamily="Leelawadee"/>
             <Button x:Name="BtnInstallOffice" Content="Install O365" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,103,0,0" FontFamily="Leelawadee"/>
@@ -123,7 +123,7 @@ $mainXML = @"
             </Ellipse>
             <Button x:Name="BtnTest" Content="Testing" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,407,0,0" FontFamily="Leelawadee"/>
         </Grid>
-        <Grid x:Name="Tools_Grid" Margin="0,50,0,0">
+        <Grid x:Name="Tools_Grid" Margin="0,50,0,0" d:IsHidden="True">
             <Image x:Name="Ken" Margin="102,49,102,111" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken.png?raw=true" Width="300" Height="293" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
         <Label x:Name="LblCopyright" Content="Created By: Brandon Swarek" Height="36" VerticalAlignment="Bottom" Width="210" FontFamily="Leelawadee" FontSize="16" Foreground="White" HorizontalAlignment="Right" Margin="0,0,10,4"/>
@@ -174,6 +174,32 @@ function Install-DefaultWingetApps {
     return "Completed"
 }
 
+
+# --- Function from ManualClientSelect.ps1 ---
+function Select-ManualFolder {
+    $FolderBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
+    $FolderBrowser.Description = "Select the Client Folder"
+    $FolderBrowser.ShowNewFolderButton = $true
+
+    $Result = $FolderBrowser.ShowDialog()
+
+    if ($Result -eq [System.Windows.Forms.DialogResult]::OK) {
+        $global:SelectedClientPath = $FolderBrowser.SelectedPath
+        
+        # 1. Clear the ListBox so we don't just keep adding to old results
+        $ClientListBox.Items.Clear()
+
+        # 2. Get only the top-level folders within the selected path
+        $SubFolders = Get-ChildItem -Path $global:SelectedClientPath -Directory
+
+        # 3. Loop through and add each folder name to the ListBox
+        foreach ($Folder in $SubFolders) {
+            $ClientListBox.Items.Add($Folder.Name)
+        }
+
+        Write-Host "Populated ListBox with $($SubFolders.Count) folders from: $global:SelectedClientPath" -ForegroundColor Green
+    }
+}
 
 # --- Function from NASLogin.ps1 ---
 function Connect-NAS {
@@ -305,8 +331,8 @@ $BtnNASLogin.Add_Click({
     Update-Status -State "Ready"
 })
 
-$BtnTest.Add_Click({
-    Get-UserInput
+$BtnManualClientSelect.Add_Click({
+    Select-ManualFolder
 })
 
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---
