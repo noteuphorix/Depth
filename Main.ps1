@@ -202,7 +202,15 @@ $BtnNASLogin.Add_Click({
 })
 
 $BtnManualClientSelect.Add_Click({
+    Update-Status -State "Busy"
     Select-ManualFolder
+    Update-Status -State "Ready"
+})
+
+$BtnTest.Add_Click({
+    Update-Status -State "Busy"
+    Get-UserInput
+    Update-Status -State "Ready"
 })
 
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---
