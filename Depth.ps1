@@ -340,6 +340,7 @@ $BtnManualClientSelect.Add_Click({
 $BtnTest.Add_Click({
     Update-Status -State "Busy"
     Get-UserInput
+    TestFunction
     Update-Status -State "Ready"
 })
 
