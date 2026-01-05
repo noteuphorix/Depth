@@ -4,9 +4,20 @@ function Install-ClientCustomWingetApps {
         return
     }
 
-    $TxtPath = "\\10.24.2.5\Clients\$global:SelectedClient\CustomApps.txt"
+    # 1. Determine the Base Path
+    # Checks for ":" (C:\) or starts with "\" (\\Server)
+    if ($global:SelectedClient -match ":" -or $global:SelectedClient -like "\\*") {
+        $BasePath = $global:SelectedClient
+    } 
+    else {
+        $BasePath = "\\10.24.2.5\Clients\$global:SelectedClient"
+    }
+
+    # 2. Map directly to the .txt file in the root of that path
+    $TxtPath = Join-Path -Path $BasePath -ChildPath "CustomApps.txt"
 
     if (-not (Test-Path $TxtPath)) {
+        # Silent return to match your requested behavior
         return
     }
 
@@ -17,7 +28,7 @@ function Install-ClientCustomWingetApps {
     }
 
     foreach ($App in $Apps) {
-        # Matches your Install-DefaultWingetApps behavior exactly
+        # Executes winget for each ID found in the text file
         Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements" -Wait -PassThru -NoNewWindow
     }
 

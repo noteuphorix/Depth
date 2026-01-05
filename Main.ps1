@@ -234,10 +234,9 @@ $BtnUninstallBloat.Add_Click({
     Update-Status -State "Ready"
 })
 
-$BtnTest.Add_Click({
+$BtnManualClientSelect.Add_Click({
     Update-Status -State "Busy"
-    Get-UserInput
-    TestFunction
+    Select-ManualFolder
     Update-Status -State "Ready"
 })
 

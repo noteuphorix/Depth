@@ -219,29 +219,38 @@ function Install-ClientCustomLocalApps {
         return
     }
 
-    $NetworkPath = "\\10.24.2.5\Clients\$global:SelectedClient\Apps"
+    # 1. Determine the Base Path
+    # If it contains a ':' (C:\) or starts with '\' (\\Server), use it directly.
+    # Otherwise, assume it's a name and build the 10.24.2.5 network path.
+    if ($global:SelectedClient -match ":" -or $global:SelectedClient -like "\\*") {
+        $BasePath = $global:SelectedClient
+    } 
+    else {
+        $BasePath = "\\10.24.2.5\Clients\$global:SelectedClient"
+    }
 
-    if (-not (Test-Path $NetworkPath)) {
-        Write-Error "Could not find the apps folder at: $NetworkPath"
+    # 2. Append the "Apps" folder to the determined path
+    $FinalPath = Join-Path -Path $BasePath -ChildPath "Apps"
+
+    if (-not (Test-Path $FinalPath)) {
+        Write-Error "Could not find the Apps folder at: $FinalPath"
         return
     }
 
-    Write-Host "Starting custom app deployment for: $global:SelectedClient" -ForegroundColor Cyan
+    Write-Host "Starting custom app deployment from: $FinalPath" -ForegroundColor Cyan
 
-    $AppFiles = Get-ChildItem -Path $NetworkPath -File
+    $AppFiles = Get-ChildItem -Path $FinalPath -File
     
     foreach ($App in $AppFiles) {
         Write-Host "Installing: $($App.Name)..." -ForegroundColor Yellow
 
         try {
             if ($App.Extension -eq ".msi") {
-                # MSIs must be run via msiexec
-                # /i = install, /qn = quiet no UI, /norestart = self-explanatory
-                $Args = "/i `"$($App.FullName)`""
+                # Wrap FullName in quotes to handle spaces correctly
+                $Args = "/i `"$($App.FullName)`" /qn /norestart"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList $Args -Wait -NoNewWindow -ErrorAction Stop
             } 
             else {
-                # EXEs run directly
                 Start-Process -FilePath $App.FullName -Wait -NoNewWindow -ErrorAction Stop
             }
             
@@ -262,9 +271,20 @@ function Install-ClientCustomWingetApps {
         return
     }
 
-    $TxtPath = "\\10.24.2.5\Clients\$global:SelectedClient\CustomApps.txt"
+    # 1. Determine the Base Path
+    # Checks for ":" (C:\) or starts with "\" (\\Server)
+    if ($global:SelectedClient -match ":" -or $global:SelectedClient -like "\\*") {
+        $BasePath = $global:SelectedClient
+    } 
+    else {
+        $BasePath = "\\10.24.2.5\Clients\$global:SelectedClient"
+    }
+
+    # 2. Map directly to the .txt file in the root of that path
+    $TxtPath = Join-Path -Path $BasePath -ChildPath "CustomApps.txt"
 
     if (-not (Test-Path $TxtPath)) {
+        # Silent return to match your requested behavior
         return
     }
 
@@ -275,7 +295,7 @@ function Install-ClientCustomWingetApps {
     }
 
     foreach ($App in $Apps) {
-        # Matches your Install-DefaultWingetApps behavior exactly
+        # Executes winget for each ID found in the text file
         Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements" -Wait -PassThru -NoNewWindow
     }
 
@@ -361,20 +381,16 @@ function Select-ManualFolder {
     $Result = $FolderBrowser.ShowDialog()
 
     if ($Result -eq [System.Windows.Forms.DialogResult]::OK) {
-        $global:SelectedClientPath = $FolderBrowser.SelectedPath
+        # Set the global variable to the FULL PATH immediately
+        $global:SelectedClient = $FolderBrowser.SelectedPath
         
-        # 1. Clear the ListBox so we don't just keep adding to old results
+        $SelectedFolderName = Split-Path $global:SelectedClient -Leaf
+
         $ClientListBox.Items.Clear()
+        $ClientListBox.Items.Add($SelectedFolderName)
+        $ClientListBox.SelectedIndex = 0
 
-        # 2. Get only the top-level folders within the selected path
-        $SubFolders = Get-ChildItem -Path $global:SelectedClientPath -Directory
-
-        # 3. Loop through and add each folder name to the ListBox
-        foreach ($Folder in $SubFolders) {
-            $ClientListBox.Items.Add($Folder.Name)
-        }
-
-        Write-Host "Populated ListBox with $($SubFolders.Count) folders from: $global:SelectedClientPath" -ForegroundColor Green
+        Write-Host "Manual Path Selected: $global:SelectedClient" -ForegroundColor Green
     }
 }
 
@@ -596,10 +612,9 @@ $BtnUninstallBloat.Add_Click({
     Update-Status -State "Ready"
 })
 
-$BtnTest.Add_Click({
+$BtnManualClientSelect.Add_Click({
     Update-Status -State "Busy"
-    Get-UserInput
-    TestFunction
+    Select-ManualFolder
     Update-Status -State "Ready"
 })
 

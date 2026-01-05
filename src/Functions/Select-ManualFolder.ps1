@@ -6,19 +6,15 @@ function Select-ManualFolder {
     $Result = $FolderBrowser.ShowDialog()
 
     if ($Result -eq [System.Windows.Forms.DialogResult]::OK) {
-        $global:SelectedClientPath = $FolderBrowser.SelectedPath
+        # Set the global variable to the FULL PATH immediately
+        $global:SelectedClient = $FolderBrowser.SelectedPath
         
-        # 1. Clear the ListBox so we don't just keep adding to old results
+        $SelectedFolderName = Split-Path $global:SelectedClient -Leaf
+
         $ClientListBox.Items.Clear()
+        $ClientListBox.Items.Add($SelectedFolderName)
+        $ClientListBox.SelectedIndex = 0
 
-        # 2. Get only the top-level folders within the selected path
-        $SubFolders = Get-ChildItem -Path $global:SelectedClientPath -Directory
-
-        # 3. Loop through and add each folder name to the ListBox
-        foreach ($Folder in $SubFolders) {
-            $ClientListBox.Items.Add($Folder.Name)
-        }
-
-        Write-Host "Populated ListBox with $($SubFolders.Count) folders from: $global:SelectedClientPath" -ForegroundColor Green
+        Write-Host "Manual Path Selected: $global:SelectedClient" -ForegroundColor Green
     }
 }
