@@ -22,7 +22,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 }
 
 # --- THE CLEANING FUNCTION ---
-# This makes it easy to load any XAML you copy from Visual Studio
+# This makes it easy to load any XAML from Visual Studio
 function Load-VisualStudioXaml {
     param([string]$RawXaml)
     $Cleaned = $RawXaml -replace 'mc:Ignorable="d"','' `
@@ -289,12 +289,11 @@ $Main_GUI_Grid.Add_MouseLeftButtonDown({
     $Main.DragMove()
 })
 
-# --- Rest of your script follows ---
-
 # 3. OPEN THE WINDOW (Last Step)
 $Main_GUI_Grid.Add_Loaded({
     GUI-Startup
 })
+
 $Tools_Grid.Visibility = "Collapsed"
 $Main.ShowDialog() | Out-Null
 Write-Host "Goodbye!" -ForegroundColor Cyan
