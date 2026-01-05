@@ -17,7 +17,7 @@ function Install-ClientCustomWingetApps {
     $TxtPath = Join-Path -Path $BasePath -ChildPath "CustomApps.txt"
 
     if (-not (Test-Path $TxtPath)) {
-        # Silent return to match your requested behavior
+        Write-Warning "CustomApps.txt not found at $BasePath"
         return
     }
 

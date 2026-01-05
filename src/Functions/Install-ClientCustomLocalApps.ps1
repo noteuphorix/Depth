@@ -18,7 +18,7 @@ function Install-ClientCustomLocalApps {
     $FinalPath = Join-Path -Path $BasePath -ChildPath "Apps"
 
     if (-not (Test-Path $FinalPath)) {
-        Write-Error "Could not find the Apps folder at: $FinalPath"
+        Write-Host "Apps folder not found at $BasePath" -ForegroundColor Red
         return
     }
 
