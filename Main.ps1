@@ -162,7 +162,7 @@ $Splash.Show()
 Start-Sleep -Seconds 1
 $Splash.Close()
 
-# 2. Load main GUI object (This makes $Main exist!)
+# 2. Load main GUI object
 $Main = Load-VisualStudioXaml -RawXaml $mainXML
 
 # --- FUNCTIONS SECTION ---

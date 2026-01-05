@@ -22,7 +22,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 }
 
 # --- THE CLEANING FUNCTION ---
-# This makes it easy to load any XAML you copy from Visual Studio
+# This makes it easy to load any XAML from Visual Studio
 function Load-VisualStudioXaml {
     param([string]$RawXaml)
     $Cleaned = $RawXaml -replace 'mc:Ignorable="d"','' `
@@ -162,7 +162,7 @@ $Splash.Show()
 Start-Sleep -Seconds 1
 $Splash.Close()
 
-# 2. Load main GUI object (This makes $Main exist!)
+# 2. Load main GUI object
 $Main = Load-VisualStudioXaml -RawXaml $mainXML
 
 # --- FUNCTIONS SECTION ---
@@ -428,15 +428,19 @@ function Select-ManualFolder {
 
 # --- Function from Set-SelectedClient.ps1 ---
 function Set-SelectedClient {
-    # Ensure something is actually selected
     if ($ClientListBox.SelectedItem -ne $null) {
-        $global:SelectedClient = $ClientListBox.SelectedItem.ToString()
-        
-        # Optional: Visual feedback or logging
-        Write-Host "Client Selected: $global:SelectedClient" -ForegroundColor Green
-        
-        # If you want to show it somewhere in the UI, you could update a label here
-        # $LblCurrentClient.Content = "Active: $global:SelectedClient"
+        $SelectedItemText = $ClientListBox.SelectedItem.ToString()
+
+        # If the current global path already ends with the selected name, 
+        # it means we did a manual select. DON'T overwrite the full path.
+        if ($global:SelectedClient -like "*\$SelectedItemText") {
+            Write-Host "Manual path preserved: $global:SelectedClient" -ForegroundColor Green
+        }
+        else {
+            # Otherwise, it's a standard NAS selection
+            $global:SelectedClient = $SelectedItemText
+            Write-Host "NAS Client Selected: $global:SelectedClient" -ForegroundColor Green
+        }
     }
 }
 
@@ -677,12 +681,11 @@ $Main_GUI_Grid.Add_MouseLeftButtonDown({
     $Main.DragMove()
 })
 
-# --- Rest of your script follows ---
-
 # 3. OPEN THE WINDOW (Last Step)
 $Main_GUI_Grid.Add_Loaded({
     GUI-Startup
 })
+
 $Tools_Grid.Visibility = "Collapsed"
 $Main.ShowDialog() | Out-Null
 Write-Host "Goodbye!" -ForegroundColor Cyan

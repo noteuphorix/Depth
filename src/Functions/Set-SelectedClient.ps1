@@ -1,12 +1,16 @@
 function Set-SelectedClient {
-    # Ensure something is actually selected
     if ($ClientListBox.SelectedItem -ne $null) {
-        $global:SelectedClient = $ClientListBox.SelectedItem.ToString()
-        
-        # Optional: Visual feedback or logging
-        Write-Host "Client Selected: $global:SelectedClient" -ForegroundColor Green
-        
-        # If you want to show it somewhere in the UI, you could update a label here
-        # $LblCurrentClient.Content = "Active: $global:SelectedClient"
+        $SelectedItemText = $ClientListBox.SelectedItem.ToString()
+
+        # If the current global path already ends with the selected name, 
+        # it means we did a manual select. DON'T overwrite the full path.
+        if ($global:SelectedClient -like "*\$SelectedItemText") {
+            Write-Host "Manual path preserved: $global:SelectedClient" -ForegroundColor Green
+        }
+        else {
+            # Otherwise, it's a standard NAS selection
+            $global:SelectedClient = $SelectedItemText
+            Write-Host "NAS Client Selected: $global:SelectedClient" -ForegroundColor Green
+        }
     }
 }
