@@ -1,4 +1,26 @@
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
+
+if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Output "Depth needs to be run as Administrator. Attempting to relaunch."
+
+    $script = if ($PSCommandPath) {
+        "& { & `'$($PSCommandPath)`' $($argList -join ' ') }"
+    } else {
+        "&([ScriptBlock]::Create((irm https://depth.narwal.llc))) $($argList -join ' ')"
+    }
+
+    $powershellCmd = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "pwsh" } else { "powershell" }
+    $processCmd = if (Get-Command wt.exe -ErrorAction SilentlyContinue) { "wt.exe" } else { "$powershellCmd" }
+
+    if ($processCmd -eq "wt.exe") {
+        Start-Process $processCmd -ArgumentList "$powershellCmd -ExecutionPolicy Bypass -NoProfile -Command `"$script`"" -Verb RunAs
+    } else {
+        Start-Process $processCmd -ArgumentList "-ExecutionPolicy Bypass -NoProfile -Command `"$script`"" -Verb RunAs
+    }
+
+    break
+}
+
 # --- THE CLEANING FUNCTION ---
 # This makes it easy to load any XAML you copy from Visual Studio
 function Load-VisualStudioXaml {
@@ -195,20 +217,30 @@ function Get-UserInput {
 
 # --- Function from GUI-Startup.ps1 ---
 function GUI-Startup {
-    $NASPath = "\\10.24.2.5\Clients"
+    $IP = "10.24.2.5"
+    $NASPath = "\\$IP\Clients"
     
-    # Use -PathType Container for the fastest possible 'touch' test
-    if (Test-Path -Path $NASPath -PathType Container -ErrorAction SilentlyContinue) {
+    # 1. LOCAL CHECK: Look for an existing authenticated session to that IP
+    # This does NOT touch the network; it only looks at your local PC's session table.
+    $ActiveSession = Get-SmbSession | Where-Object { $_.Dialect -and $_.RemoteTarget -like "*$IP*" }
+
+    if ($null -ne $ActiveSession) {
+        # 2. Session exists, so we can safely hit the network to get folders
         $global:NAS_Clients_Folder = $NASPath
         $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
         
         $ClientListBox.Items.Clear()
+        # Note: If the session exists but the NAS just got unplugged, 
+        # this part might still hang, but the GUI startup itself will be instant.
         $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue
-        foreach ($Folder in $Folders) { [void]$ClientListBox.Items.Add($Folder.Name) }
+        foreach ($Folder in $Folders) { 
+            [void]$ClientListBox.Items.Add($Folder.Name) 
+        }
     }
     else {
+        # 3. No local record of a login to that IP
         $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
-        Write-Host ("NAS Not Connected!")
+        Write-Host "No active credentials/session found for $IP" -ForegroundColor Gray
     }
 }
 
@@ -644,6 +676,8 @@ $BtnMin.Add_Click({
 $Main_GUI_Grid.Add_MouseLeftButtonDown({
     $Main.DragMove()
 })
+
+# --- Rest of your script follows ---
 
 # 3. OPEN THE WINDOW (Last Step)
 $Main_GUI_Grid.Add_Loaded({

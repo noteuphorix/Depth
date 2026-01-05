@@ -1,4 +1,26 @@
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
+
+if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Output "Depth needs to be run as Administrator. Attempting to relaunch."
+
+    $script = if ($PSCommandPath) {
+        "& { & `'$($PSCommandPath)`' $($argList -join ' ') }"
+    } else {
+        "&([ScriptBlock]::Create((irm https://depth.narwal.llc))) $($argList -join ' ')"
+    }
+
+    $powershellCmd = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "pwsh" } else { "powershell" }
+    $processCmd = if (Get-Command wt.exe -ErrorAction SilentlyContinue) { "wt.exe" } else { "$powershellCmd" }
+
+    if ($processCmd -eq "wt.exe") {
+        Start-Process $processCmd -ArgumentList "$powershellCmd -ExecutionPolicy Bypass -NoProfile -Command `"$script`"" -Verb RunAs
+    } else {
+        Start-Process $processCmd -ArgumentList "-ExecutionPolicy Bypass -NoProfile -Command `"$script`"" -Verb RunAs
+    }
+
+    break
+}
+
 # --- THE CLEANING FUNCTION ---
 # This makes it easy to load any XAML you copy from Visual Studio
 function Load-VisualStudioXaml {
@@ -266,6 +288,8 @@ $BtnMin.Add_Click({
 $Main_GUI_Grid.Add_MouseLeftButtonDown({
     $Main.DragMove()
 })
+
+# --- Rest of your script follows ---
 
 # 3. OPEN THE WINDOW (Last Step)
 $Main_GUI_Grid.Add_Loaded({
