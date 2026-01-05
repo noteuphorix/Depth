@@ -12,6 +12,11 @@ function Connect-NAS {
         New-SmbMapping -RemotePath $NASPath -Password $Pass -UserName $User -ErrorAction Stop | Out-Null
         
         $global:NAS_Clients_Folder = $NASPath
+        $ClientListBox.Items.Clear()
+        $Folders = Get-ChildItem -Path $global:NAS_Clients_Folder -Directory -ErrorAction SilentlyContinue
+        foreach ($Folder in $Folders) {
+            $ClientListBox.Items.Add($Folder.Name)
+        }
         $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
     }
     catch {

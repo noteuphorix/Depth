@@ -131,6 +131,9 @@ $mainXML = @"
 </Window>
 "@
 
+# --- GLOBAL VARIABLES ---
+
+
 # 1. Show Splashscreen
 $Splash = Load-VisualStudioXaml -RawXaml $splashXML
 $Splash.Show()
@@ -189,6 +192,12 @@ $PswrdBoxNAS        = $Main.FindName("PswrdBoxNAS")
 
 
 # --- ACTION BUTTON CLICK EVENTS ---
+$BtnRepairWinget.Add_Click({
+    Update-Status -State "Busy"
+    Repair-Winget
+    Update-Status -State "Ready"
+})
+
 $BtnInstallDefaultWingetApps.Add_Click({
     Update-Status -State "Busy"
     Install-DefaultWingetApps
@@ -201,9 +210,27 @@ $BtnNASLogin.Add_Click({
     Update-Status -State "Ready"
 })
 
-$BtnManualClientSelect.Add_Click({
+$BtnInstallOffice.Add_Click({
     Update-Status -State "Busy"
-    Select-ManualFolder
+    Install-O365
+    Update-Status -State "Ready"
+})
+
+$BtnInstallLocalApps.Add_Click({
+    Update-Status -State "Busy"
+    Install-ClientCustomLocalApps
+    Update-Status -State "Ready"
+})
+
+$BtnInstallCustomWingetApps.Add_Click({
+    Update-Status -State "Busy"
+    Install-ClientCustomWingetApps
+    Update-Status -State "Ready"
+})
+
+$BtnUninstallBloat.Add_Click({
+    Update-Status -State "Busy"
+    Uninstall-Bloat
     Update-Status -State "Ready"
 })
 
@@ -212,6 +239,10 @@ $BtnTest.Add_Click({
     Get-UserInput
     TestFunction
     Update-Status -State "Ready"
+})
+
+$ClientListBox.Add_MouseDoubleClick({
+    Set-SelectedClient
 })
 
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---
@@ -238,6 +269,9 @@ $Main_GUI_Grid.Add_MouseLeftButtonDown({
 })
 
 # 3. OPEN THE WINDOW (Last Step)
+$Main_GUI_Grid.Add_Loaded({
+    GUI-Startup
+})
 $Tools_Grid.Visibility = "Collapsed"
 $Main.ShowDialog() | Out-Null
 Write-Host "Goodbye!" -ForegroundColor Cyan

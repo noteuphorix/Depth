@@ -131,6 +131,9 @@ $mainXML = @"
 </Window>
 "@
 
+# --- GLOBAL VARIABLES ---
+
+
 # 1. Show Splashscreen
 $Splash = Load-VisualStudioXaml -RawXaml $splashXML
 $Splash.Show()
@@ -143,7 +146,36 @@ $Main = Load-VisualStudioXaml -RawXaml $mainXML
 # --- FUNCTIONS SECTION ---
 
 
-# --- Function from GetUserInput.ps1 ---
+# --- Function from Connect-NAS.ps1 ---
+function Connect-NAS {
+    $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Yellow
+    [System.Windows.Forms.Application]::DoEvents()
+
+    $User = $TxtBoxUsernameNAS.Text
+    $Pass = $PswrdBoxNAS.Password
+    $NASPath = "\\10.24.2.5\Clients"
+
+    try {
+        # Credential logic here...
+        # If it fails, New-SmbMapping will throw an error to the 'catch' block
+        New-SmbMapping -RemotePath $NASPath -Password $Pass -UserName $User -ErrorAction Stop | Out-Null
+        
+        $global:NAS_Clients_Folder = $NASPath
+        $ClientListBox.Items.Clear()
+        $Folders = Get-ChildItem -Path $global:NAS_Clients_Folder -Directory -ErrorAction SilentlyContinue
+        foreach ($Folder in $Folders) {
+            $ClientListBox.Items.Add($Folder.Name)
+        }
+        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
+    }
+    catch {
+        # This handles the failure WITHOUT opening a new window
+        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
+        Write-Warning "Connection failed: $($_.Exception.Message)"
+    }
+}
+
+# --- Function from Get-UserInput.ps1 ---
 function Get-UserInput {
     # 1. Minimize the GUI so you can see the terminal behind it
     $Main.WindowState = "Minimized"
@@ -161,10 +193,99 @@ function Get-UserInput {
     Write-Host "Input Saved: $global:UserTermInput" -ForegroundColor Green
 }
 
-# --- Function from InstallDefaultWingetApps.ps1 ---
+# --- Function from GUI-Startup.ps1 ---
+function GUI-Startup {
+    $NASPath = "\\10.24.2.5\Clients"
+    
+    # Use -PathType Container for the fastest possible 'touch' test
+    if (Test-Path -Path $NASPath -PathType Container -ErrorAction SilentlyContinue) {
+        $global:NAS_Clients_Folder = $NASPath
+        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
+        
+        $ClientListBox.Items.Clear()
+        $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue
+        foreach ($Folder in $Folders) { [void]$ClientListBox.Items.Add($Folder.Name) }
+    }
+    else {
+        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
+        Write-Host ("NAS Not Connected!")
+    }
+}
+
+# --- Function from Install-ClientCustomLocalApps.ps1 ---
+function Install-ClientCustomLocalApps {
+    if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
+        Write-Warning "Choose a client first!"
+        return
+    }
+
+    $NetworkPath = "\\10.24.2.5\Clients\$global:SelectedClient\Apps"
+
+    if (-not (Test-Path $NetworkPath)) {
+        Write-Error "Could not find the apps folder at: $NetworkPath"
+        return
+    }
+
+    Write-Host "Starting custom app deployment for: $global:SelectedClient" -ForegroundColor Cyan
+
+    $AppFiles = Get-ChildItem -Path $NetworkPath -File
+    
+    foreach ($App in $AppFiles) {
+        Write-Host "Installing: $($App.Name)..." -ForegroundColor Yellow
+
+        try {
+            if ($App.Extension -eq ".msi") {
+                # MSIs must be run via msiexec
+                # /i = install, /qn = quiet no UI, /norestart = self-explanatory
+                $Args = "/i `"$($App.FullName)`""
+                Start-Process -FilePath "msiexec.exe" -ArgumentList $Args -Wait -NoNewWindow -ErrorAction Stop
+            } 
+            else {
+                # EXEs run directly
+                Start-Process -FilePath $App.FullName -Wait -NoNewWindow -ErrorAction Stop
+            }
+            
+            Write-Host "Successfully finished $($App.Name)" -ForegroundColor Green
+        }
+        catch {
+            Write-Warning "Failed to install $($App.Name): $($_.Exception.Message)"
+        }
+    }
+
+    Write-Host "All local custom apps have been processed." -ForegroundColor Green
+}
+
+# --- Function from Install-ClientCustomWingetApps.ps1 ---
+function Install-ClientCustomWingetApps {
+    if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
+        Write-Warning "Choose a client first!"
+        return
+    }
+
+    $TxtPath = "\\10.24.2.5\Clients\$global:SelectedClient\CustomApps.txt"
+
+    if (-not (Test-Path $TxtPath)) {
+        return
+    }
+
+    $Apps = Get-Content -Path $TxtPath | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    if ($null -eq $Apps) {
+        return
+    }
+
+    foreach ($App in $Apps) {
+        # Matches your Install-DefaultWingetApps behavior exactly
+        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements" -Wait -PassThru -NoNewWindow
+    }
+
+    return "Completed"
+}
+
+# --- Function from Install-DefaultWingetApps.ps1 ---
 function Install-DefaultWingetApps {
     # Pre-defined list of IDs
-    $Apps = @("Google.Chrome", "7zip.7zip", "VideoLAN.VLC")
+    $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams", "9WZDNCRD29V9")
 
     foreach ($App in $Apps) {
         # Process runs and displays output in its own console window area
@@ -175,7 +296,63 @@ function Install-DefaultWingetApps {
 }
 
 
-# --- Function from ManualClientSelect.ps1 ---
+# --- Function from Install-O365.ps1 ---
+function Install-O365 {
+    # Pre-defined list of IDs
+    $Apps = @("Microsoft.Office")
+
+    foreach ($App in $Apps) {
+        # Process runs and displays output in its own console window area
+        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements" -Wait -PassThru -NoNewWindow
+    }
+}
+
+# --- Function from Repair-Winget.ps1 ---
+function Repair-Winget {
+    # 0. Try to let Winget fix its own dependency first
+    Write-Host "Attempting to install WindowsAppRuntime 1.8 via Winget..." -ForegroundColor Yellow
+    winget install Microsoft.WindowsAppRuntime.1.8 --source winget --accept-package-agreements --accept-source-agreements --nowarn
+
+    Write-Host "Checking for AppInstaller updates..." -ForegroundColor Cyan
+    
+    $Url = "https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
+    $Path = "$env:TEMP\WingetUpdate.msixbundle"
+
+    try {
+        # 1. Kill processes using the package to avoid HRESULT: 0x80073D02
+        Write-Host "Closing active AppInstaller processes..." -ForegroundColor Yellow
+        $AppInstallerPackage = Get-AppxPackage -Name "Microsoft.DesktopAppInstaller"
+        if ($AppInstallerPackage) {
+            # Find and stop processes associated with this package
+            Get-Process | Where-Object { $_.Path -like "*$($AppInstallerPackage.Name)*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+            # Also kill winget.exe specifically just in case
+            Stop-Process -Name "winget" -Force -ErrorAction SilentlyContinue
+        }
+
+        # 2. Download the latest bundle
+        Write-Host "Downloading latest AppInstaller bundle..." -ForegroundColor Yellow
+        $oldPreference = $ProgressPreference
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri $Url -OutFile $Path -UseBasicParsing
+        
+
+        # 3. Force install the package
+        Write-Host "Installing latest Winget..." -ForegroundColor Yellow
+        # We use -ForceApplicationShutdown as an extra safety measure
+        Add-AppxPackage -Path $Path -ForceApplicationShutdown -ErrorAction Stop
+        $ProgressPreference = $oldPreference
+        
+        Write-Host "Winget is now updated and ready." -ForegroundColor Green
+    }
+    catch {
+        Write-Warning "Failed to update Winget: $($_.Exception.Message)"
+    }
+    finally {
+        if (Test-Path $Path) { Remove-Item $Path -Force }
+    }
+}
+
+# --- Function from Select-ManualFolder.ps1 ---
 function Select-ManualFolder {
     $FolderBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
     $FolderBrowser.Description = "Select the Client Folder"
@@ -201,31 +378,21 @@ function Select-ManualFolder {
     }
 }
 
-# --- Function from NASLogin.ps1 ---
-function Connect-NAS {
-    $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Yellow
-    [System.Windows.Forms.Application]::DoEvents()
-
-    $User = $TxtBoxUsernameNAS.Text
-    $Pass = $PswrdBoxNAS.Password
-    $NASPath = "\\10.24.2.5\Clients"
-
-    try {
-        # Credential logic here...
-        # If it fails, New-SmbMapping will throw an error to the 'catch' block
-        New-SmbMapping -RemotePath $NASPath -Password $Pass -UserName $User -ErrorAction Stop | Out-Null
+# --- Function from Set-SelectedClient.ps1 ---
+function Set-SelectedClient {
+    # Ensure something is actually selected
+    if ($ClientListBox.SelectedItem -ne $null) {
+        $global:SelectedClient = $ClientListBox.SelectedItem.ToString()
         
-        $global:NAS_Clients_Folder = $NASPath
-        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
-    }
-    catch {
-        # This handles the failure WITHOUT opening a new window
-        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
-        Write-Warning "Connection failed: $($_.Exception.Message)"
+        # Optional: Visual feedback or logging
+        Write-Host "Client Selected: $global:SelectedClient" -ForegroundColor Green
+        
+        # If you want to show it somewhere in the UI, you could update a label here
+        # $LblCurrentClient.Content = "Active: $global:SelectedClient"
     }
 }
 
-# --- Function from SwitchTabs.ps1 ---
+# --- Function from Switch-Tabs.ps1 ---
 # --- Function from SwitchTabs.ps1 ---
 function Switch-Tabs {
     param([string]$Target)
@@ -250,6 +417,74 @@ function TestFunction {
 	Write-Host "Hello, World!"
 	Start-Sleep -Seconds 10
 	Write-Host "Sleepy!"
+}
+
+# --- Function from Uninstall-Bloat.ps1 ---
+function Uninstall-Bloat {
+    $Bloatware = @(
+        "Microsoft.Xbox.TCUI_8wekyb3d8bbwe",
+        "Microsoft.XboxGameOverlay_8wekyb3d8bbwe",
+        "Microsoft.XboxGamingOverlay_8wekyb3d8bbwe",
+        "Microsoft.XboxIdentityProvider_8wekyb3d8bbwe",
+        "Microsoft.XboxSpeechToTextOverlay_8wekyb3d8bbwe",
+        "Microsoft.GamingApp_8wekyb3d8bbwe",
+        "Microsoft.549981C3F5F10_8wekyb3d8bbwe", # Cortana
+        "Microsoft.MicrosoftSolitaireCollection_8wekyb3d8bbwe",
+        "Microsoft.BingNews_8wekyb3d8bbwe",
+        "Microsoft.Bingweather_8wekyb3d8bbwe",
+        "Microsoft.BingSearch_8wekyb3d8bbwe",
+        "Microsoft.Office.OneNote",
+        "Microsoft.Microsoft3DViewer_8wekyb3d8bbwe",
+        "Microsoft.MicrosoftPeople_8wekyb3d8bbwe",
+        "Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe",
+        "Microsoft.WindowsAlarms_8wekyb3d8bbwe",
+        "Microsoft.WindowsCamera_8wekyb3d8bbwe",
+        "Microsoft.WindowsMaps_8wekyb3d8bbwe",
+        "Microsoft.WindowsFeedbackHub_8wekyb3d8bbwe",
+        "Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe",
+        "Microsoft.YourPhone_8wekyb3d8bbwe",
+        "Microsoft.ZuneMusic_8wekyb3d8bbwe",
+        "Microsoft.ZuneVideo_8wekyb3d8bbwe",
+        "Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe",
+        "Microsoft.GetHelp_8wekyb3d8bbwe",
+        "Microsoft.Getstarted_8wekyb3d8bbwe", # Microsoft Tips
+        "Microsoft.Messaging_8wekyb3d8bbwe",
+        "Microsoft.OneConnect_8wekyb3d8bbwe",
+        "Microsoft.Todos_8wekyb3d8bbwe",
+        "Microsoft.People_8wekyb3d8bbwe",
+        "Microsoft.Edge.GameAssist_8wekyb3d8bbwe",
+        "Microsoft.SkypeApp",
+        "SpotifyAB.SpotifyMusic_zpdnekdrzrea0",
+        "Microsoft.Copilot_8wekyb3d8bbwe",
+        "Microsoft.Teams.Classic",
+        "MicrosoftCorporationII.MicrosoftFamily_8wekyb3d8bbwe",
+        "Clipchamp.Clipchamp_yxz26nhyzhsrt",
+        "Xbox Game Bar Plugin",
+        "Xbox Game Bar",
+        "Xbox Game Speech Window"
+        "Copilot"
+    )
+
+    $ProcessedList = @()
+    
+    # Get the raw list once to check against
+    $CurrentApps = winget list --accept-source-agreements
+
+    foreach ($App in $Bloatware) {
+        # Check if YOUR exact string exists anywhere in the winget list output
+        if ($CurrentApps -match [regex]::Escape($App)) {
+            
+            # Execute uninstall using ONLY your string from the array
+            Start-Process winget -ArgumentList "uninstall `"$App`" --silent --force --purge --accept-source-agreements" -Wait -NoNewWindow
+            
+            $ProcessedList += $App
+        }
+    }
+
+    Write-Host "`nFinished processing bloatware list. The following items were processed:" -ForegroundColor Cyan
+    foreach ($Entry in $ProcessedList) {
+        Write-Host $Entry -ForegroundColor Yellow
+    }
 }
 
 # --- Function from Update-Status.ps1 ---
@@ -319,6 +554,12 @@ $PswrdBoxNAS        = $Main.FindName("PswrdBoxNAS")
 
 
 # --- ACTION BUTTON CLICK EVENTS ---
+$BtnRepairWinget.Add_Click({
+    Update-Status -State "Busy"
+    Repair-Winget
+    Update-Status -State "Ready"
+})
+
 $BtnInstallDefaultWingetApps.Add_Click({
     Update-Status -State "Busy"
     Install-DefaultWingetApps
@@ -331,9 +572,27 @@ $BtnNASLogin.Add_Click({
     Update-Status -State "Ready"
 })
 
-$BtnManualClientSelect.Add_Click({
+$BtnInstallOffice.Add_Click({
     Update-Status -State "Busy"
-    Select-ManualFolder
+    Install-O365
+    Update-Status -State "Ready"
+})
+
+$BtnInstallLocalApps.Add_Click({
+    Update-Status -State "Busy"
+    Install-ClientCustomLocalApps
+    Update-Status -State "Ready"
+})
+
+$BtnInstallCustomWingetApps.Add_Click({
+    Update-Status -State "Busy"
+    Install-ClientCustomWingetApps
+    Update-Status -State "Ready"
+})
+
+$BtnUninstallBloat.Add_Click({
+    Update-Status -State "Busy"
+    Uninstall-Bloat
     Update-Status -State "Ready"
 })
 
@@ -342,6 +601,10 @@ $BtnTest.Add_Click({
     Get-UserInput
     TestFunction
     Update-Status -State "Ready"
+})
+
+$ClientListBox.Add_MouseDoubleClick({
+    Set-SelectedClient
 })
 
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---
@@ -368,6 +631,9 @@ $Main_GUI_Grid.Add_MouseLeftButtonDown({
 })
 
 # 3. OPEN THE WINDOW (Last Step)
+$Main_GUI_Grid.Add_Loaded({
+    GUI-Startup
+})
 $Tools_Grid.Visibility = "Collapsed"
 $Main.ShowDialog() | Out-Null
 Write-Host "Goodbye!" -ForegroundColor Cyan
