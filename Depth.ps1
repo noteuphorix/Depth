@@ -702,8 +702,7 @@ function Uninstall-Bloat {
         }
     }
 
-    Write-Host "`nFinished. Processed items:" -ForegroundColor Cyan
-    $ProcessedList | ForEach-Object { Write-Host " - $_" -ForegroundColor Yellow }
+    Write-Host "`nFinished." -ForegroundColor Cyan
 }
 
 # --- Function from Uninstall-OfficeLanguagePacks.ps1 ---
