@@ -214,6 +214,21 @@ $PswrdBoxNAS        = $Main.FindName("PswrdBoxNAS")
 
 
 # --- ACTION BUTTON CLICK EVENTS ---
+$BtnRunAll.Add_Click({
+    Update-Status -State "Busy"
+    Copy-Shortcuts
+    Repair-Winget
+    Install-ClientCustomLocalApps
+    Install-O365
+    Install-DefaultWingetApps
+    Install-ClientCustomLocalApps
+    Uninstall-Bloat
+    Uninstall-OfficeLanguagePacks
+    Set-CustomPowerOptions
+    Set-ComputerTimeZone
+    Update-Status -State "Ready"
+})
+
 $BtnRepairWinget.Add_Click({
     Update-Status -State "Busy"
     Repair-Winget
@@ -262,8 +277,38 @@ $BtnManualClientSelect.Add_Click({
     Update-Status -State "Ready"
 })
 
+$BtnUninstallLanguagePacks.Add_Click({
+    Update-Status -State "Busy"
+    Uninstall-OfficeLanguagePacks
+    Update-Status -State "Ready"
+})
+
+$BtnSetPowerOptions.Add_Click({
+    Update-Status -State "Busy"
+    Set-CustomPowerOptions
+    Update-Status -State "Ready"
+})
+
+$BtnSetTimeZone.Add_Click({
+    Update-Status -State "Busy"
+    Set-ComputerTimeZone
+    Update-Status -State "Ready"
+})
+
+$BtnSetTimeZone.Add_Click({
+    Update-Status -State "Busy"
+    Set-ComputerTimeZone
+    Update-Status -State "Ready"
+})
+
 $ClientListBox.Add_MouseDoubleClick({
     Set-SelectedClient
+})
+
+$BtnTest.Add_Click({
+    Update-Status -State "Busy"
+    Copy-Shortcuts
+    Update-Status -State "Ready"
 })
 
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---

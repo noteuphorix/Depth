@@ -197,6 +197,44 @@ function Connect-NAS {
     }
 }
 
+# --- Function from Copy-Shortcuts.ps1 ---
+function Copy-Shortcuts {
+    if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
+        Write-Warning "Choose a client first!"
+        return
+    }
+
+    # 1. Determine the Base Path (Supports NAS and Manual Selection)
+    if ($global:SelectedClient -match ":" -or $global:SelectedClient -like "\\*") {
+        $BasePath = $global:SelectedClient
+    } 
+    else {
+        $BasePath = "\\10.24.2.5\Clients\$global:SelectedClient"
+    }
+
+    # 2. Target the 'Shortcuts' folder specifically
+    $FinalPath = Join-Path -Path $BasePath -ChildPath "Shortcuts"
+    $DesktopPath = [System.IO.Path]::Combine($env:USERPROFILE, "Desktop")
+
+    if (-not (Test-Path $FinalPath)) {
+        Write-Host "Shortcut source folder not found at: $FinalPath" -ForegroundColor Red
+        return
+    }
+
+    Write-Host "Copying all items from Shortcuts to Desktop..." -ForegroundColor Cyan
+
+    try {
+        # 3. Recursive Copy of all contents
+        # Wildcard \* ensures we grab what's INSIDE, not the 'Shortcuts' folder itself
+        Copy-Item -Path "$FinalPath\*" -Destination $DesktopPath -Recurse -Force -ErrorAction Stop
+        
+        Write-Host "Copy complete. Everything from '$($global:SelectedClient)\Shortcuts' is now on your Desktop." -ForegroundColor Green
+    }
+    catch {
+        Write-Warning "Failed to copy: $($_.Exception.Message)"
+    }
+}
+
 # --- Function from Get-UserInput.ps1 ---
 function Get-UserInput {
     # 1. Minimize the GUI so you can see the terminal behind it
@@ -271,7 +309,7 @@ function Install-ClientCustomLocalApps {
         try {
             if ($App.Extension -eq ".msi") {
                 # Wrap FullName in quotes to handle spaces correctly
-                $Args = "/i `"$($App.FullName)`" /qn /norestart"
+                $Args = "/i `"$($App.FullName)`" /norestart"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList $Args -Wait -NoNewWindow -ErrorAction Stop
             } 
             else {
@@ -351,6 +389,30 @@ function Install-O365 {
     }
 }
 
+# --- Function from Refresh-Clients.ps1 ---
+function Refresh-Clients {
+    # 1. Check if the path is set
+    if (-not $global:NAS_Clients_Folder) {
+        Write-Warning "Refresh failed: NAS path is not defined. Please connect first."
+        return
+    }
+
+    try {
+        # 2. Clear existing items
+        $ClientListBox.Items.Clear()
+        
+        # 3. Re-populate from the global NAS path
+        $Folders = Get-ChildItem -Path $global:NAS_Clients_Folder -Directory -ErrorAction Stop | Sort-Object Name
+        
+        foreach ($Folder in $Folders) {
+            $ClientListBox.Items.Add($Folder.Name)
+        }
+    }
+    catch {
+        Write-Warning "Refresh failed: $($_.Exception.Message)"
+    }
+}
+
 # --- Function from Repair-Winget.ps1 ---
 function Repair-Winget {
     # 0. Try to let Winget fix its own dependency first
@@ -416,6 +478,141 @@ function Select-ManualFolder {
 
         Write-Host "Manual Path Selected: $global:SelectedClient" -ForegroundColor Green
     }
+}
+
+# --- Function from Set-ComputerTimeZone.ps1 ---
+function Set-ComputerTimeZone {
+    # 1. Minimize GUI
+    $Main.WindowState = [System.Windows.WindowState]::Minimized
+
+    # Map of Windows Time Zone IDs
+    $TZ_Map = @{
+        "E" = "Eastern Standard Time"
+        "C" = "Central Standard Time"
+        "M" = "Mountain Standard Time"
+        "P" = "Pacific Standard Time"
+        "A" = "Alaskan Standard Time"
+        "H" = "Hawaiian Standard Time"
+    }
+
+    # Comprehensive US State Map
+    $State_Map = @{
+        # --- EASTERN ---
+        "CT"="E"; "DE"="E"; "DC"="E"; "GA"="E"; "MA"="E"; "MD"="E"; "ME"="E"; "NC"="E"
+        "NH"="E"; "NJ"="E"; "NY"="E"; "OH"="E"; "PA"="E"; "RI"="E"; "SC"="E"; "VA"="E"
+        "VT"="E"; "WV"="E"
+        # --- CENTRAL ---
+        "AL"="C"; "AR"="C"; "IA"="C"; "IL"="C"; "LA"="C"; "MN"="C"; "MO"="C"; "MS"="C"
+        "OK"="C"; "WI"="C"
+        # --- MOUNTAIN ---
+        "AZ"="M"; "CO"="M"; "MT"="M"; "NM"="M"; "UT"="M"; "WY"="M"
+        # --- PACIFIC ---
+        "CA"="P"; "NV"="P"; "WA"="P"
+        # --- OFFSHORE ---
+        "AK"="A"; "HI"="H"
+        # --- SPLIT: EASTERN / CENTRAL ---
+        "FL"="EC"; "IN"="EC"; "KY"="EC"; "MI"="EC"; "TN"="EC"
+        # --- SPLIT: CENTRAL / MOUNTAIN ---
+        "KS"="CM"; "NE"="CM"; "ND"="CM"; "SD"="CM"; "TX"="CM"
+        # --- SPLIT: MOUNTAIN / PACIFIC ---
+        "ID"="MP"; "OR"="MP"
+    }
+
+    Write-Host "`n==============================" -ForegroundColor Cyan
+    Write-Host "   TIMEZONE CONFIGURATION" -ForegroundColor Cyan
+    Write-Host "==============================" -ForegroundColor Cyan
+    
+    $InputState = Read-Host "Enter State Code (e.g., PA) or [ENTER] to choose by Region"
+    $InputState = $InputState.ToUpper().Trim()
+
+    $Selection = ""
+
+    # 2. Logic: Manual Bypass or Shortcut
+    if ([string]::IsNullOrWhiteSpace($InputState) -or $TZ_Map.ContainsKey($InputState)) {
+        if ($TZ_Map.ContainsKey($InputState)) { 
+            $Selection = $InputState 
+        } else {
+            Write-Host "Regions: [E]astern, [C]entral, [M]ountain, [P]acific, [A]laska, [H]awaii" -ForegroundColor Yellow
+            $Selection = (Read-Host "Select Region Letter").ToUpper()
+        }
+    }
+    # 3. State Lookup Logic
+    elseif ($State_Map.ContainsKey($InputState)) {
+        $MappedValue = $State_Map[$InputState]
+        
+        switch ($MappedValue) {
+            "EC" { 
+                Write-Host "$InputState spans Eastern & Central." -ForegroundColor Yellow
+                $Selection = (Read-Host "Choose [E]astern or [C]entral").ToUpper() 
+            }
+            "CM" { 
+                Write-Host "$InputState spans Central & Mountain." -ForegroundColor Yellow
+                $Selection = (Read-Host "Choose [C]entral or [M]ountain").ToUpper() 
+            }
+            "MP" { 
+                Write-Host "$InputState spans Mountain & Pacific." -ForegroundColor Yellow
+                $Selection = (Read-Host "Choose [M]ountain or [P]acific").ToUpper() 
+            }
+            Default { $Selection = $MappedValue }
+        }
+    }
+    else {
+        Write-Warning "State code '$InputState' not recognized."
+        $Selection = (Read-Host "Enter Region: [E], [C], [M], [P], [A], [H]").ToUpper()
+    }
+
+    # 4. Apply the Timezone
+    if ($TZ_Map.ContainsKey($Selection)) {
+        $FinalID = $TZ_Map[$Selection]
+        try {
+            Set-TimeZone -Id $FinalID
+            Write-Host "Successfully set timezone to: $FinalID" -ForegroundColor Green
+        }
+        catch {
+            Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+    else {
+        Write-Host "Invalid selection. Timezone was not changed." -ForegroundColor Red
+    }
+
+    # 5. Restore GUI
+    Write-Host "Returning to GUI..." -ForegroundColor Gray
+    Start-Sleep -Seconds 1
+    $Main.WindowState = [System.Windows.WindowState]::Normal
+}
+
+# --- Function from Set-CustomPowerOptions.ps1 ---
+function Set-CustomPowerOptions {
+    Write-Host "Configuring Power Options..." -ForegroundColor Cyan
+
+    $PowerCommands = @(
+        # GUIDs: Sleep timeout (AC/DC), Display timeout (AC/DC), and Power Button Action
+        @('powercfg /SETDCVALUEINDEX SCHEME_CURRENT 238c9fa8-0aad-41ed-83f4-97be242c8f20 29f6c1db-86da-48c5-9fdb-f2b67b1f44da 1200', "DC Sleep Timeout"),
+        @('powercfg /SETACVALUEINDEX SCHEME_CURRENT 238c9fa8-0aad-41ed-83f4-97be242c8f20 29f6c1db-86da-48c5-9fdb-f2b67b1f44da 0', "AC Sleep Timeout"),
+        @('powercfg /SETDCVALUEINDEX SCHEME_CURRENT 7516b95f-f776-4464-8c53-06167f40cc99 3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e 1200', "DC Display Timeout"),
+        @('powercfg /SETACVALUEINDEX SCHEME_CURRENT 7516b95f-f776-4464-8c53-06167f40cc99 3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e 0', "AC Display Timeout"),
+        @('powercfg /SETACVALUEINDEX SCHEME_CURRENT 4f971e89-eebd-4455-a8de-9e59040e7347 7648efa3-dd9c-4e3e-b566-50f929386280 3', "AC Power Button Action"),
+        @('powercfg /SETDCVALUEINDEX SCHEME_CURRENT 4f971e89-eebd-4455-a8de-9e59040e7347 7648efa3-dd9c-4e3e-b566-50f929386280 3', "DC Power Button Action")
+    )
+
+    foreach ($Entry in $PowerCommands) {
+        $Command = $Entry[0]
+        $Label = $Entry[1]
+
+        try {
+            # Invoke-Expression is used here to run the raw string command
+            Invoke-Expression $Command
+            Write-Host "  [OK] $Label set." -ForegroundColor Gray
+        }
+        catch {
+            Write-Warning "  [FAIL] Could not set $Label."
+        }
+    }
+
+    # Apply changes globally
+    powercfg /setactive SCHEME_CURRENT
+    Write-Host "`nAll power options have been applied successfully." -ForegroundColor Green
 }
 
 # --- Function from Set-SelectedClient.ps1 ---
@@ -531,6 +728,64 @@ function Uninstall-Bloat {
     }
 }
 
+# --- Function from Uninstall-OfficeLanguagePacks.ps1 ---
+function Uninstall-OfficeLanguagePacks {
+    Write-Host "Scanning for extra Office Language Packs..." -ForegroundColor Cyan
+
+    # 1. Get all Office ClickToRun entries, excluding English
+    $OfficePacks = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue | Where-Object {
+        $_.UninstallString -like "*OfficeClickToRun.exe*" -and 
+        $_.DisplayName -notlike "*en-us*" -and 
+        $_.DisplayName -notlike "*English*" -and 
+        $_.DisplayName -ne $null
+    }
+
+    if (-not $OfficePacks) {
+        Write-Host "No extra Office language packs found." -ForegroundColor Green
+        return
+    }
+
+    # 2. Extract Language IDs (xx-xx)
+    $LangsToRemove = $(foreach ($Pack in $OfficePacks) {
+        if ($Pack.DisplayName -match '([a-z]{2}-[a-z]{2})') { $Matches[1] }
+    }) | Select-Object -Unique
+
+    Write-Host "Uninstalling: $($LangsToRemove -join ', ')" -ForegroundColor Yellow
+
+    # 3. Ensure ODT exists
+    $ODTPath = "$env:TEMP\setup.exe"
+    if (-not (Test-Path $ODTPath)) {
+        Invoke-WebRequest -Uri "https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_17126-20132.exe" -OutFile "$env:TEMP\odt.exe"
+        Start-Process -FilePath "$env:TEMP\odt.exe" -ArgumentList "/extract:$env:TEMP /quiet" -Wait
+    }
+
+    # 4. Build and Run XML
+    $XmlPath = "$env:TEMP\RemoveLangs.xml"
+    $LangNodes = ($LangsToRemove | ForEach-Object { "      <Language ID=""$_"" />" }) -join "`n"
+
+    @"
+<Configuration>
+  <Remove>
+    <Product ID="O365ProPlusRetail">
+$LangNodes
+    </Product>
+  </Remove>
+  <Display Level="None" AcceptEULA="TRUE" />
+  <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+</Configuration>
+"@ | Out-File -FilePath $XmlPath -Encoding utf8 -Force
+
+    $Process = Start-Process -FilePath $ODTPath -ArgumentList "/configure `"$XmlPath`"" -Wait -PassThru -NoNewWindow
+
+    # 5. Final Status & Cleanup
+    if ($Process.ExitCode -eq 0) {
+        Write-Host "Successfully removed extra language packs." -ForegroundColor Green
+        Remove-Item $XmlPath, $ODTPath -ErrorAction SilentlyContinue
+    } else {
+        Write-Host "Uninstall failed with Exit Code: $($Process.ExitCode)" -ForegroundColor Red
+    }
+}
+
 # --- Function from Update-Status.ps1 ---
 function Update-Status {
     param(
@@ -598,6 +853,21 @@ $PswrdBoxNAS        = $Main.FindName("PswrdBoxNAS")
 
 
 # --- ACTION BUTTON CLICK EVENTS ---
+$BtnRunAll.Add_Click({
+    Update-Status -State "Busy"
+    Copy-Shortcuts
+    Repair-Winget
+    Install-ClientCustomLocalApps
+    Install-O365
+    Install-DefaultWingetApps
+    Install-ClientCustomLocalApps
+    Uninstall-Bloat
+    Uninstall-OfficeLanguagePacks
+    Set-CustomPowerOptions
+    Set-ComputerTimeZone
+    Update-Status -State "Ready"
+})
+
 $BtnRepairWinget.Add_Click({
     Update-Status -State "Busy"
     Repair-Winget
@@ -646,8 +916,38 @@ $BtnManualClientSelect.Add_Click({
     Update-Status -State "Ready"
 })
 
+$BtnUninstallLanguagePacks.Add_Click({
+    Update-Status -State "Busy"
+    Uninstall-OfficeLanguagePacks
+    Update-Status -State "Ready"
+})
+
+$BtnSetPowerOptions.Add_Click({
+    Update-Status -State "Busy"
+    Set-CustomPowerOptions
+    Update-Status -State "Ready"
+})
+
+$BtnSetTimeZone.Add_Click({
+    Update-Status -State "Busy"
+    Set-ComputerTimeZone
+    Update-Status -State "Ready"
+})
+
+$BtnSetTimeZone.Add_Click({
+    Update-Status -State "Busy"
+    Set-ComputerTimeZone
+    Update-Status -State "Ready"
+})
+
 $ClientListBox.Add_MouseDoubleClick({
     Set-SelectedClient
+})
+
+$BtnTest.Add_Click({
+    Update-Status -State "Busy"
+    Copy-Shortcuts
+    Update-Status -State "Ready"
 })
 
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---

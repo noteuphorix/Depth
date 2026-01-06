@@ -32,7 +32,7 @@ function Install-ClientCustomLocalApps {
         try {
             if ($App.Extension -eq ".msi") {
                 # Wrap FullName in quotes to handle spaces correctly
-                $Args = "/i `"$($App.FullName)`" /qn /norestart"
+                $Args = "/i `"$($App.FullName)`" /norestart"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList $Args -Wait -NoNewWindow -ErrorAction Stop
             } 
             else {
