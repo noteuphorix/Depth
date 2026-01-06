@@ -1,6 +1,6 @@
 function Install-DefaultWingetApps {
     # Pre-defined list of IDs
-    $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams", "9WZDNCRD29V9")
+    $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams")
 
     foreach ($App in $Apps) {
         # Process runs and displays output in its own console window area
