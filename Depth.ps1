@@ -934,9 +934,9 @@ $BtnSetTimeZone.Add_Click({
     Update-Status -State "Ready"
 })
 
-$BtnSetTimeZone.Add_Click({
+$BtnClientChooser.Add_Click({
     Update-Status -State "Busy"
-    Set-ComputerTimeZone
+    Refresh-Clients
     Update-Status -State "Ready"
 })
 
