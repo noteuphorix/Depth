@@ -1,66 +1,43 @@
-function Uninstall-Bloat {
+
     $Bloatware = @(
-        "Microsoft.Xbox.TCUI_8wekyb3d8bbwe",
-        "Microsoft.XboxGameOverlay_8wekyb3d8bbwe",
-        "Microsoft.XboxGamingOverlay_8wekyb3d8bbwe",
-        "Microsoft.XboxIdentityProvider_8wekyb3d8bbwe",
-        "Microsoft.XboxSpeechToTextOverlay_8wekyb3d8bbwe",
-        "Microsoft.GamingApp_8wekyb3d8bbwe",
-        "Microsoft.549981C3F5F10_8wekyb3d8bbwe", # Cortana
-        "Microsoft.MicrosoftSolitaireCollection_8wekyb3d8bbwe",
-        "Microsoft.BingNews_8wekyb3d8bbwe",
-        "Microsoft.Bingweather_8wekyb3d8bbwe",
-        "Microsoft.BingSearch_8wekyb3d8bbwe",
-        "Microsoft.Office.OneNote",
-        "Microsoft.Microsoft3DViewer_8wekyb3d8bbwe",
-        "Microsoft.MicrosoftPeople_8wekyb3d8bbwe",
-        "Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe",
-        "Microsoft.WindowsAlarms_8wekyb3d8bbwe",
-        "Microsoft.WindowsCamera_8wekyb3d8bbwe",
-        "Microsoft.WindowsMaps_8wekyb3d8bbwe",
-        "Microsoft.WindowsFeedbackHub_8wekyb3d8bbwe",
-        "Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe",
-        "Microsoft.YourPhone_8wekyb3d8bbwe",
-        "Microsoft.ZuneMusic_8wekyb3d8bbwe",
-        "Microsoft.ZuneVideo_8wekyb3d8bbwe",
-        "Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe",
-        "Microsoft.GetHelp_8wekyb3d8bbwe",
-        "Microsoft.Getstarted_8wekyb3d8bbwe", # Microsoft Tips
-        "Microsoft.Messaging_8wekyb3d8bbwe",
-        "Microsoft.OneConnect_8wekyb3d8bbwe",
-        "Microsoft.Todos_8wekyb3d8bbwe",
-        "Microsoft.People_8wekyb3d8bbwe",
-        "Microsoft.Edge.GameAssist_8wekyb3d8bbwe",
-        "Microsoft.SkypeApp",
-        "SpotifyAB.SpotifyMusic_zpdnekdrzrea0",
-        "Microsoft.Copilot_8wekyb3d8bbwe",
-        "Microsoft.Teams.Classic",
-        "MicrosoftCorporationII.MicrosoftFamily_8wekyb3d8bbwe",
-        "Clipchamp.Clipchamp_yxz26nhyzhsrt",
-        "Xbox Game Bar Plugin",
-        "Xbox Game Bar",
-        "Xbox Game Speech Window"
-        "Copilot"
+        "Microsoft.Xbox.TCUI", "Microsoft.XboxGameOverlay", "Microsoft.XboxGamingOverlay",
+        "Microsoft.XboxIdentityProvider", "Microsoft.XboxSpeechToTextOverlay", "Microsoft.GamingApp",
+        "Microsoft.549981C3F5F10", "Microsoft.MicrosoftSolitaireCollection", "Microsoft.BingNews",
+        "Microsoft.Bingweather", "Microsoft.BingSearch", "Microsoft.Office.OneNote",
+        "Microsoft.Microsoft3DViewer", "Microsoft.MicrosoftPeople", "Microsoft.MicrosoftOfficeHub",
+        "Microsoft.WindowsAlarms", "Microsoft.WindowsCamera", "Microsoft.WindowsMaps",
+        "Microsoft.WindowsFeedbackHub", "Microsoft.WindowsSoundRecorder", "Microsoft.YourPhone",
+        "Microsoft.ZuneMusic", "Microsoft.ZuneVideo", "Microsoft.MicrosoftStickyNotes",
+        "Microsoft.GetHelp", "Microsoft.Getstarted", "Microsoft.Messaging",
+        "Microsoft.OneConnect", "Microsoft.Todos", "Microsoft.People",
+        "Microsoft.Edge.GameAssist", "Microsoft.SkypeApp", "SpotifyAB.SpotifyMusic",
+        "Microsoft.Copilot", "Microsoft.Teams.Classic", "MicrosoftCorporationII.MicrosoftFamily",
+        "Clipchamp.Clipchamp", "Microsoft.XboxGameCallableUI"
     )
 
     $ProcessedList = @()
-    
-    # Get the raw list once to check against
-    $CurrentApps = winget list --accept-source-agreements
+    Write-Host "Forcing removal of bloatware via AppxManifest..." -ForegroundColor Cyan
 
     foreach ($App in $Bloatware) {
-        # Check if YOUR exact string exists anywhere in the winget list output
-        if ($CurrentApps -match [regex]::Escape($App)) {
-            
-            # Execute uninstall using ONLY your string from the array
-            Start-Process winget -ArgumentList "uninstall `"$App`" --silent --force --purge --accept-source-agreements" -Wait -NoNewWindow
-            
-            $ProcessedList += $App
+        # 1. Get the real identity
+        $Package = Get-AppxPackage -Name "*$App*" -ErrorAction SilentlyContinue
+
+        if ($Package) {
+            foreach ($Item in $Package) {
+                $FullName = $Item.PackageFullName
+                Write-Host "Removing: $FullName" -ForegroundColor Yellow
+                
+                # 2. Use the native PowerShell removal tool instead of winget
+                # This is much faster and doesn't rely on winget's "source agreements" or "input criteria"
+                try {
+                    $Item | Remove-AppxPackage -ErrorAction Stop
+                    $ProcessedList += $FullName
+                } catch {
+                    Write-Host "Failed to remove $App. It may be system-protected." -ForegroundColor Red
+                }
+            }
         }
     }
 
-    Write-Host "`nFinished processing bloatware list. The following items were processed:" -ForegroundColor Cyan
-    foreach ($Entry in $ProcessedList) {
-        Write-Host $Entry -ForegroundColor Yellow
-    }
-}
+    Write-Host "`nFinished. Processed items:" -ForegroundColor Cyan
+    $ProcessedList | ForEach-Object { Write-Host " - $_" -ForegroundColor Yellow }
