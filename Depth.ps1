@@ -358,7 +358,7 @@ function Install-ClientCustomWingetApps {
 
     foreach ($App in $Apps) {
         # Executes winget for each ID found in the text file
-        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements" -Wait -PassThru -NoNewWindow
+        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --scope machine" -Wait -PassThru -NoNewWindow
     }
 
     return "Completed"
