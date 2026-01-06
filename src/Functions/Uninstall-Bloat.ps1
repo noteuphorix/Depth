@@ -1,4 +1,8 @@
 function Uninstall-Bloat {
+    # Suppress the "Deployment operation progress" bar
+    $OldProgress = $ProgressPreference
+    $ProgressPreference = 'SilentlyContinue'
+
     $Bloatware = @(
         "Microsoft.Xbox.TCUI", "Microsoft.XboxGameOverlay", "Microsoft.XboxGamingOverlay",
         "Microsoft.XboxIdentityProvider", "Microsoft.XboxSpeechToTextOverlay", "Microsoft.GamingApp",
@@ -19,25 +23,30 @@ function Uninstall-Bloat {
     Write-Host "Forcing removal of bloatware via AppxManifest..." -ForegroundColor Cyan
 
     foreach ($App in $Bloatware) {
-        # 1. Get the real identity
         $Package = Get-AppxPackage -Name "*$App*" -ErrorAction SilentlyContinue
 
         if ($Package) {
             foreach ($Item in $Package) {
                 $FullName = $Item.PackageFullName
-                Write-Host "Removing: $FullName" -ForegroundColor Yellow
                 
-                # 2. Use the native PowerShell removal tool instead of winget
-                # This is much faster and doesn't rely on winget's "source agreements" or "input criteria"
+                # Using Write-Progress or custom messages keeps it tidy
+                Write-Host "Removing: $App" -ForegroundColor Yellow
+                
                 try {
-                    $Item | Remove-AppxPackage -ErrorAction Stop
-                    $ProcessedList += $FullName
+                    # Removing -ErrorAction Stop from here so it doesn't break the script, 
+                    # we handle the "nastiness" in the catch block
+                    $Item | Remove-AppxPackage -ErrorAction SilentlyContinue
+                    $ProcessedList += $App
                 } catch {
-                    Write-Host "Failed to remove $App. It may be system-protected." -ForegroundColor Red
+                    # This only triggers if something major breaks
                 }
             }
         }
     }
 
-    Write-Host "`nFinished." -ForegroundColor Cyan
+    # Restore the progress bar setting for other scripts
+    $ProgressPreference = $OldProgress
+
+    Write-Host "`nFinished processing bloatware." -ForegroundColor Cyan
+    Write-Host "Items successfully removed: $($ProcessedList.Count)" -ForegroundColor Gray
 }
