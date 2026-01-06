@@ -417,7 +417,7 @@ function Refresh-Clients {
 function Repair-Winget {
     # 0. Try to let Winget fix its own dependency first
     Write-Host "Attempting to install WindowsAppRuntime 1.8 via Winget..." -ForegroundColor Yellow
-    winget install Microsoft.WindowsAppRuntime.1.8 --source winget --accept-package-agreements --accept-source-agreements --nowarn
+    Start-Process winget -ArgumentList "install Microsoft.WindowsAppRuntime.1.8 --source winget --silent --accept-package-agreements --accept-source-agreements" -Wait -PassThru -NoNewWindow
 
     Write-Host "Checking for AppInstaller updates..." -ForegroundColor Cyan
     
