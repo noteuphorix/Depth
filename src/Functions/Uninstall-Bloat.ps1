@@ -40,5 +40,6 @@ function Uninstall-Bloat {
     }
 
     Write-Host "`nFinished. Processed items:" -ForegroundColor Cyan
+    Write-Host "Test"
     $ProcessedList | ForEach-Object { Write-Host " - $_" -ForegroundColor Yellow }
 }
