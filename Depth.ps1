@@ -661,7 +661,7 @@ function TestFunction {
 }
 
 # --- Function from Uninstall-Bloat.ps1 ---
-
+function Uninstall-Bloat {
     $Bloatware = @(
         "Microsoft.Xbox.TCUI", "Microsoft.XboxGameOverlay", "Microsoft.XboxGamingOverlay",
         "Microsoft.XboxIdentityProvider", "Microsoft.XboxSpeechToTextOverlay", "Microsoft.GamingApp",
@@ -704,7 +704,7 @@ function TestFunction {
 
     Write-Host "`nFinished. Processed items:" -ForegroundColor Cyan
     $ProcessedList | ForEach-Object { Write-Host " - $_" -ForegroundColor Yellow }
-
+}
 
 # --- Function from Uninstall-OfficeLanguagePacks.ps1 ---
 function Uninstall-OfficeLanguagePacks {

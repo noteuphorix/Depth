@@ -1,4 +1,4 @@
-
+function Uninstall-Bloat {
     $Bloatware = @(
         "Microsoft.Xbox.TCUI", "Microsoft.XboxGameOverlay", "Microsoft.XboxGamingOverlay",
         "Microsoft.XboxIdentityProvider", "Microsoft.XboxSpeechToTextOverlay", "Microsoft.GamingApp",
@@ -41,3 +41,4 @@
 
     Write-Host "`nFinished. Processed items:" -ForegroundColor Cyan
     $ProcessedList | ForEach-Object { Write-Host " - $_" -ForegroundColor Yellow }
+}
