@@ -221,7 +221,7 @@ $BtnRunAll.Add_Click({
     Install-ClientCustomLocalApps
     Install-O365
     Install-DefaultWingetApps
-    Install-ClientCustomLocalApps
+    Install-ClientCustomWingetApps
     Uninstall-Bloat
     Uninstall-OfficeLanguagePacks
     Set-CustomPowerOptions
