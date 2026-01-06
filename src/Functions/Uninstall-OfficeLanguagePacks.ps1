@@ -28,14 +28,21 @@ function Uninstall-OfficeLanguagePacks {
         Start-Process -FilePath "$env:TEMP\odt.exe" -ArgumentList "/extract:$env:TEMP /quiet" -Wait
     }
 
-    # 4. Build and Run XML
+    # 4. Build and Run XML with all 3 Product IDs
     $XmlPath = "$env:TEMP\RemoveLangs.xml"
     $LangNodes = ($LangsToRemove | ForEach-Object { "      <Language ID=""$_"" />" }) -join "`n"
 
+    # We repeat the LangNodes for each potential Product ID
     @"
 <Configuration>
   <Remove>
     <Product ID="O365ProPlusRetail">
+$LangNodes
+    </Product>
+    <Product ID="O365HomePremRetail">
+$LangNodes
+    </Product>
+    <Product ID="OneNoteFreeRetail">
 $LangNodes
     </Product>
   </Remove>
