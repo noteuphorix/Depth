@@ -311,6 +311,18 @@ $BtnTest.Add_Click({
     Update-Status -State "Ready"
 })
 
+$BtnNVIDIAApp.Add_Click({
+    Update-Status -State "Busy"
+    Start-Process "https://www.nvidia.com/en-us/software/nvidia-app-enterprise/"
+    Update-Status -State "Ready"
+})
+
+$BtnAMDApp.Add_Click({
+    Update-Status -State "Busy"
+    Start-Process "https://www.amd.com/en/support/download/drivers.html"
+    Update-Status -State "Ready"
+})
+
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---
 $BtnTools_Menu.Add_Click({
     Switch-Tabs -Target "Tools"
