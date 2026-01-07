@@ -683,31 +683,30 @@ function Uninstall-Bloat {
     )
 
     $ProcessedList = @()
-    Write-Host "Forcing removal of bloatware via AppxManifest..." -ForegroundColor Cyan
+    Write-Host "Forcing removal of bloatware for ALL users..." -ForegroundColor Cyan
 
     foreach ($App in $Bloatware) {
-        $Package = Get-AppxPackage -Name "*$App*" -ErrorAction SilentlyContinue
+        # 1. Added -AllUsers here to find the app in every profile (including the standard user)
+        $Package = Get-AppxPackage -Name "*$App*" -AllUsers -ErrorAction SilentlyContinue
 
         if ($Package) {
             foreach ($Item in $Package) {
                 $FullName = $Item.PackageFullName
                 
-                # Using Write-Progress or custom messages keeps it tidy
-                Write-Host "Removing: $App" -ForegroundColor Yellow
+                Write-Host "Removing: $App (System-wide)" -ForegroundColor Yellow
                 
                 try {
-                    # Removing -ErrorAction Stop from here so it doesn't break the script, 
-                    # we handle the "nastiness" in the catch block
-                    $Item | Remove-AppxPackage -ErrorAction SilentlyContinue
+                    # 2. Added -AllUsers here to execute the removal across all profiles
+                    $Item | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
                     $ProcessedList += $App
                 } catch {
-                    # This only triggers if something major breaks
+                    # Errors handled silently for cleaner output
                 }
             }
         }
     }
 
-    # Restore the progress bar setting for other scripts
+    # Restore the progress bar setting
     $ProgressPreference = $OldProgress
 
     Write-Host "`nFinished processing bloatware." -ForegroundColor Cyan
