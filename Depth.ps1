@@ -149,7 +149,7 @@ $mainXML = @"
 			</Ellipse>
 		</Grid>
 		<Grid x:Name="Tools_Grid" Margin="0,50,0,0" d:IsHidden="True">
-			<Image x:Name="Ken" Margin="102,49,102,111" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken.png?raw=true" Width="300" Height="293" HorizontalAlignment="Center" VerticalAlignment="Center" d:IsHidden="True"/>
+			<Image x:Name="Ken" Margin="102,49,102,111" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken2.png?raw=true" Width="300" Height="293" HorizontalAlignment="Center" VerticalAlignment="Center" d:IsHidden="True"/>
 		</Grid>
 		<Label x:Name="LblCopyright" Content="Created By: Brandon Swarek" Height="36" VerticalAlignment="Bottom" Width="210" FontFamily="Leelawadee" FontSize="16" Foreground="White" HorizontalAlignment="Right" Margin="0,0,10,4"/>
 	</Grid>
