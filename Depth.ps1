@@ -187,7 +187,7 @@ function Connect-NAS {
         
         $global:NAS_Clients_Folder = $NASPath
         $ClientListBox.Items.Clear()
-        $Folders = Get-ChildItem -Path $global:NAS_Clients_Folder -Directory -ErrorAction SilentlyContinue
+        $Folders = Get-ChildItem -Path $global:NAS_Clients_Folder -Directory -ErrorAction SilentlyContinue | Sort-Object Name
         foreach ($Folder in $Folders) {
             $ClientListBox.Items.Add($Folder.Name)
         }
