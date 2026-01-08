@@ -184,6 +184,7 @@ function Connect-NAS {
         # Credential logic here...
         # If it fails, New-SmbMapping will throw an error to the 'catch' block
         New-SmbMapping -RemotePath $NASPath -Password $Pass -UserName $User -Persistent $true -ErrorAction Stop | Out-Null
+        net use $NASPath $Pass /user:$User /persistent:yes /y > $null
         
         $global:NAS_Clients_Folder = $NASPath
         $ClientListBox.Items.Clear()
