@@ -4,7 +4,7 @@ function Install-DefaultWingetApps {
 
     foreach ($App in $Apps) {
         # Process runs and displays output in its own console window area
-        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements" -Wait -PassThru -NoNewWindow
+        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --scope machine" -Wait -PassThru -NoNewWindow
     }
 
     return "Completed"
