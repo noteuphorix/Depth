@@ -259,22 +259,36 @@ function Get-UserInput {
 
 # --- Function from GUI-Startup.ps1 ---
 function GUI-Startup {
-    $NASPath = "\\10.24.2.5\Clients"
+    $NASIP = "10.24.2.5"
+    $NASPath = "\\$NASIP\Clients"
     
-    # Prepend the FileSystem:: provider for the fastest possible 'touch' test
-    if (Test-Path -Path "FileSystem::$NASPath" -PathType Container -ErrorAction SilentlyContinue) {
-        $global:NAS_Clients_Folder = $NASPath
-        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
+    Write-Host "Checking NAS connectivity..." -ForegroundColor Cyan
+
+    # Step 1: Ping the IP. -Count 1 -Quiet returns True/False instantly.
+    if (Test-Connection -ComputerName $NASIP -Count 1 -Quiet) {
         
-        $ClientListBox.Items.Clear()
-        $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue
-        foreach ($Folder in $Folders) { 
-            [void]$ClientListBox.Items.Add($Folder.Name) 
+        # Step 2: Ping succeeded, now check the specific folder path
+        if (Test-Path -Path "FileSystem::$NASPath" -PathType Container -ErrorAction SilentlyContinue) {
+            $global:NAS_Clients_Folder = $NASPath
+            $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
+            
+            $ClientListBox.Items.Clear()
+            $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue
+            foreach ($Folder in $Folders) { 
+                [void]$ClientListBox.Items.Add($Folder.Name) 
+            }
+            Write-Host "NAS Connected and Clients Loaded." -ForegroundColor Green
+        }
+        else {
+            # IP is up, but the share or folder is missing/perm denied
+            $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
+            Write-Host "NAS IP reachable, but Path not found!" -ForegroundColor Yellow
         }
     }
     else {
+        # Step 3: Ping failed - This is the "Fail Fast" exit
         $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
-        Write-Host "NAS Not Connected!" -ForegroundColor Red
+        Write-Host "NAS Not Connected! (Ping Failed)" -ForegroundColor Red
     }
 }
 
