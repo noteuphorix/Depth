@@ -13,7 +13,7 @@ function GUI-Startup {
             $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
             
             $ListBox_Clients.Items.Clear()
-            $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue
+            $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue | Sort-Object Name
             foreach ($Folder in $Folders) { 
                 [void]$ListBox_Clients.Items.Add($Folder.Name) 
             }
