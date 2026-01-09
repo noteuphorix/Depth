@@ -93,7 +93,7 @@ $mainXML = @"
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid x:Name="Main_Grid">
+    <Grid x:Name="Main_Grid" Background="Transparent">
         <Border x:Name="Main_Border" BorderBrush="#FF2B3842" BorderThickness="5,5,5,5"/>
         <Grid x:Name="Title_Grid" Margin="0,0,0,426" VerticalAlignment="Top" Height="100">
             <Ellipse x:Name="Ellipse_StatusLight" Height="22" Stroke="Black" Width="22" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,35,96,0" Fill="#FF0FFF1E">
@@ -167,10 +167,10 @@ $mainXML = @"
                 </Ellipse.Effect>
             </Ellipse>
         </Grid>
-        <Label x:Name="Lbl_Copyright" Content="Created By: Brandon Swarek" FontFamily="Leelawadee" FontSize="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="5,5,3,5" Width="266" Foreground="White"/>
         <Grid x:Name="Tools_Grid" Margin="0,100,0,0" Visibility="Collapsed">
             <Image x:Name="Img_Ken" Width="500" Height="500" HorizontalAlignment="Center" VerticalAlignment="Top" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken2.png?raw=true"/>
         </Grid>
+        <Label x:Name="Lbl_Copyright" Content="Created By: Brandon Swarek" FontFamily="Leelawadee" FontSize="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="5,5,3,5" Width="266" Foreground="White"/>
     </Grid>
 </Window>
 "@
