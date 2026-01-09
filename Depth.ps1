@@ -395,7 +395,7 @@ function Install-ClientCustomWingetApps {
 
     foreach ($App in $Apps) {
         # Executes winget for each ID found in the text file
-        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --scope machine" -Wait -PassThru -NoNewWindow
+        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements --scope machine" -Wait -PassThru -NoNewWindow
     }
 
     return "Completed"
@@ -408,7 +408,7 @@ function Install-DefaultWingetApps {
 
     foreach ($App in $Apps) {
         # Process runs and displays output in its own console window area
-        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements" -Wait -PassThru -NoNewWindow
+        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
     }
 
     return "Completed"
@@ -429,7 +429,7 @@ function Install-O365 {
 # --- Function from Install-PassedWingetApp.ps1 ---
 function Install-PassedWingetApp {
     param([string]$AppID)
-    Start-Process winget -ArgumentList "install --id $AppID --silent --accept-source-agreements" -Wait -PassThru -NoNewWindow
+    Start-Process winget -ArgumentList "install --id $AppID --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
 }
 
 # --- Function from Refresh-Clients.ps1 ---
