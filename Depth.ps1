@@ -93,7 +93,7 @@ $mainXML = @"
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid x:Name="Main_Grid" Background="Transparent">
+    <Grid x:Name="Main_Grid">
         <Border x:Name="Main_Border" BorderBrush="#FF2B3842" BorderThickness="5,5,5,5"/>
         <Grid x:Name="Title_Grid" Margin="0,0,0,426" VerticalAlignment="Top" Height="100">
             <Ellipse x:Name="Ellipse_StatusLight" Height="22" Stroke="Black" Width="22" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,35,96,0" Fill="#FF0FFF1E">
@@ -291,10 +291,10 @@ function GUI-Startup {
             $global:NAS_Clients_Folder = $NASPath
             $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
             
-            $ClientListBox.Items.Clear()
+            $ListBox_Clients.Items.Clear()
             $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue
             foreach ($Folder in $Folders) { 
-                [void]$ClientListBox.Items.Add($Folder.Name) 
+                [void]$ListBox_Clients.Items.Add($Folder.Name) 
             }
             Write-Host "NAS Connected and Clients Loaded." -ForegroundColor Green
         }
@@ -866,6 +866,7 @@ function Update-Status {
 
 # --- UI ELEMENT MAPPING ---
 
+
 # Grids
 $Main_Grid       = $Main.FindName("Main_Grid")
 $Tools_Grid      = $Main.FindName("Tools_Grid")
@@ -1073,4 +1074,4 @@ $Main_Grid.Add_Loaded({
 
 $Tools_Grid.Visibility = "Collapsed"
 $Main.ShowDialog() | Out-Null
-Write-Host "Goodbye!" -ForegroundColor Cyan
+Write-Host "Goodbye!!!" -ForegroundColor Cyan
