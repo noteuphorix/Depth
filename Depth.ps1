@@ -676,6 +676,24 @@ function Set-SelectedClient {
     }
 }
 
+# --- Function from Startup-Logo.ps1 ---
+function Startup-Logo{
+$MagnaLogo = @"                                                                                                    
+                                                            
+ mmm  mmm                                          mmmmmmm  
+ ###  ###                                          ##"""""  
+ ########   m#####m   m###m##  ##m####m   m#####m  ##mmmm   
+ ## ## ##   " mmm##  ##"  "##  ##"   ##   " mmm##  #""""##m 
+ ## "" ##  m##"""##  ##    ##  ##    ##  m##"""##        ## 
+ ##    ##  ##mmm###  "##mm###  ##    ##  ##mmm###  #mmmm##" 
+ ""    ""   """" ""   m""" ##  ""    ""   """" ""   """""   
+                      "####""                               
+                                                    
+"@
+
+Write-Host $MagnaLogo -ForegroundColor Green
+}
+
 # --- Function from Switch-Tabs.ps1 ---
 # --- Function from SwitchTabs.ps1 ---
 function Switch-Tabs {
@@ -962,7 +980,6 @@ $Btn_CopyShortcuts.Add_Click({
 
 $Btn_Login.Add_Click({
     Update-Status -State "Busy"
-    # Note: Use $TxtBox_Username.Text and $PasswordBox_Password.Password in your Connect-NAS function
     Connect-NAS
     Update-Status -State "Ready"
 })
@@ -1046,6 +1063,7 @@ $Main_Grid.Add_MouseLeftButtonDown({
 
 # 3. OPEN THE WINDOW (Last Step)
 $Main_Grid.Add_Loaded({
+    Startup-Logo
     GUI-Startup
 })
 

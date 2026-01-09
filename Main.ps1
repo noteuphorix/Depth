@@ -310,7 +310,6 @@ $Btn_CopyShortcuts.Add_Click({
 
 $Btn_Login.Add_Click({
     Update-Status -State "Busy"
-    # Note: Use $TxtBox_Username.Text and $PasswordBox_Password.Password in your Connect-NAS function
     Connect-NAS
     Update-Status -State "Ready"
 })
@@ -394,6 +393,7 @@ $Main_Grid.Add_MouseLeftButtonDown({
 
 # 3. OPEN THE WINDOW (Last Step)
 $Main_Grid.Add_Loaded({
+    Startup-Logo
     GUI-Startup
 })
 
