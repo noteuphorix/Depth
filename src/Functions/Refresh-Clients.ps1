@@ -7,13 +7,13 @@ function Refresh-Clients {
 
     try {
         # 2. Clear existing items
-        $ClientListBox.Items.Clear()
+        $ListBox_Clients.Items.Clear()
         
         # 3. Re-populate from the global NAS path
         $Folders = Get-ChildItem -Path $global:NAS_Clients_Folder -Directory -ErrorAction Stop | Sort-Object Name
         
         foreach ($Folder in $Folders) {
-            $ClientListBox.Items.Add($Folder.Name)
+            $ListBox_Clients.Items.Add($Folder.Name)
         }
     }
     catch {

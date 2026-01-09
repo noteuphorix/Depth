@@ -59,100 +59,119 @@ $splashXML = @"
 
 # --- MAIN XAML ---
 $mainXML = @"
-<Window x:Name="Main_GUI" x:Class="DepthWPFFramework.MainWindow"
+<Window x:Name="Main_Window" x:Class="DepthWPFFramework_Revamped.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DepthWPFFramework"
+        xmlns:local="clr-namespace:DepthWPFFramework_Revamped"
         mc:Ignorable="d"
-        Title="Depth" Height="500" Width="800" WindowStartupLocation="CenterScreen" Background="#FF262D2F" SizeToContent="WidthAndHeight" MinHeight="500" MinWidth="850" WindowStyle="None" AllowsTransparency="True" ResizeMode="CanResizeWithGrip">
-	<Window.Resources>
-		<Style x:Key="CleanButtons" TargetType="Button">
-			<Setter Property="Template">
-				<Setter.Value>
-					<ControlTemplate TargetType="Button">
-						<Border x:Name="border" 
-                            Background="{TemplateBinding Background}" 
-                            BorderBrush="{TemplateBinding BorderBrush}" 
-                            BorderThickness="{TemplateBinding BorderThickness}" 
-                            SnapsToDevicePixels="true">
-							<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-						</Border>
-						<ControlTemplate.Triggers>
-							<Trigger Property="IsMouseOver" Value="true">
-								<Setter TargetName="border" Property="Background" Value="#FF1FA5DE"/>
-							</Trigger>
-						</ControlTemplate.Triggers>
-					</ControlTemplate>
-				</Setter.Value>
-			</Setter>
-		</Style>
-	</Window.Resources>
-	<Grid x:Name="Main_GUI_Grid" MinWidth="800" Background="Transparent">
-		<Border x:Name="Main_GUI_Border" BorderThickness="5,5,5,5" BorderBrush="#FF2B3842">
-			<Border.Effect>
-				<BlurEffect/>
-			</Border.Effect>
-		</Border>
-		<Grid x:Name="Title_Bar_Grid" VerticalAlignment="Top" Height="34" MinHeight="50">
-			<Button x:Name="BtnTools_Menu" Content="Tools" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="87" Background="#FF454A4C" Foreground="White" BorderBrush="White" BorderThickness="2" Style="{StaticResource CleanButtons}" Margin="117,10,0,0"/>
-			<Button x:Name="BtnDeployment_Menu" Content="Deployment" HorizontalAlignment="Left" Height="26" Margin="25,10,0,0" VerticalAlignment="Top" Width="87" Background="#FF454A4C" Foreground="White" BorderThickness="2" Style="{StaticResource CleanButtons}" BorderBrush="White"/>
-   <Button x:Name="BtnRestart_Menu" Content="Restart PC" HorizontalAlignment="Right" Height="26" VerticalAlignment="Top" Width="86" Background="#FF454A4C" Foreground="White" BorderBrush="White" BorderThickness="2" Style="{StaticResource CleanButtons}" Margin="0,10,114,0"/>
-			<Button x:Name="BtnClose" Content="X" HorizontalAlignment="Right" Height="28" Margin="0,10,5,0" VerticalAlignment="Top" Width="27" FontFamily="Segoe UI Variable Display Semibold" Background="{x:Null}" FontSize="18" Foreground="White" BorderBrush="{x:Null}"/>
-			<Button x:Name="BtnMin" Content="-" HorizontalAlignment="Right" Height="28" Margin="0,10,32,0" VerticalAlignment="Top" Width="27" FontFamily="Segoe UI Variable Display Semibold" Background="{x:Null}" FontSize="24" Foreground="White" BorderBrush="{x:Null}"/>
-			<Ellipse x:Name="StatusLight" HorizontalAlignment="Right" Height="22" Stroke="Black" VerticalAlignment="Top" Width="22" Fill="#FF0FFF1E" Margin="0,16,75,0">
-				<Ellipse.Effect>
-					<BlurEffect/>
-				</Ellipse.Effect>
-			</Ellipse>
-		</Grid>
-		<Grid x:Name="Deployment_Grid" Margin="0,50,0,0">
-			<Border x:Name="Border_Clients" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="168,0,0,10" HorizontalAlignment="Left" Width="142"/>
-			<Border x:Name="Border_Actions" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="10,0,0,10" HorizontalAlignment="Left" Width="142"/>
-			<Border x:Name="Border_OOBE" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="326,0,0,10" HorizontalAlignment="Left" Width="142"/>
-			<Border x:Name="Border_Apps" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="483,0,0,10" HorizontalAlignment="Left" Width="142"/>
-			<Border x:Name="Border_NAS" BorderBrush="#FF2B3842" BorderThickness="2,2,2,2" Margin="640,1,0,0" Height="167" Width="140" VerticalAlignment="Top" HorizontalAlignment="Left"/>
-			<Label x:Name="LblClients_Copy" Content="OOBE" HorizontalAlignment="Left" Height="26" Margin="334,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
-			<Label x:Name="LblDeploymentActions" Content="Actions" HorizontalAlignment="Left" Height="26" Margin="20,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
-			<Label x:Name="LblClients" Content="Client Select" HorizontalAlignment="Left" Height="26" Margin="176,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
-			<Label x:Name="LblApps" Content="Apps" HorizontalAlignment="Left" Height="26" Margin="493,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
-			<Label x:Name="LblNASLogin" Content="NAS Login" HorizontalAlignment="Left" Height="26" Margin="648,15,0,0" VerticalAlignment="Top" Width="126" FontWeight="Bold" Foreground="#FF3D6EE6" FontSize="14" FontFamily="Leelawadee"/>
-			<Label x:Name="LblUsername" Content="Username" HorizontalAlignment="Left" Height="24" Margin="648,42,0,0" VerticalAlignment="Top" Width="82" FontWeight="Bold" Foreground="White" FontSize="10" FontFamily="Leelawadee"/>
-			<Label x:Name="LblPassword" Content="Password" HorizontalAlignment="Left" Height="24" Margin="648,83,0,0" VerticalAlignment="Top" Width="82" FontWeight="Bold" Foreground="White" FontSize="10" FontFamily="Leelawadee"/>
-			<ListBox x:Name="ClientListBox" HorizontalAlignment="Left" Margin="178,119,0,0" d:ItemsSource="{d:SampleData ItemCount=5}" Background="Black" Foreground="White" Width="122" ScrollViewer.VerticalScrollBarVisibility="Auto" FontFamily="Leelawadee" VerticalAlignment="Top" Height="314"/>
-			<Button x:Name="BtnRunAll" Content="Run All" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,41,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnRepairWinget" Content="Repair Winget" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,72,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnInstallOffice" Content="Install O365" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,103,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnInstallLocalApps" Content="Install Local Apps" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,134,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnInstallDefaultWingetApps" Content="Install Default Winget" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,165,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnInstallCustomWingetApps" Content="Install Custom Winget" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,196,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnUninstallBloat" Content="Uninstall Bloat" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,227,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnUninstallLanguagePacks" Content="Uninstall Lng Packs" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,258,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnSetPowerOptions" Content="Set Power Options" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,289,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnSetTimeZone" Content="Set Timezone" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,320,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnClientChooser" Content="Re-Load Clients" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="178,41,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnManualClientSelect" Content="Manual Selection" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="178,81,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnNVIDIAApp" Content="NVIDIA App" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="493,41,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnAMDApp" Content="AMD App" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="493,72,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnNASLogin" Content="Login" HorizontalAlignment="Left" Height="24" Margin="648,131,0,0" VerticalAlignment="Top" Width="60" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnCopyShortcuts" Content="Copy Shortcuts" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="20,351,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnInstallDellApp" Content="Dell App" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="493,103,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnInstalLenovoApp" Content="Lenovo App" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="493,134,0,0" FontFamily="Leelawadee"/>
-			<Button x:Name="BtnInstallHPApp" Content="HP App" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="122" Background="#FF1C5971" Foreground="White" BorderThickness="1,1,1,1" Style="{StaticResource CleanButtons}" BorderBrush="White" Margin="493,165,0,0" FontFamily="Leelawadee"/>
-			<TextBox x:Name="TxtBoxUsernameNAS" HorizontalAlignment="Left" Margin="648,62,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-			<PasswordBox x:Name="PswrdBoxNAS" HorizontalAlignment="Left" Margin="648,103,0,0" VerticalAlignment="Top" Width="120"/>
-			<Ellipse x:Name="NASLoginStatusLight" HorizontalAlignment="Left" Height="16" Stroke="Black" VerticalAlignment="Top" Width="15" Fill="Red" Margin="739,20,0,0" RenderTransformOrigin="2.212,-0.044">
-				<Ellipse.Effect>
-					<BlurEffect/>
-				</Ellipse.Effect>
-			</Ellipse>
-		</Grid>
-		<Grid x:Name="Tools_Grid" Margin="0,50,0,0" d:IsHidden="True">
-			<Image x:Name="Ken" Margin="102,49,102,111" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken2.png?raw=true" Width="300" Height="293" HorizontalAlignment="Center" VerticalAlignment="Center" d:IsHidden="True"/>
-		</Grid>
-		<Label x:Name="LblCopyright" Content="Created By: Brandon Swarek" Height="36" VerticalAlignment="Bottom" Width="210" FontFamily="Leelawadee" FontSize="16" Foreground="White" HorizontalAlignment="Right" Margin="0,0,10,4"/>
-	</Grid>
+        Title="Depth" Height="650" Width="1100" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip" WindowStyle="None" AllowsTransparency="True" Background="#FF262D2F" MinWidth="1100" MinHeight="650">
+    <Window.Resources>
+        <Style x:Key="CleanButtons" TargetType="Button">
+            <Setter Property="Margin" Value="5,0,5,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                SnapsToDevicePixels="true">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="border" Property="Background" Value="#FF1FA5DE"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter TargetName="border" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid x:Name="Main_Grid" Background="Transparent">
+        <Border x:Name="Main_Border" BorderBrush="#FF2B3842" BorderThickness="5,5,5,5"/>
+        <Grid x:Name="Title_Grid" Margin="0,0,0,426" VerticalAlignment="Top" Height="100">
+            <Ellipse x:Name="Ellipse_StatusLight" Height="22" Stroke="Black" Width="22" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,35,96,0" Fill="#FF0FFF1E">
+                <Ellipse.Effect>
+                    <BlurEffect/>
+                </Ellipse.Effect>
+            </Ellipse>
+            <StackPanel x:Name="Tabs_StackPanel" HorizontalAlignment="Left" Height="60" Margin="20,0,0,0" VerticalAlignment="Center" Width="945" Orientation="Horizontal">
+                <Button x:Name="Btn_Deployment" Content="Deployment" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White"/>
+                <Button x:Name="Btn_Tools" Content="Tools" Style="{StaticResource CleanButtons}" Height="36" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White"/>
+                <Button x:Name="Btn_RestartPC" Content="Restart PC" Style="{StaticResource CleanButtons}" Height="36" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White" HorizontalAlignment="Left" Margin="5,0,5,0"/>
+            </StackPanel>
+            <StackPanel x:Name="GUIControl_StackPanel" Margin="0,20,10,0" Height="60" Orientation="Horizontal" FlowDirection="RightToLeft" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <Button x:Name="Btn_Close" Content="X" Height="28" Width="35" Background="{x:Null}" FontFamily="MS Reference Sans Serif" FontSize="20" Foreground="White" BorderBrush="Transparent" Padding="0,0,0,0" UseLayoutRounding="False"/>
+                <Button x:Name="Btn_Minimize" Content="_" Height="28" Width="35" Background="{x:Null}" FontFamily="MS Reference Sans Serif" Foreground="White" BorderBrush="Transparent" FontWeight="Bold" FontSize="28" Padding="0,-25,0,0" UseLayoutRounding="True" RenderTransformOrigin="0.471,0.35"/>
+            </StackPanel>
+        </Grid>
+        <Grid x:Name="Deployment_Grid" Margin="0,100,0,0">
+            <Border x:Name="Actions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="20,0,0,0" Width="196" HorizontalAlignment="Left" Height="490" VerticalAlignment="Top">
+                <StackPanel x:Name="Actions_StackPanel" Margin="6,11,6,6">
+                    <Label x:Name="Lbl_Actions" Content="Actions" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
+                    <Button x:Name="Btn_RunAll" Content="Run All" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF269832" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_RepairWinget" Content="Repair Winget" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_InstallO365" Content="Install O365 Apps" Style="{StaticResource CleanButtons}" Height="25" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_InstallLocalApps" Content="Install Local Apps" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_InstallDefaultWinget" Content="Default Winget" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_InstallCustomWinget" Content="Custom Winget" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_UninstallBloat" Content="Uninstall Bloat" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_UninstallLanguagePacks" Content="Language Pack Killer" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_SetPowerOptions" Content="Set Power Options" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_SetTimezone" Content="Set Timezone" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_CopyShortcuts" Content="Copy Shortcuts" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="ClientSelect_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="226,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <StackPanel x:Name="ClientSelect_StackPanel" Margin="6,11,10,6">
+                    <Label x:Name="Lbl_ClientSelect" Content="Client Select" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
+                    <Button x:Name="Btn_ReloadClients" Content="Reload Client List" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
+                    <Button x:Name="Btn_ManualSelection" Content="Manual Client Select" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
+                    <ListBox x:Name="ListBox_Clients" Height="334" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,10,0,0" Width="160" Background="Black" Foreground="White" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="Misc_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="436,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <StackPanel x:Name="Misc_StackPanel" Margin="6,11,10,6">
+                    <Label x:Name="Lbl_Misc" Content="Misc" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="Apps_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="646,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <StackPanel x:Name="Apps_StackPanel" Margin="6,11,10,6">
+                    <Label x:Name="Lbl_Apps" Content="Apps" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
+                    <Button x:Name="Btn_InstallNVIDIAApp" Content="NVIDIA App" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_InstallAMDApp" Content="AMD App" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_InstallDellApp" Content="Dell App" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_InstallLenovoApp" Content="Lenovo App" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                    <Button x:Name="Btn_InstallHPApp" Content="HP App" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border x:Name="NAS_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="856,0,0,0" Width="200" Height="197" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <StackPanel x:Name="NAS_StackPanel" Margin="6,11,10,6">
+                    <Label x:Name="Lbl_NASLogin" Content="NAS Login" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="112" FontWeight="Bold" HorizontalAlignment="Left"/>
+                    <Label x:Name="LblUsername" Content="Username" FontFamily="Leelawadee" Foreground="White" FontWeight="Bold" HorizontalAlignment="Left" Margin="3,0,0,0"/>
+                    <TextBox x:Name="TxtBox_Username" TextWrapping="Wrap" Width="150" HorizontalAlignment="Left" Margin="2,0,0,0" Height="22" FontSize="14"/>
+                    <Label x:Name="LblPassword" Content="Password" FontFamily="Leelawadee" Foreground="White" FontWeight="Bold" HorizontalAlignment="Left" Margin="3,0,0,0"/>
+                    <PasswordBox x:Name="PasswordBox_Password" Width="150" Height="22" HorizontalAlignment="Left" Margin="2,0,0,0"/>
+                    <Button x:Name="Btn_Login" Content="Login" Margin="2,10,0,0" HorizontalAlignment="Left" Width="100" Height="30" FontFamily="Leelawadee" FontSize="16"/>
+                </StackPanel>
+            </Border>
+            <Ellipse x:Name="Ellipse_NASLoginStatusLight" Stroke="Black" Margin="985,20,0,0" Width="20" Height="20" Fill="#FFF90909" VerticalAlignment="Top" HorizontalAlignment="Left">
+                <Ellipse.Effect>
+                    <BlurEffect/>
+                </Ellipse.Effect>
+            </Ellipse>
+        </Grid>
+        <Label x:Name="Lbl_Copyright" Content="Created By: Brandon Swarek" FontFamily="Leelawadee" FontSize="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="5,5,3,5" Width="266" Foreground="White"/>
+        <Grid x:Name="Tools_Grid" Margin="0,100,0,0" Visibility="Collapsed">
+            <Image x:Name="Img_Ken" Width="500" Height="500" HorizontalAlignment="Center" VerticalAlignment="Top" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken2.png?raw=true"/>
+        </Grid>
+    </Grid>
 </Window>
 "@
 
@@ -173,11 +192,11 @@ $Main = Load-VisualStudioXaml -RawXaml $mainXML
 
 # --- Function from Connect-NAS.ps1 ---
 function Connect-NAS {
-    $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Yellow
+    $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Yellow
     [System.Windows.Forms.Application]::DoEvents()
 
-    $User = $TxtBoxUsernameNAS.Text
-    $Pass = $PswrdBoxNAS.Password
+    $User = $TxtBox_Username.Text
+    $Pass = $PasswordBox_Password.Password
     $NASPath = "\\10.24.2.5\Clients"
 
     try {
@@ -187,16 +206,16 @@ function Connect-NAS {
         net use $NASPath $Pass /user:$User /persistent:yes /y > $null
         
         $global:NAS_Clients_Folder = $NASPath
-        $ClientListBox.Items.Clear()
+        $ListBox_Clients.Items.Clear()
         $Folders = Get-ChildItem -Path $global:NAS_Clients_Folder -Directory -ErrorAction SilentlyContinue | Sort-Object Name
         foreach ($Folder in $Folders) {
-            $ClientListBox.Items.Add($Folder.Name)
+            $ListBox_Clients.Items.Add($Folder.Name)
         }
-        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
+        $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
     }
     catch {
         # This handles the failure WITHOUT opening a new window
-        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
+        $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
         Write-Warning "Connection failed: $($_.Exception.Message)"
     }
 }
@@ -270,7 +289,7 @@ function GUI-Startup {
         # Step 2: Ping succeeded, now check the specific folder path
         if (Test-Path -Path "FileSystem::$NASPath" -PathType Container -ErrorAction SilentlyContinue) {
             $global:NAS_Clients_Folder = $NASPath
-            $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
+            $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
             
             $ClientListBox.Items.Clear()
             $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue
@@ -281,13 +300,13 @@ function GUI-Startup {
         }
         else {
             # IP is up, but the share or folder is missing/perm denied
-            $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
+            $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
             Write-Host "NAS IP reachable, but Path not found!" -ForegroundColor Yellow
         }
     }
     else {
         # Step 3: Ping failed - This is the "Fail Fast" exit
-        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
+        $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
         Write-Host "NAS Not Connected! (Ping Failed)" -ForegroundColor Red
     }
 }
@@ -423,13 +442,13 @@ function Refresh-Clients {
 
     try {
         # 2. Clear existing items
-        $ClientListBox.Items.Clear()
+        $ListBox_Clients.Items.Clear()
         
         # 3. Re-populate from the global NAS path
         $Folders = Get-ChildItem -Path $global:NAS_Clients_Folder -Directory -ErrorAction Stop | Sort-Object Name
         
         foreach ($Folder in $Folders) {
-            $ClientListBox.Items.Add($Folder.Name)
+            $ListBox_Clients.Items.Add($Folder.Name)
         }
     }
     catch {
@@ -496,9 +515,9 @@ function Select-ManualFolder {
         
         $SelectedFolderName = Split-Path $global:SelectedClient -Leaf
 
-        $ClientListBox.Items.Clear()
-        $ClientListBox.Items.Add($SelectedFolderName)
-        $ClientListBox.SelectedIndex = 0
+        $ListBox_Clients.Items.Clear()
+        $ListBox_Clients.Items.Add($SelectedFolderName)
+        $ListBox_Clients.SelectedIndex = 0
 
         Write-Host "Manual Path Selected: $global:SelectedClient" -ForegroundColor Green
     }
@@ -641,8 +660,8 @@ function Set-CustomPowerOptions {
 
 # --- Function from Set-SelectedClient.ps1 ---
 function Set-SelectedClient {
-    if ($ClientListBox.SelectedItem -ne $null) {
-        $SelectedItemText = $ClientListBox.SelectedItem.ToString()
+    if ($ListBox_Clients.SelectedItem -ne $null) {
+        $SelectedItemText = $ListBox_Clients.SelectedItem.ToString()
 
         # If the current global path already ends with the selected name, 
         # it means we did a manual select. DON'T overwrite the full path.
@@ -812,10 +831,10 @@ function Update-Status {
     # Change the color of the StatusLight Ellipse
     if ($State -eq "Busy") {
         # Use Red for Busy
-        $StatusLight.Fill = [System.Windows.Media.Brushes]::Red
+        $Ellipse_StatusLight.Fill = [System.Windows.Media.Brushes]::Red
     } else {
         # Use LimeGreen for Ready
-        $StatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
+        $Ellipse_StatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
     }
 
     # Keeps the UI responsive during the color change
@@ -826,211 +845,207 @@ function Update-Status {
 # --- UI ELEMENT MAPPING ---
 
 # Grids
-$Main_GUI_Grid = $Main.FindName("Main_GUI_Grid")
+$Main_Grid       = $Main.FindName("Main_Grid")
 $Tools_Grid      = $Main.FindName("Tools_Grid")
 $Deployment_Grid = $Main.FindName("Deployment_Grid")
 
 # Menu Bar
-$BtnTools_Menu      = $Main.FindName("BtnTools_Menu")
-$BtnDeployment_Menu = $Main.FindName("BtnDeployment_Menu")
-$BtnRestart_Menu    = $Main.FindName("BtnRestart_Menu")
-$BtnClose           = $Main.FindName("BtnClose")
-$BtnMin             = $Main.FindName("BtnMin")
+$Btn_Tools      = $Main.FindName("Btn_Tools")
+$Btn_Deployment = $Main.FindName("Btn_Deployment")
+$Btn_RestartPC  = $Main.FindName("Btn_RestartPC")
+$Btn_Close      = $Main.FindName("Btn_Close")
+$Btn_Minimize   = $Main.FindName("Btn_Minimize")
 
 # Status Indicators
-$StatusLight         = $Main.FindName("StatusLight")
-$NASLoginStatusLight = $Main.FindName("NASLoginStatusLight")
+$Ellipse_StatusLight         = $Main.FindName("Ellipse_StatusLight")
+$Ellipse_NASLoginStatusLight = $Main.FindName("Ellipse_NASLoginStatusLight")
 
 # Actions Column
-$BtnRunAll                      = $Main.FindName("BtnRunAll")
-$BtnRepairWinget                = $Main.FindName("BtnRepairWinget")
-$BtnInstallOffice               = $Main.FindName("BtnInstallOffice")
-$BtnInstallLocalApps            = $Main.FindName("BtnInstallLocalApps")
-$BtnInstallDefaultWingetApps    = $Main.FindName("BtnInstallDefaultWingetApps")
-$BtnInstallCustomWingetApps     = $Main.FindName("BtnInstallCustomWingetApps")
-$BtnUninstallBloat              = $Main.FindName("BtnUninstallBloat")
-$BtnUninstallLanguagePacks      = $Main.FindName("BtnUninstallLanguagePacks")
-$BtnSetPowerOptions             = $Main.FindName("BtnSetPowerOptions")
-$BtnSetTimeZone                 = $Main.FindName("BtnSetTimeZone")
-$BtnCopyShortcuts               = $Main.FindName("BtnCopyShortcuts") 
+$Btn_RunAll                   = $Main.FindName("Btn_RunAll")
+$Btn_RepairWinget             = $Main.FindName("Btn_RepairWinget")
+$Btn_InstallO365              = $Main.FindName("Btn_InstallO365")
+$Btn_InstallLocalApps         = $Main.FindName("Btn_InstallLocalApps")
+$Btn_InstallDefaultWinget     = $Main.FindName("Btn_InstallDefaultWinget")
+$Btn_InstallCustomWinget      = $Main.FindName("Btn_InstallCustomWinget")
+$Btn_UninstallBloat           = $Main.FindName("Btn_UninstallBloat")
+$Btn_UninstallLanguagePacks   = $Main.FindName("Btn_UninstallLanguagePacks")
+$Btn_SetPowerOptions          = $Main.FindName("Btn_SetPowerOptions")
+$Btn_SetTimezone              = $Main.FindName("Btn_SetTimezone")
+$Btn_CopyShortcuts            = $Main.FindName("Btn_CopyShortcuts") 
 
 # Client Selection Column
-$ClientListBox          = $Main.FindName("ClientListBox")
-$BtnClientChooser       = $Main.FindName("BtnClientChooser")
-$BtnManualClientSelect  = $Main.FindName("BtnManualClientSelect")
+$ListBox_Clients      = $Main.FindName("ListBox_Clients")
+$Btn_ReloadClients    = $Main.FindName("Btn_ReloadClients")
+$Btn_ManualSelection  = $Main.FindName("Btn_ManualSelection")
 
-# Apps Column
-$BtnNVIDIAApp        = $Main.FindName("BtnNVIDIAApp")
-$BtnAMDApp           = $Main.FindName("BtnAMDApp")
-$BtnInstallDellApp   = $Main.FindName("BtnInstallDellApp")
-$BtnInstalLenovoApp  = $Main.FindName("BtnInstalLenovoApp")
-$BtnInstallHPApp     = $Main.FindName("BtnInstallHPApp")
+# Apps Column (Drivers)
+$Btn_InstallNVIDIAApp = $Main.FindName("Btn_InstallNVIDIAApp")
+$Btn_InstallAMDApp    = $Main.FindName("Btn_InstallAMDApp")
+$Btn_InstallDellApp   = $Main.FindName("Btn_InstallDellApp")
+$Btn_InstallLenovoApp = $Main.FindName("Btn_InstallLenovoApp")
+$Btn_InstallHPApp     = $Main.FindName("Btn_InstallHPApp")
 
 # NAS Login Section
-$BtnNASLogin        = $Main.FindName("BtnNASLogin")
-$TxtBoxUsernameNAS  = $Main.FindName("TxtBoxUsernameNAS")
-$PswrdBoxNAS        = $Main.FindName("PswrdBoxNAS")
+$Btn_Login             = $Main.FindName("Btn_Login")
+$TxtBox_Username       = $Main.FindName("TxtBox_Username")
+$PasswordBox_Password  = $Main.FindName("PasswordBox_Password")
 
 
 # --- ACTIONS COLUMN CLICK EVENTS ---
-$BtnRunAll.Add_Click({
+$Btn_RunAll.Add_Click({
     Update-Status -State "Busy"
-    Copy-Shortcuts
-    Repair-Winget
-    Install-ClientCustomLocalApps
-    Install-O365
-    Install-DefaultWingetApps
-    Install-ClientCustomWingetApps
-    Uninstall-Bloat
-    Uninstall-OfficeLanguagePacks
-    Set-CustomPowerOptions
-    Set-ComputerTimeZone
+    Copy-Shortcuts; Repair-Winget; Install-ClientCustomLocalApps; Install-O365
+    Install-DefaultWingetApps; Install-ClientCustomWingetApps; Uninstall-Bloat
+    Uninstall-OfficeLanguagePacks; Set-CustomPowerOptions; Set-ComputerTimeZone
     Update-Status -State "Ready"
 })
 
-$BtnRepairWinget.Add_Click({
+$Btn_RepairWinget.Add_Click({
     Update-Status -State "Busy"
     Repair-Winget
     Update-Status -State "Ready"
 })
 
-$BtnInstallOffice.Add_Click({
+$Btn_InstallO365.Add_Click({
     Update-Status -State "Busy"
     Install-O365
     Update-Status -State "Ready"
 })
 
-$BtnInstallLocalApps.Add_Click({
+$Btn_InstallLocalApps.Add_Click({
     Update-Status -State "Busy"
     Install-ClientCustomLocalApps
     Update-Status -State "Ready"
 })
 
-$BtnInstallDefaultWingetApps.Add_Click({
+$Btn_InstallDefaultWinget.Add_Click({
     Update-Status -State "Busy"
     Install-DefaultWingetApps
     Update-Status -State "Ready"
 })
 
-$BtnInstallCustomWingetApps.Add_Click({
+$Btn_InstallCustomWinget.Add_Click({
     Update-Status -State "Busy"
     Install-ClientCustomWingetApps
     Update-Status -State "Ready"
 })
 
-$BtnUninstallBloat.Add_Click({
+$Btn_UninstallBloat.Add_Click({
     Update-Status -State "Busy"
     Uninstall-Bloat
     Update-Status -State "Ready"
 })
 
-$BtnUninstallLanguagePacks.Add_Click({
+$Btn_UninstallLanguagePacks.Add_Click({
     Update-Status -State "Busy"
     Uninstall-OfficeLanguagePacks
     Update-Status -State "Ready"
 })
 
-$BtnSetPowerOptions.Add_Click({
+$Btn_SetPowerOptions.Add_Click({
     Update-Status -State "Busy"
     Set-CustomPowerOptions
     Update-Status -State "Ready"
 })
 
-$BtnSetTimeZone.Add_Click({
+$Btn_SetTimezone.Add_Click({
     Update-Status -State "Busy"
     Set-ComputerTimeZone
     Update-Status -State "Ready"
 })
 
-$BtnCopyShortcuts.Add_Click({
+$Btn_CopyShortcuts.Add_Click({
     Update-Status -State "Busy"
     Copy-Shortcuts
     Update-Status -State "Ready"
 })
 
-$BtnNASLogin.Add_Click({
+$Btn_Login.Add_Click({
     Update-Status -State "Busy"
+    # Note: Use $TxtBox_Username.Text and $PasswordBox_Password.Password in your Connect-NAS function
     Connect-NAS
     Update-Status -State "Ready"
 })
 
 # --- CLIENT SELECT COLUMN CLICK EVENTS ---
-$BtnClientChooser.Add_Click({
+$Btn_ReloadClients.Add_Click({
     Update-Status -State "Busy"
     Refresh-Clients
     Update-Status -State "Ready"
 })
 
-$BtnManualClientSelect.Add_Click({
+$Btn_ManualSelection.Add_Click({
     Update-Status -State "Busy"
     Select-ManualFolder
     Update-Status -State "Ready"
 })
 
-$ClientListBox.Add_MouseDoubleClick({
+$ListBox_Clients.Add_MouseDoubleClick({
     Set-SelectedClient
 })
 
-# --- APPS COLUMN CLICK EVENTS ---
-$BtnNVIDIAApp.Add_Click({
+# --- APPS COLUMN (DRIVERS) CLICK EVENTS ---
+$Btn_InstallNVIDIAApp.Add_Click({
     Update-Status -State "Busy"
     Start-Process "https://www.nvidia.com/en-us/software/nvidia-app-enterprise/"
     Update-Status -State "Ready"
 })
 
-$BtnAMDApp.Add_Click({
+$Btn_InstallAMDApp.Add_Click({
     Update-Status -State "Busy"
     Start-Process "https://www.amd.com/en/support/download/drivers.html"
     Update-Status -State "Ready"
 })
 
-$BtnInstallDellApp.Add_Click({
+$Btn_InstallDellApp.Add_Click({
     Update-Status -State "Busy"
     Install-PassedWingetApp "Dell.CommandUpdate"
     Update-Status -State "Ready"
 })
 
-$BtnInstalLenovoApp.Add_Click({
+$Btn_InstallLenovoApp.Add_Click({
     Update-Status -State "Busy"
     Install-PassedWingetApp "9NR5B8GVVM13"
     Update-Status -State "Ready"
 })
 
-$BtnInstallHPApp.Add_Click({
+$Btn_InstallHPApp.Add_Click({
     Update-Status -State "Busy"
     Start-Process "https://support.hp.com/us-en/help/hp-support-assistant"
     Update-Status -State "Ready"
 })
 
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---
-$BtnTools_Menu.Add_Click({
-    Switch-Tabs -Target "Tools"
+$Btn_Tools.Add_Click({
+    $Deployment_Grid.Visibility = "Collapsed"
+    $Tools_Grid.Visibility = "Visible"
 })
 
-$BtnDeployment_Menu.Add_Click({
-    Switch-Tabs -Target "Deployment"
+$Btn_Deployment.Add_Click({
+    $Tools_Grid.Visibility = "Collapsed"
+    $Deployment_Grid.Visibility = "Visible"
 })
 
 # --- TITLE BAR BUTTON CLICK EVENTS ---
-$BtnClose.Add_Click({
+$Btn_Close.Add_Click({
     $Main.Close()
 })
 
-$BtnMin.Add_Click({
+$Btn_Minimize.Add_Click({
     $Main.WindowState = [System.Windows.WindowState]::Minimized
 })
 
-$BtnRestart_Menu.Add_Click({
+$Btn_RestartPC.Add_Click({
     shutdown.exe /r /f /t 0
 })
 
 # --- GRID EVENTS ---
-$Main_GUI_Grid.Add_MouseLeftButtonDown({
+$Main_Grid.Add_MouseLeftButtonDown({
     $Main.DragMove()
 })
 
 # 3. OPEN THE WINDOW (Last Step)
-$Main_GUI_Grid.Add_Loaded({
+$Main_Grid.Add_Loaded({
     GUI-Startup
 })
 

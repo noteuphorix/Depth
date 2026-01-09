@@ -11,9 +11,9 @@ function Select-ManualFolder {
         
         $SelectedFolderName = Split-Path $global:SelectedClient -Leaf
 
-        $ClientListBox.Items.Clear()
-        $ClientListBox.Items.Add($SelectedFolderName)
-        $ClientListBox.SelectedIndex = 0
+        $ListBox_Clients.Items.Clear()
+        $ListBox_Clients.Items.Add($SelectedFolderName)
+        $ListBox_Clients.SelectedIndex = 0
 
         Write-Host "Manual Path Selected: $global:SelectedClient" -ForegroundColor Green
     }

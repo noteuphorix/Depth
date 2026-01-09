@@ -10,7 +10,7 @@ function GUI-Startup {
         # Step 2: Ping succeeded, now check the specific folder path
         if (Test-Path -Path "FileSystem::$NASPath" -PathType Container -ErrorAction SilentlyContinue) {
             $global:NAS_Clients_Folder = $NASPath
-            $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
+            $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
             
             $ClientListBox.Items.Clear()
             $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue
@@ -21,13 +21,13 @@ function GUI-Startup {
         }
         else {
             # IP is up, but the share or folder is missing/perm denied
-            $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
+            $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
             Write-Host "NAS IP reachable, but Path not found!" -ForegroundColor Yellow
         }
     }
     else {
         # Step 3: Ping failed - This is the "Fail Fast" exit
-        $NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
+        $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
         Write-Host "NAS Not Connected! (Ping Failed)" -ForegroundColor Red
     }
 }

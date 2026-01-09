@@ -1,6 +1,6 @@
 function Set-SelectedClient {
-    if ($ClientListBox.SelectedItem -ne $null) {
-        $SelectedItemText = $ClientListBox.SelectedItem.ToString()
+    if ($ListBox_Clients.SelectedItem -ne $null) {
+        $SelectedItemText = $ListBox_Clients.SelectedItem.ToString()
 
         # If the current global path already ends with the selected name, 
         # it means we did a manual select. DON'T overwrite the full path.
