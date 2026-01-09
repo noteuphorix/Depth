@@ -21,18 +21,22 @@ function Uninstall-OfficeLanguagePacks {
 
     Write-Host "Uninstalling: $($LangsToRemove -join ', ')" -ForegroundColor Yellow
 
-    # 3. Ensure ODT exists
-    $ODTPath = "$env:TEMP\setup.exe"
+    # --- SANDBOX SETUP ---
+    $WorkDir = "$env:TEMP\officedeployment"
+    if (-not (Test-Path $WorkDir)) { New-Item -Path $WorkDir -ItemType Directory -Force | Out-Null }
+    
+    $ODTPath = "$WorkDir\setup.exe"
+    $XmlPath = "$WorkDir\RemoveLangs.xml"
+
+    # 3. Ensure ODT exists in our private folder
     if (-not (Test-Path $ODTPath)) {
-        Invoke-WebRequest -Uri "https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_17126-20132.exe" -OutFile "$env:TEMP\odt.exe"
-        Start-Process -FilePath "$env:TEMP\odt.exe" -ArgumentList "/extract:$env:TEMP /quiet" -Wait
+        Invoke-WebRequest -Uri "https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_17126-20132.exe" -OutFile "$WorkDir\odt.exe"
+        Start-Process -FilePath "$WorkDir\odt.exe" -ArgumentList "/extract:`"$WorkDir`" /quiet" -Wait
     }
 
-    # 4. Build and Run XML with all 3 Product IDs
-    $XmlPath = "$env:TEMP\RemoveLangs.xml"
+    # 4. Build XML
     $LangNodes = ($LangsToRemove | ForEach-Object { "      <Language ID=""$_"" />" }) -join "`n"
 
-    # We repeat the LangNodes for each potential Product ID
     @"
 <Configuration>
   <Remove>
@@ -51,13 +55,16 @@ $LangNodes
 </Configuration>
 "@ | Out-File -FilePath $XmlPath -Encoding utf8 -Force
 
+    # 5. Run and Cleanup
     $Process = Start-Process -FilePath $ODTPath -ArgumentList "/configure `"$XmlPath`"" -Wait -PassThru -NoNewWindow
 
-    # 5. Final Status & Cleanup
-    if ($Process.ExitCode -eq 0) {
+    # Null-check the process to prevent a fatal crash if it failed to launch
+    if ($null -ne $Process -and $Process.ExitCode -eq 0) {
         Write-Host "Successfully removed extra language packs." -ForegroundColor Green
-        Remove-Item $XmlPath, $ODTPath -ErrorAction SilentlyContinue
+        # Wipe the whole subfolder clean
+        Remove-Item -Path $WorkDir -Recurse -Force -ErrorAction SilentlyContinue
     } else {
-        Write-Host "Uninstall failed with Exit Code: $($Process.ExitCode)" -ForegroundColor Red
+        $ExitCode = if ($null -ne $Process) { $Process.ExitCode } else { "Failed to Start" }
+        Write-Host "Uninstall failed. Exit Code: $ExitCode" -ForegroundColor Red
     }
 }
