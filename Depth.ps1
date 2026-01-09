@@ -181,7 +181,7 @@ $mainXML = @"
 # 1. Show Splashscreen
 $Splash = Load-VisualStudioXaml -RawXaml $splashXML
 $Splash.Show()
-Start-Sleep -Seconds 1
+Start-Sleep -Seconds 3
 $Splash.Close()
 
 # 2. Load main GUI object
