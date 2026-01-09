@@ -730,6 +730,7 @@ function Uninstall-Bloat {
     $OldProgress = $ProgressPreference
     $ProgressPreference = 'SilentlyContinue'
 
+
     $Bloatware = @(
         "Microsoft.Xbox.TCUI", "Microsoft.XboxGameOverlay", "Microsoft.XboxGamingOverlay",
         "Microsoft.XboxIdentityProvider", "Microsoft.XboxSpeechToTextOverlay", "Microsoft.GamingApp",

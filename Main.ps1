@@ -192,6 +192,7 @@ $Main = Load-VisualStudioXaml -RawXaml $mainXML
 
 # --- UI ELEMENT MAPPING ---
 
+
 # Grids
 $Main_Grid       = $Main.FindName("Main_Grid")
 $Tools_Grid      = $Main.FindName("Tools_Grid")
@@ -399,4 +400,4 @@ $Main_Grid.Add_Loaded({
 
 $Tools_Grid.Visibility = "Collapsed"
 $Main.ShowDialog() | Out-Null
-Write-Host "Goodbye!" -ForegroundColor Cyan
+Write-Host "Goodbye!!!" -ForegroundColor Cyan
