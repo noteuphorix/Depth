@@ -957,7 +957,7 @@ $PasswordBox_Password  = $Main.FindName("PasswordBox_Password")
 # --- ACTIONS COLUMN CLICK EVENTS ---
 $Btn_RunAll.Add_Click({
     Update-Status -State "Busy"
-    Start-PowerShellLogging; Copy-Shortcuts; Repair-Winget; Install-ClientCustomLocalApps; Install-O365
+    Copy-Shortcuts; Repair-Winget; Install-ClientCustomLocalApps; Install-O365
     Install-DefaultWingetApps; Install-ClientCustomWingetApps; Uninstall-Bloat
     Uninstall-OfficeLanguagePacks; Set-CustomPowerOptions; Set-ComputerTimeZone
     Update-Status -State "Ready"
