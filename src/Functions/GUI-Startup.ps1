@@ -12,10 +12,10 @@ function GUI-Startup {
             $global:NAS_Clients_Folder = $NASPath
             $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
             
-            $ClientListBox.Items.Clear()
+            $ListBox_Clients.Items.Clear()
             $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue
             foreach ($Folder in $Folders) { 
-                [void]$ClientListBox.Items.Add($Folder.Name) 
+                [void]$ListBox_Clients.Items.Add($Folder.Name) 
             }
             Write-Host "NAS Connected and Clients Loaded." -ForegroundColor Green
         }

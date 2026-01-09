@@ -93,7 +93,7 @@ $mainXML = @"
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid x:Name="Main_Grid" Background="Transparent">
+    <Grid x:Name="Main_Grid">
         <Border x:Name="Main_Border" BorderBrush="#FF2B3842" BorderThickness="5,5,5,5"/>
         <Grid x:Name="Title_Grid" Margin="0,0,0,426" VerticalAlignment="Top" Height="100">
             <Ellipse x:Name="Ellipse_StatusLight" Height="22" Stroke="Black" Width="22" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,35,96,0" Fill="#FF0FFF1E">
