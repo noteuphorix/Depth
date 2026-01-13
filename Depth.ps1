@@ -103,8 +103,8 @@ $mainXML = @"
             </Ellipse>
             <StackPanel x:Name="Tabs_StackPanel" HorizontalAlignment="Left" Height="60" Margin="20,0,0,0" VerticalAlignment="Center" Width="945" Orientation="Horizontal">
                 <Button x:Name="Btn_Deployment" Content="Deployment" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White"/>
-                <Button x:Name="Btn_Tools" Content="Tools" Style="{StaticResource CleanButtons}" Height="36" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White"/>
-                <Button x:Name="Btn_RestartPC" Content="Restart PC" Style="{StaticResource CleanButtons}" Height="36" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White" HorizontalAlignment="Left" Margin="5,0,5,0"/>
+                <Button x:Name="Btn_Tools" Content="Tools" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White"/>
+                <Button x:Name="Btn_RestartPC" Content="Restart PC" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White" HorizontalAlignment="Left" Margin="5,0,5,0"/>
             </StackPanel>
             <StackPanel x:Name="GUIControl_StackPanel" Margin="0,20,10,0" Height="60" Orientation="Horizontal" FlowDirection="RightToLeft" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <Button x:Name="Btn_Close" Content="X" Height="28" Width="35" Background="{x:Null}" FontFamily="MS Reference Sans Serif" FontSize="20" Foreground="White" BorderBrush="Transparent" Padding="0,0,0,0" UseLayoutRounding="False"/>
@@ -139,7 +139,9 @@ $mainXML = @"
             <Border x:Name="Misc_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="436,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <StackPanel x:Name="Misc_StackPanel" Margin="6,11,10,6">
                     <Label x:Name="Lbl_Misc" Content="Misc" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
-                </StackPanel>
+					<Button x:Name="Btn_ConfigUAC" Content="Set UAC" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
+					<Button x:Name="Btn_ConfigTaskbar" Content="Configure Taskbar" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
+				</StackPanel>
             </Border>
             <Border x:Name="Apps_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="646,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <StackPanel x:Name="Apps_StackPanel" Margin="6,11,10,6">
@@ -149,7 +151,8 @@ $mainXML = @"
                     <Button x:Name="Btn_InstallDellApp" Content="Dell App" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
                     <Button x:Name="Btn_InstallLenovoApp" Content="Lenovo App" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
                     <Button x:Name="Btn_InstallHPApp" Content="HP App" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
-                </StackPanel>
+					<Button x:Name="Btn_InstallSnapdragonApp" Content="Snapdragon App" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+				</StackPanel>
             </Border>
             <Border x:Name="NAS_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="856,0,0,0" Width="200" Height="197" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <StackPanel x:Name="NAS_StackPanel" Margin="6,11,10,6">
@@ -684,6 +687,53 @@ function Set-SelectedClient {
     }
 }
 
+# --- Function from Set-Taskbar.ps1 ---
+function Set-Taskbar {
+    Write-Host "Configuring Taskbar (Alignment: Left | Search: Disabled | Widgets: Disabled)..." -ForegroundColor Cyan
+
+    $AdvancedPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+    $SearchPath   = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search"
+
+    # Define our targets: [Path, Name, Value, Label]
+    $Settings = @(
+        @($AdvancedPath, "TaskbarAl", 0, "Alignment: Left"),
+        @($AdvancedPath, "TaskbarDa", 0, "Widgets: Disabled"),
+        @($SearchPath, "SearchboxTaskbarMode", 0, "Search: Disabled")
+    )
+
+    foreach ($Row in $Settings) {
+        $Path  = $Row[0]
+        $Name  = $Row[1]
+        $Value = $Row[2]
+        $Label = $Row[3]
+
+        try {
+            # Create path if it doesn't exist (mostly for the Search key on fresh profiles)
+            if (-not (Test-Path $Path)) { New-Item -Path $Path -Force | Out-Null }
+
+            Set-ItemProperty -Path $Path -Name $Name -Value $Value -ErrorAction Stop
+            Write-Host "  [OK] $Label" -ForegroundColor Gray
+        }
+        catch {
+            Write-Warning "  [FAIL] Could not set $Label. Error: $($_.Exception.Message)"
+        }
+    }
+
+    Write-Host "`nTaskbar settings applied. A restart of Explorer may be required." -ForegroundColor Green
+}
+
+# --- Function from Set-UAC.ps1 ---
+function Set-UAC {
+    $UACPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+    
+    # 0 = Never Notify
+    # 1 = Prompt on Secure Desktop (the dimming effect)
+    Set-ItemProperty -Path $UACPath -Name "ConsentPromptBehaviorAdmin" -Value 5
+    Set-ItemProperty -Path $UACPath -Name "PromptOnSecureDesktop" -Value 0
+    
+    Write-Host "UAC configured." -ForegroundColor Green
+}
+
 # --- Function from Start-PowerShellLogging.ps1 ---
 function Start-PowerShellLogging {
     <#
@@ -943,12 +993,17 @@ $ListBox_Clients      = $Main.FindName("ListBox_Clients")
 $Btn_ReloadClients    = $Main.FindName("Btn_ReloadClients")
 $Btn_ManualSelection  = $Main.FindName("Btn_ManualSelection")
 
+# Misc Column
+$Btn_ConfigUAC     = $Main.FindName("Btn_ConfigUAC")
+$Btn_ConfigTaskbar = $Main.FindName("Btn_ConfigTaskbar")
+
 # Apps Column (Drivers)
-$Btn_InstallNVIDIAApp = $Main.FindName("Btn_InstallNVIDIAApp")
-$Btn_InstallAMDApp    = $Main.FindName("Btn_InstallAMDApp")
-$Btn_InstallDellApp   = $Main.FindName("Btn_InstallDellApp")
-$Btn_InstallLenovoApp = $Main.FindName("Btn_InstallLenovoApp")
-$Btn_InstallHPApp     = $Main.FindName("Btn_InstallHPApp")
+$Btn_InstallNVIDIAApp     = $Main.FindName("Btn_InstallNVIDIAApp")
+$Btn_InstallAMDApp        = $Main.FindName("Btn_InstallAMDApp")
+$Btn_InstallDellApp       = $Main.FindName("Btn_InstallDellApp")
+$Btn_InstallLenovoApp     = $Main.FindName("Btn_InstallLenovoApp")
+$Btn_InstallHPApp         = $Main.FindName("Btn_InstallHPApp")
+$Btn_InstallSnapdragonApp = $Main.FindName("Btn_InstallSnapdragonApp")
 
 # NAS Login Section
 $Btn_Login             = $Main.FindName("Btn_Login")
@@ -1048,6 +1103,19 @@ $ListBox_Clients.Add_MouseDoubleClick({
     Set-SelectedClient
 })
 
+# --- MISC COLUMN ---
+$Btn_ConfigUAC.Add_Click({
+    Update-Status -State "Busy"
+    Set-UAC
+    Update-Status -State "Ready"
+})
+
+$Btn_ConfigTaskbar.Add_Click({
+    Update-Status -State "Busy"
+    Set-Taskbar
+    Update-Status -State "Ready"
+})
+
 # --- APPS COLUMN (DRIVERS) CLICK EVENTS ---
 $Btn_InstallNVIDIAApp.Add_Click({
     Update-Status -State "Busy"
@@ -1076,6 +1144,12 @@ $Btn_InstallLenovoApp.Add_Click({
 $Btn_InstallHPApp.Add_Click({
     Update-Status -State "Busy"
     Start-Process "https://support.hp.com/us-en/help/hp-support-assistant"
+    Update-Status -State "Ready"
+})
+
+$Btn_InstallSnapdragonApp.Add_Click({
+    Update-Status -State "Busy"
+    Start-Process "https://softwarecenter.qualcomm.com/api/download/software/tools/SnapdragonControlPanel/Windows/ARM64/2025.3.0.0/Snapdragon_Control_Panel_2025.3.0.0.zip"
     Update-Status -State "Ready"
 })
 
