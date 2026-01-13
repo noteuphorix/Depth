@@ -715,18 +715,17 @@ function Set-Taskbar {
     foreach ($Row in $Settings) {
         $Path, $Name, $Value, $Label = $Row
         try {
-            # Direct attempt to set property
             Set-ItemProperty -Path $Path -Name $Name -Value $Value -ErrorAction Stop
-            Write-Host "  [OK] $Label set." -ForegroundColor Gray
+            Write-Host "  [OK] ${Label} set." -ForegroundColor Gray
         } 
         catch [System.Management.Automation.ItemNotFoundException] {
-            Write-Warning "  [SKIP] $Label: Registry path does not exist."
+            Write-Warning "  [SKIP] ${Label} - Registry path does not exist."
         }
         catch [System.Security.SecurityException] {
-            Write-Warning "  [FAIL] $Label: Security/Permission exception."
+            Write-Warning "  [FAIL] ${Label} - Security/Permission exception."
         }
         catch {
-            Write-Warning "  [FAIL] $Label: Unhandled exception."
+            Write-Warning "  [FAIL] ${Label} - Unhandled exception."
         }
     }
 
