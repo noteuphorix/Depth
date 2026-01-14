@@ -141,6 +141,7 @@ $mainXML = @"
                     <Label x:Name="Lbl_Misc" Content="Misc" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_ConfigUAC" Content="Set UAC" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
 					<Button x:Name="Btn_ConfigTaskbar" Content="Configure Taskbar" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
+					<Button x:Name="Btn_UnlockWinUpdate" Content="Unlock Win Updates" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
 				</StackPanel>
             </Border>
             <Border x:Name="Apps_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="646,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -246,6 +247,7 @@ $Btn_InstallSnapdragonApp = $Main.FindName("Btn_InstallSnapdragonApp")
 $Btn_Login             = $Main.FindName("Btn_Login")
 $TxtBox_Username       = $Main.FindName("TxtBox_Username")
 $PasswordBox_Password  = $Main.FindName("PasswordBox_Password")
+$Btn_UnlockWinUpdate   = $Main.FindName("Btn_UnlockWinUpdate")
 
 
 # --- ACTIONS COLUMN CLICK EVENTS ---
@@ -350,6 +352,12 @@ $Btn_ConfigUAC.Add_Click({
 $Btn_ConfigTaskbar.Add_Click({
     Update-Status -State "Busy"
     Set-Taskbar
+    Update-Status -State "Ready"
+})
+
+$Btn_UnlockWinUpdate.Add_Click({
+    Update-Status -State "Busy"
+    Unlock-WinUpdates
     Update-Status -State "Ready"
 })
 
