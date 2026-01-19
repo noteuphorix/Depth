@@ -1184,7 +1184,7 @@ $Btn_UnlockWinUpdate.Add_Click({
 # --- APPS COLUMN (DRIVERS) CLICK EVENTS ---
 $Btn_InstallNVIDIAApp.Add_Click({
     Update-Status -State "Busy"
-    Start-Process "https://www.nvidia.com/en-us/software/nvidia-app-enterprise/"
+    Install-PassedWingetApp "TechPowerUp.NVCleanstall"
     Update-Status -State "Ready"
 })
 
