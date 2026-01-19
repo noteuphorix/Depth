@@ -66,7 +66,7 @@ $mainXML = @"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DepthWPFFramework_Revamped"
         mc:Ignorable="d"
-        Title="Depth" Height="650" Width="1100" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip" WindowStyle="None" AllowsTransparency="True" Background="#FF262D2F" MinWidth="1100" MinHeight="650">
+        Title="Depth" Height="650" Width="1100" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" WindowStyle="None" AllowsTransparency="True" Background="#FF262D2F" MinWidth="1100" MinHeight="650" Topmost="True">
     <Window.Resources>
         <Style x:Key="CleanButtons" TargetType="Button">
             <Setter Property="Margin" Value="5,0,5,0"/>
@@ -177,6 +177,7 @@ $mainXML = @"
         <Label x:Name="Lbl_Copyright" Content="Created By: Brandon Swarek" FontFamily="Leelawadee" FontSize="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="5,5,3,5" Width="266" Foreground="White"/>
     </Grid>
 </Window>
+
 "@
 
 # --- GLOBAL VARIABLES ---
