@@ -66,7 +66,7 @@ $mainXML = @"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DepthWPFFramework_Revamped"
         mc:Ignorable="d"
-        Title="Depth" Height="650" Width="1100" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" WindowStyle="None" AllowsTransparency="True" Background="#FF262D2F" MinWidth="1100" MinHeight="650" Topmost="True">
+        Title="Depth" Height="650" Width="1100" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" WindowStyle="None" AllowsTransparency="True" Background="#FF262D2F" MinWidth="1100" MinHeight="650">
     <Window.Resources>
         <Style x:Key="CleanButtons" TargetType="Button">
             <Setter Property="Margin" Value="5,0,5,0"/>
