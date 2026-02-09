@@ -8,7 +8,6 @@ function Install-PassedWingetApp {
     }
 
     # 2. Proceed to install the requested AppID (including Dell apps)
-    Write-Host $AppID
     Write-Host "Installing package: $AppID..." -ForegroundColor Green
     Start-Process winget -ArgumentList "install --id $AppID --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
 }
