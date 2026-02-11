@@ -1,6 +1,7 @@
 function GUI-Startup {
     $NASIP = "10.24.2.5"
     $NASPath = "\\$NASIP\Clients"
+    Sync-ClientLabel
     
     Write-Host "Checking NAS connectivity..." -ForegroundColor Cyan
 

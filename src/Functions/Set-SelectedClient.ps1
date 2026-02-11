@@ -13,4 +13,5 @@ function Set-SelectedClient {
             Write-Host "NAS Client Selected: $global:SelectedClient" -ForegroundColor Green
         }
     }
+    Sync-ClientLabel
 }
