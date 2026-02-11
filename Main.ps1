@@ -111,7 +111,7 @@ $mainXML = @"
 				<Button x:Name="Btn_Minimize" Content="_" Height="28" Width="35" Background="{x:Null}" FontFamily="MS Reference Sans Serif" Foreground="White" BorderBrush="Transparent" FontWeight="Bold" FontSize="28" Padding="0,-25,0,0" UseLayoutRounding="True" RenderTransformOrigin="0.471,0.35"/>
 			</StackPanel>
 		</Grid>
-		<Grid x:Name="Deployment_Grid" Margin="0,100,0,0">
+		<Grid x:Name="Deployment_Grid" Margin="0,100,0,0" d:IsHidden="True">
 			<Border x:Name="Actions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="20,0,0,0" Width="196" HorizontalAlignment="Left" Height="490" VerticalAlignment="Top">
 				<StackPanel x:Name="Actions_StackPanel" Margin="6,11,6,6">
 					<Label x:Name="Lbl_Actions" Content="Actions" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
@@ -175,10 +175,16 @@ $mainXML = @"
 				</Ellipse.Effect>
 			</Ellipse>
 		</Grid>
+		<Label x:Name="Lbl_Copyright" Content="Created By: Brandon Swarek" FontFamily="Leelawadee" FontSize="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="5,5,3,5" Width="266" Foreground="White"/>
 		<Grid x:Name="Tools_Grid" Margin="0,100,0,0" Visibility="Collapsed">
+			<Border x:Name="HDActions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="20,0,0,0" Width="196" HorizontalAlignment="Left" Height="490" VerticalAlignment="Top">
+				<StackPanel x:Name="HDActions_StackPanel" Margin="6,11,6,6">
+					<Label x:Name="Lbl_HD_Actions" Content="HD Actions" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
+					<Button x:Name="Btn_DISM" Content="DISM" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+				</StackPanel>
+			</Border>
 			<Image x:Name="Img_Ken" Width="500" Height="500" HorizontalAlignment="Center" VerticalAlignment="Top" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken2.png?raw=true"/>
 		</Grid>
-		<Label x:Name="Lbl_Copyright" Content="Created By: Brandon Swarek" FontFamily="Leelawadee" FontSize="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="5,5,3,5" Width="266" Foreground="White"/>
 	</Grid>
 </Window>
 "@
@@ -257,6 +263,12 @@ $Btn_InstallForticlientApp = $Main.FindName("Btn_InstallForticlientApp")
 $Btn_Login             = $Main.FindName("Btn_Login")
 $TxtBox_Username       = $Main.FindName("TxtBox_Username")
 $PasswordBox_Password  = $Main.FindName("PasswordBox_Password")
+
+# HD Actions Section - Tools Grid
+$HDActions_Border      = $Main.FindName("HDActions_Border")
+$HDActions_StackPanel  = $Main.FindName("HDActions_StackPanel")
+$Lbl_HD_Actions        = $Main.FindName("Lbl_HD_Actions")
+$Btn_DISM              = $Main.FindName("Btn_DISM")
 
 
 # --- ACTIONS COLUMN CLICK EVENTS ---
@@ -441,6 +453,13 @@ $Btn_Minimize.Add_Click({
 
 $Btn_RestartPC.Add_Click({
     shutdown.exe /r /f /t 0
+})
+
+# --- HD Buttons --- #
+$Btn_DISM.Add_Click({
+    Update-Status -State "Busy"
+    DISMFix
+    Update-Status -State "Ready"
 })
 
 # --- GRID EVENTS ---
