@@ -328,34 +328,38 @@ function GUI-Startup {
 
 # --- Function from HD_DISMFix.ps1 ---
 function DISMFix {
-    Write-Host "Starting System Repair Sequence in specified order..." -ForegroundColor Cyan
+    Write-Host "--- Starting System Repair Sequence (7 Steps) ---" -ForegroundColor Cyan
 
-    # 1. CheckHealth
-    Write-Host "Step 1: DISM CheckHealth" -ForegroundColor Yellow
-    DISM /Online /Cleanup-Image /CheckHealth
+    # Step 1: Initial SFC
+    Write-Host "`nStep 1: Initial sfc /scannow" -ForegroundColor Yellow
+    Start-Process "sfc.exe" -ArgumentList "/scannow" -Wait -NoNewWindow
 
-    # 2. ScanHealth
-    Write-Host "Step 2: DISM ScanHealth" -ForegroundColor Yellow
-    DISM /Online /Cleanup-Image /ScanHealth
+    # Step 2: CheckHealth
+    Write-Host "`nStep 2: DISM CheckHealth" -ForegroundColor Yellow
+    Start-Process "DISM.exe" -ArgumentList "/Online /Cleanup-Image /CheckHealth" -Wait -NoNewWindow
 
-    # 3. RestoreHealth
-    Write-Host "Step 3: DISM RestoreHealth" -ForegroundColor Yellow
-    DISM /Online /Cleanup-Image /RestoreHealth
+    # Step 3: ScanHealth
+    Write-Host "`nStep 3: DISM ScanHealth" -ForegroundColor Yellow
+    Start-Process "DISM.exe" -ArgumentList "/Online /Cleanup-Image /ScanHealth" -Wait -NoNewWindow
 
-    # 4. Chkdsk (Read-only mode)
-    Write-Host "Step 4: Chkdsk (Status Report)" -ForegroundColor Yellow
-    Chkdsk
+    # Step 4: RestoreHealth
+    Write-Host "`nStep 4: DISM RestoreHealth" -ForegroundColor Yellow
+    Start-Process "DISM.exe" -ArgumentList "/Online /Cleanup-Image /RestoreHealth" -Wait -NoNewWindow
 
-    # 5. Chkdsk /r /f (Repair and Stage for Reboot)
-    Write-Host "Step 5: Chkdsk /r /f (Scheduling for next reboot...)" -ForegroundColor Yellow
-    # This automatically sends 'Y' to the prompt to schedule the volume for the next restart
-    echo y | Chkdsk /r /f
+    # Step 5: Chkdsk (Read-only)
+    Write-Host "`nStep 5: Chkdsk (Report Only)" -ForegroundColor Yellow
+    Start-Process "chkdsk.exe" -Wait -NoNewWindow
 
-    # 6. SFC Scannow
-    Write-Host "Step 6: sfc /scannow" -ForegroundColor Yellow
-    sfc /scannow
+    # Step 6: Chkdsk /r /f
+    Write-Host "`nStep 6: Chkdsk /r /f (Scheduling Reboot Repair)" -ForegroundColor Yellow
+    # We use cmd /c here because 'echo y' is a shell feature to bypass the prompt
+    cmd /c "echo y | chkdsk /f /r"
 
-    Write-Host "Sequence Complete. If errors were found in Step 5, please restart your computer." -ForegroundColor Green
+    # Step 7: Final SFC
+    Write-Host "`nStep 7: Final sfc /scannow" -ForegroundColor Yellow
+    Start-Process "sfc.exe" -ArgumentList "/scannow" -Wait -NoNewWindow
+
+    Write-Host "`n--- All Steps Complete ---" -ForegroundColor Green
 }
 
 # --- Function from Install-ClientCustomLocalApps.ps1 ---
