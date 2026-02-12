@@ -4,7 +4,7 @@ $MainFile      = Join-Path -Path $CurrentFolder -ChildPath "main.ps1"
 $OutputFile    = Join-Path -Path $CurrentFolder -ChildPath "Depth.ps1"
 
 # --- NEW: Explicitly define which subfolders in 'src' to include ---
-$TargetFolders = @("functions", "hd functions", "gui functions") 
+$TargetFolders = @("functions", "hd functions", "gui functions", "personal functions") 
 # -------------------------------------------------------------------
 
 # 2. Grab the Main script
