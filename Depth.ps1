@@ -216,7 +216,7 @@ $Main = Load-VisualStudioXaml -RawXaml $mainXML
 # --- FUNCTIONS SECTION ---
 
 
-# --- Function from Connect-NAS.ps1 ---
+# --- Source: src\functions\Connect-NAS.ps1 ---
 function Connect-NAS {
     $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Yellow
     [System.Windows.Forms.Application]::DoEvents()
@@ -246,7 +246,7 @@ function Connect-NAS {
     }
 }
 
-# --- Function from Copy-Shortcuts.ps1 ---
+# --- Source: src\functions\Copy-Shortcuts.ps1 ---
 function Copy-Shortcuts {
     if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
         Write-Warning "Choose a client first!"
@@ -284,7 +284,7 @@ function Copy-Shortcuts {
     }
 }
 
-# --- Function from Get-UserInput.ps1 ---
+# --- Source: src\functions\Get-UserInput.ps1 ---
 function Get-UserInput {
     # 1. Minimize the GUI so you can see the terminal behind it
     $Main.WindowState = "Minimized"
@@ -302,7 +302,7 @@ function Get-UserInput {
     Write-Host "Input Saved: $global:UserTermInput" -ForegroundColor Green
 }
 
-# --- Function from GUI-Startup.ps1 ---
+# --- Source: src\functions\GUI-Startup.ps1 ---
 function GUI-Startup {
     $NASIP = "10.24.2.5"
     $NASPath = "\\$NASIP\Clients"
@@ -338,43 +338,7 @@ function GUI-Startup {
     }
 }
 
-# --- Function from HD_DISMFix.ps1 ---
-function DISMFix {
-    Write-Host "--- Starting System Repair Sequence (7 Steps) ---" -ForegroundColor Cyan
-
-    # Step 1: Initial SFC
-    Write-Host "`nStep 1: Initial sfc /scannow" -ForegroundColor Yellow
-    Start-Process "sfc.exe" -ArgumentList "/scannow" -Wait -NoNewWindow
-
-    # Step 2: CheckHealth
-    Write-Host "`nStep 2: DISM CheckHealth" -ForegroundColor Yellow
-    Start-Process "DISM.exe" -ArgumentList "/Online /Cleanup-Image /CheckHealth" -Wait -NoNewWindow
-
-    # Step 3: ScanHealth
-    Write-Host "`nStep 3: DISM ScanHealth" -ForegroundColor Yellow
-    Start-Process "DISM.exe" -ArgumentList "/Online /Cleanup-Image /ScanHealth" -Wait -NoNewWindow
-
-    # Step 4: RestoreHealth
-    Write-Host "`nStep 4: DISM RestoreHealth" -ForegroundColor Yellow
-    Start-Process "DISM.exe" -ArgumentList "/Online /Cleanup-Image /RestoreHealth" -Wait -NoNewWindow
-
-    # Step 5: Chkdsk (Read-only)
-    Write-Host "`nStep 5: Chkdsk (Report Only)" -ForegroundColor Yellow
-    Start-Process "chkdsk.exe" -Wait -NoNewWindow
-
-    # Step 6: Chkdsk /r /f
-    Write-Host "`nStep 6: Chkdsk /r /f (Scheduling Reboot Repair)" -ForegroundColor Yellow
-    # We use cmd /c here because 'echo y' is a shell feature to bypass the prompt
-    cmd /c "echo y | chkdsk /f /r"
-
-    # Step 7: Final SFC
-    Write-Host "`nStep 7: Final sfc /scannow" -ForegroundColor Yellow
-    Start-Process "sfc.exe" -ArgumentList "/scannow" -Wait -NoNewWindow
-
-    Write-Host "`n--- All Steps Complete ---" -ForegroundColor Green
-}
-
-# --- Function from Install-ClientCustomLocalApps.ps1 ---
+# --- Source: src\functions\Install-ClientCustomLocalApps.ps1 ---
 function Install-ClientCustomLocalApps {
     if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
         Write-Warning "Choose a client first!"
@@ -426,7 +390,7 @@ function Install-ClientCustomLocalApps {
     Write-Host "All local custom apps have been processed." -ForegroundColor Green
 }
 
-# --- Function from Install-ClientCustomWingetApps.ps1 ---
+# --- Source: src\functions\Install-ClientCustomWingetApps.ps1 ---
 function Install-ClientCustomWingetApps {
     if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
         Write-Warning "Choose a client first!"
@@ -464,7 +428,7 @@ function Install-ClientCustomWingetApps {
     return "Completed"
 }
 
-# --- Function from Install-DefaultWingetApps.ps1 ---
+# --- Source: src\functions\Install-DefaultWingetApps.ps1 ---
 function Install-DefaultWingetApps {
     # Pre-defined list of IDs
     $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams")
@@ -478,7 +442,7 @@ function Install-DefaultWingetApps {
 }
 
 
-# --- Function from Install-O365.ps1 ---
+# --- Source: src\functions\Install-O365.ps1 ---
 function Install-O365 {
     # Pre-defined list of IDs
     $Apps = @("Microsoft.Office")
@@ -489,7 +453,7 @@ function Install-O365 {
     }
 }
 
-# --- Function from Install-O365Bypass.ps1 ---
+# --- Source: src\functions\Install-O365Bypass.ps1 ---
 function Install-O365Bypass {
     Write-Host "Starting manual install" -ForegroundColor Cyan
     
@@ -532,7 +496,7 @@ function Install-O365Bypass {
     Write-Host "[OK] Office Installation Completed." -ForegroundColor Green
 }
 
-# --- Function from Install-PassedWingetApp.ps1 ---
+# --- Source: src\functions\Install-PassedWingetApp.ps1 ---
 function Install-PassedWingetApp {
     param([string]$AppID)
 
@@ -547,7 +511,7 @@ function Install-PassedWingetApp {
     Start-Process winget -ArgumentList "install --id $AppID --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
 }
 
-# --- Function from Refresh-Clients.ps1 ---
+# --- Source: src\functions\Refresh-Clients.ps1 ---
 function Refresh-Clients {
     # 1. Check if the path is set
     if (-not $global:NAS_Clients_Folder) {
@@ -571,7 +535,7 @@ function Refresh-Clients {
     }
 }
 
-# --- Function from Repair-Winget.ps1 ---
+# --- Source: src\functions\Repair-Winget.ps1 ---
 function Repair-Winget {
     # 0. Try to let Winget fix its own dependency first
     Write-Host "Attempting to install WindowsAppRuntime 1.8 via Winget..." -ForegroundColor Yellow
@@ -616,7 +580,7 @@ function Repair-Winget {
     }
 }
 
-# --- Function from Select-ManualFolder.ps1 ---
+# --- Source: src\functions\Select-ManualFolder.ps1 ---
 function Select-ManualFolder {
     $FolderBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
     $FolderBrowser.Description = "Select the Client Folder"
@@ -639,7 +603,7 @@ function Select-ManualFolder {
     Sync-ClientLabel
 }
 
-# --- Function from Set-ComputerTimeZone.ps1 ---
+# --- Source: src\functions\Set-ComputerTimeZone.ps1 ---
 function Set-ComputerTimeZone {
     # 1. Minimize GUI
     $Main.WindowState = [System.Windows.WindowState]::Minimized
@@ -741,7 +705,7 @@ function Set-ComputerTimeZone {
     $Main.WindowState = [System.Windows.WindowState]::Normal
 }
 
-# --- Function from Set-CustomPowerOptions.ps1 ---
+# --- Source: src\functions\Set-CustomPowerOptions.ps1 ---
 function Set-CustomPowerOptions {
     Write-Host "Configuring Power Options..." -ForegroundColor Cyan
 
@@ -782,7 +746,7 @@ function Set-CustomPowerOptions {
     Write-Host "`nAll power options have been applied successfully." -ForegroundColor Green
 }
 
-# --- Function from Set-SelectedClient.ps1 ---
+# --- Source: src\functions\Set-SelectedClient.ps1 ---
 function Set-SelectedClient {
     if ($ListBox_Clients.SelectedItem -ne $null) {
         $SelectedItemText = $ListBox_Clients.SelectedItem.ToString()
@@ -801,7 +765,7 @@ function Set-SelectedClient {
     Sync-ClientLabel
 }
 
-# --- Function from Set-Taskbar.ps1 ---
+# --- Source: src\functions\Set-Taskbar.ps1 ---
 function Set-Taskbar {
     Write-Host "Wiping taskbar pins and configuring layout..." -ForegroundColor Cyan
 
@@ -848,7 +812,7 @@ function Set-Taskbar {
     Stop-Process -Name explorer -Force
 }
 
-# --- Function from Set-UAC.ps1 ---
+# --- Source: src\functions\Set-UAC.ps1 ---
 function Set-UAC {
     $UACPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
     
@@ -860,7 +824,7 @@ function Set-UAC {
     Write-Host "UAC configured." -ForegroundColor Green
 }
 
-# --- Function from Start-PowerShellLogging.ps1 ---
+# --- Source: src\functions\Start-PowerShellLogging.ps1 ---
 function Start-PowerShellLogging {
     <#
     .SYNOPSIS
@@ -887,7 +851,7 @@ function Stop-DeploymentLogging {
     Write-Host "--- Deployment logging stopped ---" -ForegroundColor Yellow
 }
 
-# --- Function from Startup-Logo.ps1 ---
+# --- Source: src\functions\Startup-Logo.ps1 ---
 function Startup-Logo{
 $MagnaLogo = @"                                                                                                    
 
@@ -908,27 +872,7 @@ $MagnaLogo = @"
 Write-Host $MagnaLogo -ForegroundColor Green
 }
 
-# --- Function from Switch-Tabs.ps1 ---
-# --- Function from SwitchTabs.ps1 ---
-function Switch-Tabs {
-    param([string]$Target)
-
-    # 1. Exit if already on the target to prevent flickering
-    if ($Target -eq "Deployment" -and $Deployment_Grid.Visibility -eq "Visible") { return }
-    if ($Target -eq "Tools" -and $Tools_Grid.Visibility -eq "Visible") { return }
-
-    # This ensures only one grid is active at a time
-    $Deployment_Grid.Visibility = "Collapsed"
-    $Tools_Grid.Visibility      = "Collapsed"
-
-    # 3. Show only the target grid
-    switch ($Target) {
-        "Deployment" { $Deployment_Grid.Visibility = "Visible" }
-        "Tools"      { $Tools_Grid.Visibility      = "Visible" }
-    }
-}
-
-# --- Function from Sync-ClientLabel.ps1 ---
+# --- Source: src\functions\Sync-ClientLabel.ps1 ---
 function Sync-ClientLabel {
     if ($global:SelectedClient -and $global:SelectedClient -ne "None") {
         
@@ -944,14 +888,14 @@ function Sync-ClientLabel {
     }
 }
 
-# --- Function from TestFunction.ps1 ---
+# --- Source: src\functions\TestFunction.ps1 ---
 function TestFunction {
 	Write-Host "Hello, World!"
 	Start-Sleep -Seconds 10
 	Write-Host "Sleepy!"
 }
 
-# --- Function from Uninstall-Bloat.ps1 ---
+# --- Source: src\functions\Uninstall-Bloat.ps1 ---
 function Uninstall-Bloat {
     # Suppress the "Deployment operation progress" bar
     $OldProgress = $ProgressPreference
@@ -1005,7 +949,7 @@ function Uninstall-Bloat {
     Write-Host "Items successfully removed: $($ProcessedList.Count)" -ForegroundColor Gray
 }
 
-# --- Function from Uninstall-OfficeLanguagePacks.ps1 ---
+# --- Source: src\functions\Uninstall-OfficeLanguagePacks.ps1 ---
 function Uninstall-OfficeLanguagePacks {
     Write-Host "Scanning for extra Office Language Packs..." -ForegroundColor Cyan
 
@@ -1077,7 +1021,7 @@ $LangNodes
     }
 }
 
-# --- Function from Unlock-WinUpdates.ps1 ---
+# --- Source: src\functions\Unlock-WinUpdates.ps1 ---
 function Unlock-WinUpdates {
     Write-Host "Unlocking Windows Update Access..." -ForegroundColor Cyan
 
@@ -1122,7 +1066,7 @@ function Unlock-WinUpdates {
     Write-Host "`nWindows Update has been unlocked." -ForegroundColor Green
 }
 
-# --- Function from Update-Status.ps1 ---
+# --- Source: src\functions\Update-Status.ps1 ---
 function Update-Status {
     param(
         [ValidateSet("Busy", "Ready")]
@@ -1140,6 +1084,42 @@ function Update-Status {
 
     # Keeps the UI responsive during the color change
     [System.Windows.Forms.Application]::DoEvents()
+}
+
+# --- Source: src\hd functions\HD_DISMFix.ps1 ---
+function DISMFix {
+    Write-Host "--- Starting System Repair Sequence (7 Steps) ---" -ForegroundColor Cyan
+
+    # Step 1: Initial SFC
+    Write-Host "`nStep 1: Initial sfc /scannow" -ForegroundColor Yellow
+    Start-Process "sfc.exe" -ArgumentList "/scannow" -Wait -NoNewWindow
+
+    # Step 2: CheckHealth
+    Write-Host "`nStep 2: DISM CheckHealth" -ForegroundColor Yellow
+    Start-Process "DISM.exe" -ArgumentList "/Online /Cleanup-Image /CheckHealth" -Wait -NoNewWindow
+
+    # Step 3: ScanHealth
+    Write-Host "`nStep 3: DISM ScanHealth" -ForegroundColor Yellow
+    Start-Process "DISM.exe" -ArgumentList "/Online /Cleanup-Image /ScanHealth" -Wait -NoNewWindow
+
+    # Step 4: RestoreHealth
+    Write-Host "`nStep 4: DISM RestoreHealth" -ForegroundColor Yellow
+    Start-Process "DISM.exe" -ArgumentList "/Online /Cleanup-Image /RestoreHealth" -Wait -NoNewWindow
+
+    # Step 5: Chkdsk (Read-only)
+    Write-Host "`nStep 5: Chkdsk (Report Only)" -ForegroundColor Yellow
+    Start-Process "chkdsk.exe" -Wait -NoNewWindow
+
+    # Step 6: Chkdsk /r /f
+    Write-Host "`nStep 6: Chkdsk /r /f (Scheduling Reboot Repair)" -ForegroundColor Yellow
+    # We use cmd /c here because 'echo y' is a shell feature to bypass the prompt
+    cmd /c "echo y | chkdsk /f /r"
+
+    # Step 7: Final SFC
+    Write-Host "`nStep 7: Final sfc /scannow" -ForegroundColor Yellow
+    Start-Process "sfc.exe" -ArgumentList "/scannow" -Wait -NoNewWindow
+
+    Write-Host "`n--- All Steps Complete ---" -ForegroundColor Green
 }
 
 
