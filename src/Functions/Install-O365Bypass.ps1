@@ -1,22 +1,23 @@
 function Install-O365Bypass {
-    Write-Host "Enabling Installer Hash Override (Admin)..." -ForegroundColor Cyan
+    Write-Host "Enabling Installer Hash Override..." -ForegroundColor Cyan
     winget settings --enable InstallerHashOverride
 
-    Write-Host "Spawning Non-Admin CMD..." -ForegroundColor Yellow
-
-    # We use a simpler command string to avoid nested quote hell
-    $WingetCmd = 'winget install --id Microsoft.Office --silent --accept-source-agreements --accept-package-agreements --ignore-security-hash'
+    # Get the current logged-in username
+    $CurrentUser = $env:USERNAME
     
-    # 0x20000 is the standard 'Medium' (Non-Admin) trust level
-    # We wrap the entire command in double quotes for runas
-    $ArgList = "/trustlevel:0x20000 ""cmd.exe /k $WingetCmd"""
+    Write-Host "Spawning Winget as $CurrentUser (Non-Admin context)..." -ForegroundColor Yellow
+
+    $WingetCmd = "winget install Microsoft.Office --silent --ignore-security-hash --accept-source-agreements --accept-package-agreements"
+    
+    # We use 'cmd /c' to run the command and then close
+    $ArgList = "/user:$CurrentUser `"cmd.exe /c $WingetCmd`""
 
     try {
-        Start-Process runas.exe -ArgumentList $ArgList
-        Write-Host "  [OK] Non-Admin window spawned." -ForegroundColor Gray
+        # This will likely ask for your password or pin in the console
+        # but it will result in a User-level process that Winget won't block.
+        Start-Process "runas.exe" -ArgumentList $ArgList
+        Write-Host "  [OK] Process started. If a password was required, enter it in the new window." -ForegroundColor Green
     } catch {
-        Write-Warning "Failed to spawn process: $($_.Exception.Message)"
+        Write-Warning "Failed to spawn: $($_.Exception.Message)"
     }
-
-    Write-Host "`nHanded off to Standard User context." -ForegroundColor Green
 }
