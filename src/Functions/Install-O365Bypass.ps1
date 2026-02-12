@@ -31,11 +31,11 @@ function Install-O365Bypass {
     $XmlContent | Out-File $ConfigFile -Encoding Ascii
 
     # 3. Run the installation directly as Admin
-    Write-Host "Starting Installation... This bypasses Winget's hash checks." -ForegroundColor Green
+    Write-Host "Starting Installation..." -ForegroundColor Green
     # We use /configure to tell the setup tool to use our XML
     Start-Process -FilePath $SetupExe -ArgumentList "/configure `"$ConfigFile`"" -Wait
 
     # Cleanup
     Remove-Item $WorkDir -Recurse -Force
-    Write-Host "[OK] Office Installation Handed off to Windows." -ForegroundColor Green
+    Write-Host "[OK] Office Installation Completed." -ForegroundColor Green
 }
