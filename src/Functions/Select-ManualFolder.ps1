@@ -17,4 +17,5 @@ function Select-ManualFolder {
 
         Write-Host "Manual Path Selected: $global:SelectedClient" -ForegroundColor Green
     }
+    Sync-ClientLabel
 }
