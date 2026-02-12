@@ -102,9 +102,11 @@ $mainXML = @"
 				</Ellipse.Effect>
 			</Ellipse>
 			<StackPanel x:Name="Tabs_StackPanel" HorizontalAlignment="Left" Height="60" Margin="20,0,0,0" VerticalAlignment="Center" Width="945" Orientation="Horizontal">
-				<Button x:Name="Btn_Deployment" Content="Deployment" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White"/>
-				<Button x:Name="Btn_Tools" Content="Tools" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White"/>
-				<Button x:Name="Btn_RestartPC" Content="Restart PC" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White" HorizontalAlignment="Left" Margin="5,0,5,0"/>
+				<Button x:Name="Btn_Deployment" Content="Deployment" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White" HorizontalAlignment="Left"/>
+				<Button x:Name="Btn_Tools" Content="Tools" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White" HorizontalAlignment="Left"/>
+				<Button x:Name="Btn_FAQ" Content="FAQ" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White" HorizontalAlignment="Left" Margin="5,0,5,0" VerticalAlignment="Center"/>
+				<Button x:Name="Btn_RestartPC" Content="Restart PC" Style="{StaticResource CleanButtons}" Height="35" Width="100" Background="#FF454A4C" BorderBrush="White" FontFamily="Leelawadee" FontSize="14" BorderThickness="2,2,2,2" Foreground="White"/>
+				<Slider x:Name="Slider_Ken" Width="120" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0" SmallChange="1" Value="-1" TickPlacement="TopLeft" IsSnapToTickEnabled="True"/>
 			</StackPanel>
 			<StackPanel x:Name="GUIControl_StackPanel" Margin="0,20,10,0" Height="60" Orientation="Horizontal" FlowDirection="RightToLeft" HorizontalAlignment="Right" VerticalAlignment="Top">
 				<Button x:Name="Btn_Close" Content="X" Height="28" Width="35" Background="{x:Null}" FontFamily="MS Reference Sans Serif" FontSize="20" Foreground="White" BorderBrush="Transparent" Padding="0,0,0,0" UseLayoutRounding="False"/>
@@ -112,6 +114,7 @@ $mainXML = @"
 			</StackPanel>
 		</Grid>
 		<Grid x:Name="Deployment_Grid" Margin="0,100,0,0" d:IsHidden="True">
+			<Image x:Name="Img_Ken" Width="1100" Height="550" HorizontalAlignment="Center" VerticalAlignment="Top" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken2.png?raw=true" Stretch="Fill" Opacity="0"/>
 			<Border x:Name="Actions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="20,0,0,0" Width="196" HorizontalAlignment="Left" Height="490" VerticalAlignment="Top">
 				<StackPanel x:Name="Actions_StackPanel" Margin="6,11,6,6">
 					<Label x:Name="Lbl_Actions" Content="Actions" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
@@ -175,16 +178,25 @@ $mainXML = @"
 				</Ellipse.Effect>
 			</Ellipse>
 		</Grid>
-		<Label x:Name="Lbl_Copyright" Content="Created By: Brandon Swarek" FontFamily="Leelawadee" FontSize="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="5,5,3,5" Width="266" Foreground="White"/>
-		<Grid x:Name="Tools_Grid" Margin="0,100,0,0" Visibility="Collapsed">
+		<Grid x:Name="Tools_Grid" Margin="0,100,0,0" d:IsHidden="True">
 			<Border x:Name="HDActions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="20,0,0,0" Width="196" HorizontalAlignment="Left" Height="490" VerticalAlignment="Top">
 				<StackPanel x:Name="HDActions_StackPanel" Margin="6,11,6,6">
 					<Label x:Name="Lbl_HD_Actions" Content="HD Actions" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_DISM" Content="DISM" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 				</StackPanel>
 			</Border>
-			<Image x:Name="Img_Ken" Width="500" Height="500" HorizontalAlignment="Center" VerticalAlignment="Top" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken2.png?raw=true"/>
 		</Grid>
+		<Grid x:Name="FAQ_Grid" Margin="0,100,0,0">
+			<StackPanel x:Name="FAQ_StackPanel" Margin="27,38,0,0" HorizontalAlignment="Left" Width="1042" VerticalAlignment="Top" Height="454">
+				<Label x:Name="Lbl_FAQ" Content="FAQ" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="40" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+				<Label x:Name="Lbl_FAQ1" Content="What is a hash mismatch?" FontFamily="Leelawadee" FontSize="20" Foreground="#FF73E4CC"/>
+				<TextBlock x:Name="TxtBlock_FAQ1" TextWrapping="Wrap" Text="A Hash Mismatch occurs when Winget has not yet validated the hash of the program you are trying to install. You need to install the app manually until winget resolves the issue." Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0"/>
+				<Label x:Name="Lbl_FAQ2" Content="Winget error &quot;failed to update from source msstore&quot;." FontFamily="Leelawadee" FontSize="20" Foreground="#FF73E4CC"/>
+				<TextBlock x:Name="TxtBlock_FAQ2" TextWrapping="Wrap" Text="This error is fixed by running the &quot;Repair Winget&quot; button on the Deployment tab." Foreground="White" Margin="10,0,0,0"/>
+			</StackPanel>
+			<Border x:Name="FAQ_Border" BorderBrush="White" BorderThickness="5,5,5,5" Margin="10,20,10,40"/>
+		</Grid>
+		<Label x:Name="Lbl_Copyright" Content="Created By: Brandon Swarek" FontFamily="Leelawadee" FontSize="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="5,5,3,5" Width="266" Foreground="White"/>
 	</Grid>
 </Window>
 "@
@@ -211,10 +223,13 @@ $Main = Load-VisualStudioXaml -RawXaml $mainXML
 $Main_Grid       = $Main.FindName("Main_Grid")
 $Tools_Grid      = $Main.FindName("Tools_Grid")
 $Deployment_Grid = $Main.FindName("Deployment_Grid")
+$FAQ_Grid        = $Main.FindName("FAQ_Grid")
 
 # Menu Bar
 $Btn_Tools      = $Main.FindName("Btn_Tools")
 $Btn_Deployment = $Main.FindName("Btn_Deployment")
+$Btn_FAQ        = $Main.FindName("Btn_FAQ")
+$Slider_Ken     = $Main.FindName("Slider_Ken")
 $Btn_RestartPC  = $Main.FindName("Btn_RestartPC")
 $Btn_Close      = $Main.FindName("Btn_Close")
 $Btn_Minimize   = $Main.FindName("Btn_Minimize")
@@ -269,6 +284,18 @@ $HDActions_Border      = $Main.FindName("HDActions_Border")
 $HDActions_StackPanel  = $Main.FindName("HDActions_StackPanel")
 $Lbl_HD_Actions        = $Main.FindName("Lbl_HD_Actions")
 $Btn_DISM              = $Main.FindName("Btn_DISM")
+
+# FAQ Grid
+$FAQ_StackPanel = $Main.FindName("FAQ_StackPanel")
+$Lbl_FAQ        = $Main.FindName("Lbl_FAQ")
+$Lbl_FAQ1       = $Main.FindName("Lbl_FAQ1")
+$TxtBlock_FAQ1  = $Main.FindName("TxtBlock_FAQ1")
+$Lbl_FAQ2       = $Main.FindName("Lbl_FAQ2")
+$TxtBlock_FAQ2  = $Main.FindName("TxtBlock_FAQ2")
+$FAQ_Border     = $Main.FindName("FAQ_Border")
+
+# Fun Additions
+$Img_Ken = $Main.FindName("Img_Ken")
 
 
 # --- ACTIONS COLUMN CLICK EVENTS ---
@@ -435,11 +462,19 @@ $Btn_InstallForticlientApp.Add_Click({
 $Btn_Tools.Add_Click({
     $Deployment_Grid.Visibility = "Collapsed"
     $Tools_Grid.Visibility = "Visible"
+    $FAQ_Grid.Visibility = "Collapsed"
 })
 
 $Btn_Deployment.Add_Click({
-    $Tools_Grid.Visibility = "Collapsed"
     $Deployment_Grid.Visibility = "Visible"
+    $Tools_Grid.Visibility = "Collapsed"
+    $FAQ_Grid.Visibility = "Collapsed"
+})
+
+$Btn_FAQ.Add_Click({
+    $Deployment_Grid.Visibility = "Collapsed"
+    $Tools_Grid.Visibility = "Collapsed"
+    $FAQ_Grid.Visibility = "Visible"
 })
 
 # --- TITLE BAR BUTTON CLICK EVENTS ---
@@ -453,6 +488,17 @@ $Btn_Minimize.Add_Click({
 
 $Btn_RestartPC.Add_Click({
     shutdown.exe /r /f /t 0
+})
+
+$Slider_Ken.Add_ValueChanged({
+    param($sender, $e)
+    
+    # Calculate opacity: 1 becomes 0.1 (10%), 10 becomes 1.0 (100%)
+    # Using [Math]::Round to prevent floating point math weirdness
+    $NewOpacity = [Math]::Round(($sender.Value / 10), 1)
+    
+    # Apply to the image
+    $Img_Ken.Opacity = $NewOpacity
 })
 
 # --- HD Buttons --- #
@@ -474,5 +520,6 @@ $Main_Grid.Add_Loaded({
 })
 
 $Tools_Grid.Visibility = "Collapsed"
+$FAQ_Grid.Visibility = "Collapsed"
 $Main.ShowDialog() | Out-Null
 Write-Host "Goodbye!!!" -ForegroundColor Cyan
