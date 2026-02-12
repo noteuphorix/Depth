@@ -284,60 +284,6 @@ function Copy-Shortcuts {
     }
 }
 
-# --- Source: src\functions\Get-UserInput.ps1 ---
-function Get-UserInput {
-    # 1. Minimize the GUI so you can see the terminal behind it
-    $Main.WindowState = "Minimized"
-
-    # 2. Capture the input (The GUI will stay minimized while this waits)
-    Write-Host "`n[INPUT REQUIRED] Please type your input below:" -ForegroundColor Yellow
-    $InputtedText = Read-Host "Enter your value"
-    
-    # 3. Store the value
-    $global:UserTermInput = $InputtedText
-    
-    # 4. Restore the GUI now that the thread is free to draw again
-    $Main.WindowState = "Normal"
-    
-    Write-Host "Input Saved: $global:UserTermInput" -ForegroundColor Green
-}
-
-# --- Source: src\functions\GUI-Startup.ps1 ---
-function GUI-Startup {
-    $NASIP = "10.24.2.5"
-    $NASPath = "\\$NASIP\Clients"
-    Sync-ClientLabel
-    
-    Write-Host "Checking NAS connectivity..." -ForegroundColor Cyan
-
-    # Step 1: Ping the IP. -Count 1 -Quiet returns True/False instantly.
-    if (Test-Connection -ComputerName $NASIP -Count 1 -Quiet) {
-        
-        # Step 2: Ping succeeded, now check the specific folder path
-        if (Test-Path -Path "FileSystem::$NASPath" -PathType Container -ErrorAction SilentlyContinue) {
-            $global:NAS_Clients_Folder = $NASPath
-            $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
-            
-            $ListBox_Clients.Items.Clear()
-            $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue | Sort-Object Name
-            foreach ($Folder in $Folders) { 
-                [void]$ListBox_Clients.Items.Add($Folder.Name) 
-            }
-            Write-Host "NAS Connected and Clients Loaded." -ForegroundColor Green
-        }
-        else {
-            # IP is up, but the share or folder is missing/perm denied
-            $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
-            Write-Host "NAS IP reachable, but Path not found!" -ForegroundColor Yellow
-        }
-    }
-    else {
-        # Step 3: Ping failed - This is the "Fail Fast" exit
-        $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
-        Write-Host "NAS Not Connected! (Ping Failed)" -ForegroundColor Red
-    }
-}
-
 # --- Source: src\functions\Install-ClientCustomLocalApps.ps1 ---
 function Install-ClientCustomLocalApps {
     if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
@@ -824,70 +770,6 @@ function Set-UAC {
     Write-Host "UAC configured." -ForegroundColor Green
 }
 
-# --- Source: src\functions\Start-PowerShellLogging.ps1 ---
-function Start-PowerShellLogging {
-    <#
-    .SYNOPSIS
-        Starts a transcript on the Desktop for the current session only.
-        Automatically cleans up if a transcript is already running.
-    #>
-    
-    # 1. Find the Desktop
-    $DesktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
-    $LogFile = Join-Path -Path $DesktopPath -ChildPath "Deployment_Output.txt"
-
-    # 2. Stop any existing transcript to prevent errors
-    try { Stop-Transcript | Out-Null } catch { }
-
-    # 3. Start the log for THIS window only
-    Start-Transcript -Path $LogFile -Append -Confirm:$false
-
-    Write-Host "--- Deployment logging active: $LogFile ---" -ForegroundColor Yellow
-}
-
-# To stop it manually before the window closes:
-function Stop-DeploymentLogging {
-    Stop-Transcript
-    Write-Host "--- Deployment logging stopped ---" -ForegroundColor Yellow
-}
-
-# --- Source: src\functions\Startup-Logo.ps1 ---
-function Startup-Logo{
-$MagnaLogo = @"                                                                                                    
-
-888b     d888                                     888888888  
-8888b   d8888                                     888        
-88888b.d88888                                     888        
-888Y88888P888  8888b.   .d88b.  88888b.   8888b.  8888888b.  
-888 Y888P 888     "88b d88P"88b 888 "88b     "88b      "Y88b 
-888  Y8P  888 .d888888 888  888 888  888 .d888888        888 
-888   "   888 888  888 Y88b 888 888  888 888  888 Y88b  d88P 
-888       888 "Y888888  "Y88888 888  888 "Y888888  "Y8888P"  
-                            888                              
-                       Y8b d88P                              
-                        "Y88P"                               
-                                                    
-"@
-
-Write-Host $MagnaLogo -ForegroundColor Green
-}
-
-# --- Source: src\functions\Sync-ClientLabel.ps1 ---
-function Sync-ClientLabel {
-    if ($global:SelectedClient -and $global:SelectedClient -ne "None") {
-        
-        # 1. Strip the path to show only the final folder name (the 'Leaf')
-        # This turns "C:\Users\Euphoria\Pictures\Cyberpunk 2077" into "Cyberpunk 2077"
-        $DisplayName = Split-Path -Path $global:SelectedClient -Leaf
-        
-        # 2. Update the TextBlock with the shortened name
-        $TxtBlock_SelectedClient.Text = $DisplayName
-        
-        # 3. Update the color to LimeGreen
-        $TxtBlock_SelectedClient.Foreground = [System.Windows.Media.Brushes]::LimeGreen
-    }
-}
-
 # --- Source: src\functions\TestFunction.ps1 ---
 function TestFunction {
 	Write-Host "Hello, World!"
@@ -1066,26 +948,6 @@ function Unlock-WinUpdates {
     Write-Host "`nWindows Update has been unlocked." -ForegroundColor Green
 }
 
-# --- Source: src\functions\Update-Status.ps1 ---
-function Update-Status {
-    param(
-        [ValidateSet("Busy", "Ready")]
-        [string]$State
-    )
-
-    # Change the color of the StatusLight Ellipse
-    if ($State -eq "Busy") {
-        # Use Red for Busy
-        $Ellipse_StatusLight.Fill = [System.Windows.Media.Brushes]::Red
-    } else {
-        # Use LimeGreen for Ready
-        $Ellipse_StatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
-    }
-
-    # Keeps the UI responsive during the color change
-    [System.Windows.Forms.Application]::DoEvents()
-}
-
 # --- Source: src\hd functions\HD_DISMFix.ps1 ---
 function DISMFix {
     Write-Host "--- Starting System Repair Sequence (7 Steps) ---" -ForegroundColor Cyan
@@ -1120,6 +982,143 @@ function DISMFix {
     Start-Process "sfc.exe" -ArgumentList "/scannow" -Wait -NoNewWindow
 
     Write-Host "`n--- All Steps Complete ---" -ForegroundColor Green
+}
+
+# --- Source: src\gui functions\Get-UserInput.ps1 ---
+function Get-UserInput {
+    # 1. Minimize the GUI so you can see the terminal behind it
+    $Main.WindowState = "Minimized"
+
+    # 2. Capture the input (The GUI will stay minimized while this waits)
+    Write-Host "`n[INPUT REQUIRED] Please type your input below:" -ForegroundColor Yellow
+    $InputtedText = Read-Host "Enter your value"
+    
+    # 3. Store the value
+    $global:UserTermInput = $InputtedText
+    
+    # 4. Restore the GUI now that the thread is free to draw again
+    $Main.WindowState = "Normal"
+    
+    Write-Host "Input Saved: $global:UserTermInput" -ForegroundColor Green
+}
+
+# --- Source: src\gui functions\GUI-Startup.ps1 ---
+function GUI-Startup {
+    $NASIP = "10.24.2.5"
+    $NASPath = "\\$NASIP\Clients"
+    Sync-ClientLabel
+    
+    Write-Host "Checking NAS connectivity..." -ForegroundColor Cyan
+
+    # Step 1: Ping the IP. -Count 1 -Quiet returns True/False instantly.
+    if (Test-Connection -ComputerName $NASIP -Count 1 -Quiet) {
+        
+        # Step 2: Ping succeeded, now check the specific folder path
+        if (Test-Path -Path "FileSystem::$NASPath" -PathType Container -ErrorAction SilentlyContinue) {
+            $global:NAS_Clients_Folder = $NASPath
+            $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
+            
+            $ListBox_Clients.Items.Clear()
+            $Folders = Get-ChildItem -Path $NASPath -Directory -ErrorAction SilentlyContinue | Sort-Object Name
+            foreach ($Folder in $Folders) { 
+                [void]$ListBox_Clients.Items.Add($Folder.Name) 
+            }
+            Write-Host "NAS Connected and Clients Loaded." -ForegroundColor Green
+        }
+        else {
+            # IP is up, but the share or folder is missing/perm denied
+            $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
+            Write-Host "NAS IP reachable, but Path not found!" -ForegroundColor Yellow
+        }
+    }
+    else {
+        # Step 3: Ping failed - This is the "Fail Fast" exit
+        $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
+        Write-Host "NAS Not Connected! (Ping Failed)" -ForegroundColor Red
+    }
+}
+
+# --- Source: src\gui functions\Start-PowerShellLogging.ps1 ---
+function Start-PowerShellLogging {
+    <#
+    .SYNOPSIS
+        Starts a transcript on the Desktop for the current session only.
+        Automatically cleans up if a transcript is already running.
+    #>
+    
+    # 1. Find the Desktop
+    $DesktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
+    $LogFile = Join-Path -Path $DesktopPath -ChildPath "Deployment_Output.txt"
+
+    # 2. Stop any existing transcript to prevent errors
+    try { Stop-Transcript | Out-Null } catch { }
+
+    # 3. Start the log for THIS window only
+    Start-Transcript -Path $LogFile -Append -Confirm:$false
+
+    Write-Host "--- Deployment logging active: $LogFile ---" -ForegroundColor Yellow
+}
+
+# To stop it manually before the window closes:
+function Stop-DeploymentLogging {
+    Stop-Transcript
+    Write-Host "--- Deployment logging stopped ---" -ForegroundColor Yellow
+}
+
+# --- Source: src\gui functions\Startup-Logo.ps1 ---
+function Startup-Logo{
+$MagnaLogo = @"                                                                                                    
+
+888b     d888                                     888888888  
+8888b   d8888                                     888        
+88888b.d88888                                     888        
+888Y88888P888  8888b.   .d88b.  88888b.   8888b.  8888888b.  
+888 Y888P 888     "88b d88P"88b 888 "88b     "88b      "Y88b 
+888  Y8P  888 .d888888 888  888 888  888 .d888888        888 
+888   "   888 888  888 Y88b 888 888  888 888  888 Y88b  d88P 
+888       888 "Y888888  "Y88888 888  888 "Y888888  "Y8888P"  
+                            888                              
+                       Y8b d88P                              
+                        "Y88P"                               
+                                                    
+"@
+
+Write-Host $MagnaLogo -ForegroundColor Green
+}
+
+# --- Source: src\gui functions\Sync-ClientLabel.ps1 ---
+function Sync-ClientLabel {
+    if ($global:SelectedClient -and $global:SelectedClient -ne "None") {
+        
+        # 1. Strip the path to show only the final folder name (the 'Leaf')
+        $DisplayName = Split-Path -Path $global:SelectedClient -Leaf
+        
+        # 2. Update the TextBlock with the shortened name
+        $TxtBlock_SelectedClient.Text = $DisplayName
+        
+        # 3. Update the color to LimeGreen
+        $TxtBlock_SelectedClient.Foreground = [System.Windows.Media.Brushes]::LimeGreen
+    }
+}
+
+# --- Source: src\gui functions\Update-Status.ps1 ---
+function Update-Status {
+    param(
+        [ValidateSet("Busy", "Ready")]
+        [string]$State
+    )
+
+    # Change the color of the StatusLight Ellipse
+    if ($State -eq "Busy") {
+        # Use Red for Busy
+        $Ellipse_StatusLight.Fill = [System.Windows.Media.Brushes]::Red
+    } else {
+        # Use LimeGreen for Ready
+        $Ellipse_StatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
+    }
+
+    # Keeps the UI responsive during the color change
+    [System.Windows.Forms.Application]::DoEvents()
 }
 
 
