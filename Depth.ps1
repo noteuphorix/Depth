@@ -491,27 +491,45 @@ function Install-O365 {
 
 # --- Function from Install-O365Bypass.ps1 ---
 function Install-O365Bypass {
-    Write-Host "Enabling Installer Hash Override..." -ForegroundColor Cyan
-    winget settings --enable InstallerHashOverride
-
-    # Get the current logged-in username
-    $CurrentUser = $env:USERNAME
+    Write-Host "Starting manual install" -ForegroundColor Cyan
     
-    Write-Host "Spawning Winget as $CurrentUser (Non-Admin context)..." -ForegroundColor Yellow
-
-    $WingetCmd = "winget install Microsoft.Office --silent --ignore-security-hash --accept-source-agreements --accept-package-agreements"
+    $WorkDir = "$env:TEMP\OfficeInstall"
+    if (!(Test-Path $WorkDir)) { New-Item $WorkDir -ItemType Directory | Out-Null }
     
-    # We use 'cmd /c' to run the command and then close
-    $ArgList = "/user:$CurrentUser `"cmd.exe /c $WingetCmd`""
+    $SetupExe = "$WorkDir\setup.exe"
+    $ConfigFile = "$WorkDir\configuration.xml"
 
-    try {
-        # This will likely ask for your password or pin in the console
-        # but it will result in a User-level process that Winget won't block.
-        Start-Process "runas.exe" -ArgumentList $ArgList
-        Write-Host "  [OK] Process started. If a password was required, enter it in the new window." -ForegroundColor Green
-    } catch {
-        Write-Warning "Failed to spawn: $($_.Exception.Message)"
-    }
+    # 1. Download the official Microsoft Office Bootstrapper
+    Write-Host "Downloading Microsoft Setup Tool..." -ForegroundColor Gray
+    $ProgressPreference = 'SilentlyContinue'
+    Invoke-WebRequest -Uri "https://officecdn.microsoft.com/pr/wsus/setup.exe" -OutFile $SetupExe
+
+    # 2. Create the Configuration file (Mimics the Winget Enterprise install)
+    # This tells the installer to get 64-bit Enterprise silently
+    $XmlContent = @"
+<Configuration>
+  <Add>
+    <Product ID="O365ProPlusRetail">
+      <Language ID="MatchOS"/>
+      <Language ID="MatchPreviousMSI"/>
+      <ExcludeApp ID="Groove"/>
+      <ExcludeApp ID="Lync"/>
+    </Product>
+  </Add>
+  <RemoveMSI/>
+  <Display Level="Full" AcceptEULA="TRUE"/>
+</Configuration>
+"@
+    $XmlContent | Out-File $ConfigFile -Encoding Ascii
+
+    # 3. Run the installation directly as Admin
+    Write-Host "Starting Installation... This bypasses Winget's hash checks." -ForegroundColor Green
+    # We use /configure to tell the setup tool to use our XML
+    Start-Process -FilePath $SetupExe -ArgumentList "/configure `"$ConfigFile`"" -Wait
+
+    # Cleanup
+    Remove-Item $WorkDir -Recurse -Force
+    Write-Host "[OK] Office Installation Handed off to Windows." -ForegroundColor Green
 }
 
 # --- Function from Install-PassedWingetApp.ps1 ---
