@@ -147,7 +147,7 @@ $mainXML = @"
 					<Button x:Name="Btn_ConfigUAC" Content="Set UAC" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
 					<Button x:Name="Btn_ConfigTaskbar" Content="Configure Taskbar" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
 					<Button x:Name="Btn_UnlockWinUpdate" Content="Unlock Win Updates" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
-					<Button x:Name="Btn_OfficeInstallBypass" Content="Office Install Bypass" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
+					<Button x:Name="Btn_OfficeInstallBypass" Content="O365 Install Bypass" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
 				</StackPanel>
 			</Border>
 			<Border x:Name="Apps_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="646,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -178,15 +178,21 @@ $mainXML = @"
 				</Ellipse.Effect>
 			</Ellipse>
 		</Grid>
-		<Grid x:Name="Tools_Grid" Margin="0,100,0,0" d:IsHidden="True">
+		<Grid x:Name="Tools_Grid" Margin="0,100,0,0">
 			<Border x:Name="HDActions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="20,0,0,0" Width="196" HorizontalAlignment="Left" Height="490" VerticalAlignment="Top">
 				<StackPanel x:Name="HDActions_StackPanel" Margin="6,11,6,6">
 					<Label x:Name="Lbl_HD_Actions" Content="HD Actions" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_DISM" Content="DISM" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 				</StackPanel>
 			</Border>
-		</Grid>
-		<Grid x:Name="FAQ_Grid" Margin="0,100,0,0">
+            <Border x:Name="EuphActions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="226,0,0,0" Width="196" HorizontalAlignment="Left" Height="490" VerticalAlignment="Top">
+                <StackPanel x:Name="EuphActions_StackPanel" Margin="6,11,6,6">
+                    <Label x:Name="Lbl_Personal" Content="Personal" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
+                    <Button x:Name="Btn_EnableScripting" Content="Enable Scripting" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+		<Grid x:Name="FAQ_Grid" Margin="0,100,0,0" d:IsHidden="True">
 			<StackPanel x:Name="FAQ_StackPanel" Margin="27,38,0,0" HorizontalAlignment="Left" Width="1042" VerticalAlignment="Top" Height="454">
 				<Label x:Name="Lbl_FAQ" Content="FAQ" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="40" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 				<Label x:Name="Lbl_FAQ1" Content="What is a hash mismatch?" FontFamily="Leelawadee" FontSize="20" Foreground="#FF73E4CC"/>
@@ -284,6 +290,12 @@ $HDActions_Border      = $Main.FindName("HDActions_Border")
 $HDActions_StackPanel  = $Main.FindName("HDActions_StackPanel")
 $Lbl_HD_Actions        = $Main.FindName("Lbl_HD_Actions")
 $Btn_DISM              = $Main.FindName("Btn_DISM")
+
+# Personal Actions Section - Tools Grid
+$EuphActions_Border       = $Main.FindName("EuphActions_Border")
+$EuphActions_StackPanel   = $Main.FindName("EuphActions_StackPanel")
+$Lbl_Personal             = $Main.FindName("Lbl_Personal")
+$Btn_EnableScripting      = $Main.FindName("Btn_EnableScripting")
 
 # FAQ Grid
 $FAQ_StackPanel = $Main.FindName("FAQ_StackPanel")
@@ -505,6 +517,13 @@ $Slider_Ken.Add_ValueChanged({
 $Btn_DISM.Add_Click({
     Update-Status -State "Busy"
     DISMFix
+    Update-Status -State "Ready"
+})
+
+# --- Person Buttons --- #
+$Btn_EnableScripting.Add_Click({
+    Update-Status -State "Busy"
+    Set-ScriptingEnvironment
     Update-Status -State "Ready"
 })
 
