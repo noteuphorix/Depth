@@ -520,7 +520,7 @@ $Btn_DISM.Add_Click({
     Update-Status -State "Ready"
 })
 
-# --- Person Buttons --- #
+# --- Personal Buttons --- #
 $Btn_EnableScripting.Add_Click({
     Update-Status -State "Busy"
     Set-ScriptingEnvironment
@@ -540,5 +540,6 @@ $Main_Grid.Add_Loaded({
 
 $Tools_Grid.Visibility = "Collapsed"
 $FAQ_Grid.Visibility = "Collapsed"
+Start-PowerShellLogging
 $Main.ShowDialog() | Out-Null
 Write-Host "Goodbye!!!" -ForegroundColor Cyan

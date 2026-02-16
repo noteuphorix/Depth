@@ -1053,13 +1053,12 @@ function GUI-Startup {
 function Start-PowerShellLogging {
     <#
     .SYNOPSIS
-        Starts a transcript on the Desktop for the current session only.
+        Starts a transcript in the %TEMP% directory for the current session only.
         Automatically cleans up if a transcript is already running.
     #>
     
-    # 1. Find the Desktop
-    $DesktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
-    $LogFile = Join-Path -Path $DesktopPath -ChildPath "Deployment_Output.txt"
+    # 1. Target the %TEMP% directory
+    $LogFile = Join-Path -Path $env:TEMP -ChildPath "Deployment_Output.txt"
 
     # 2. Stop any existing transcript to prevent errors
     try { Stop-Transcript | Out-Null } catch { }
@@ -1072,8 +1071,12 @@ function Start-PowerShellLogging {
 
 # To stop it manually before the window closes:
 function Stop-DeploymentLogging {
-    Stop-Transcript
-    Write-Host "--- Deployment logging stopped ---" -ForegroundColor Yellow
+    try {
+        Stop-Transcript
+        Write-Host "--- Deployment logging stopped ---" -ForegroundColor Yellow
+    } catch {
+        Write-Warning "No active transcript found to stop."
+    }
 }
 
 # --- Source: src\gui functions\Startup-Logo.ps1 ---
@@ -1455,7 +1458,7 @@ $Btn_DISM.Add_Click({
     Update-Status -State "Ready"
 })
 
-# --- Person Buttons --- #
+# --- Personal Buttons --- #
 $Btn_EnableScripting.Add_Click({
     Update-Status -State "Busy"
     Set-ScriptingEnvironment
@@ -1475,5 +1478,6 @@ $Main_Grid.Add_Loaded({
 
 $Tools_Grid.Visibility = "Collapsed"
 $FAQ_Grid.Visibility = "Collapsed"
+Start-PowerShellLogging
 $Main.ShowDialog() | Out-Null
 Write-Host "Goodbye!!!" -ForegroundColor Cyan
