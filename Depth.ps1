@@ -148,8 +148,7 @@ $mainXML = @"
 					<Button x:Name="Btn_ConfigTaskbar" Content="Configure Taskbar" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
 					<Button x:Name="Btn_UnlockWinUpdate" Content="Unlock Win Updates" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
 					<Button x:Name="Btn_OfficeInstallBypass" Content="O365 Install Bypass" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
-                    <Button x:Name="Btn_EnableLogging" Content="Enable Logging" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="Black" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,230,0,0"/>
-                </StackPanel>
+				</StackPanel>
 			</Border>
 			<Border x:Name="Apps_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="646,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
 				<StackPanel x:Name="Apps_StackPanel" Margin="6,11,10,6">
@@ -1209,7 +1208,6 @@ $Btn_ConfigUAC             = $Main.FindName("Btn_ConfigUAC")
 $Btn_ConfigTaskbar         = $Main.FindName("Btn_ConfigTaskbar")
 $Btn_UnlockWinUpdate       = $Main.FindName("Btn_UnlockWinUpdate")
 $Btn_OfficeInstallBypass   = $Main.FindName("Btn_OfficeInstallBypass")
-$Btn_EnableLogging         = $Main.FindName("Btn_EnableLogging")
 
 # Apps Column (Drivers)
 $Btn_InstallNVIDIAApp      = $Main.FindName("Btn_InstallNVIDIAApp")
@@ -1364,12 +1362,6 @@ $Btn_UnlockWinUpdate.Add_Click({
 $Btn_OfficeInstallBypass.Add_Click({
     Update-Status -State "Busy"
     Install-O365Bypass
-    Update-Status -State "Ready"
-})
-
-$Btn_EnableLogging.Add_Click({
-    Update-Status -State "Busy"
-    Start-PowerShellLogging
     Update-Status -State "Ready"
 })
 
