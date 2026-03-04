@@ -845,8 +845,7 @@ function Uninstall-OfficeLanguagePacks {
     # 1. Get all Office ClickToRun entries, excluding English
     $OfficePacks = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue | Where-Object {
         $_.UninstallString -like "*OfficeClickToRun.exe*" -and 
-        $_.DisplayName -notlike "*enterprise*" -and 
-        $_.DisplayName -notlike "*English*" -and 
+        $_.DisplayName -notlike "*Microsoft 365 Apps for enterprise - en-us*" -and 
         $_.DisplayName -ne $null
     }
 
