@@ -1251,9 +1251,9 @@ $Img_Ken = $Main.FindName("Img_Ken")
 # --- ACTIONS COLUMN CLICK EVENTS ---
 $Btn_RunAll.Add_Click({
     Update-Status -State "Busy"
-    Copy-Shortcuts; Repair-Winget; Install-ClientCustomLocalApps; Install-O365
+    Set-CustomPowerOptions; Copy-Shortcuts; Repair-Winget; Install-ClientCustomLocalApps
     Install-DefaultWingetApps; Install-ClientCustomWingetApps; Uninstall-Bloat
-    Uninstall-OfficeLanguagePacks; Set-CustomPowerOptions; Set-ComputerTimeZone
+    Uninstall-OfficeLanguagePacks; Install-O365; Set-ComputerTimeZone
     Update-Status -State "Ready"
 })
 
