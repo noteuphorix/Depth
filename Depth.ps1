@@ -846,6 +846,7 @@ function Uninstall-OfficeLanguagePacks {
     $OfficePacks = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue | Where-Object {
         $_.UninstallString -like "*OfficeClickToRun.exe*" -and 
         $_.DisplayName -notlike "*Microsoft 365 Apps for enterprise - en-us*" -and 
+        $_.DisplayName -notlike "*Microsoft OneNote - en-us*" -and 
         $_.DisplayName -ne $null
     }
 
