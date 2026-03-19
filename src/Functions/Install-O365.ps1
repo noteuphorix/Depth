@@ -1,4 +1,5 @@
 function Install-O365 {
+    Show-FunctionBanner "O365 Apps Install"
     # Pre-defined list of IDs
     $Apps = @("Microsoft.Office")
 

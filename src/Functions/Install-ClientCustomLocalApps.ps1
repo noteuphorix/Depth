@@ -1,4 +1,5 @@
 function Install-ClientCustomLocalApps {
+    Show-FunctionBanner "Install Client Local Apps"
     if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
         Write-Warning "Choose a client first!"
         return

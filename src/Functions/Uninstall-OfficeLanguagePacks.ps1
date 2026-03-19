@@ -1,4 +1,5 @@
 function Uninstall-OfficeLanguagePacks {
+    Show-FunctionBanner "Language Pack Killer"
     Write-Host "Scanning for extra Office Language Packs..." -ForegroundColor Cyan
 
     # 1. Get all Office ClickToRun entries, excluding English

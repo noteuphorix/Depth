@@ -254,6 +254,7 @@ function Connect-NAS {
 
 # --- Source: src\functions\Copy-Shortcuts.ps1 ---
 function Copy-Shortcuts {
+    Show-FunctionBanner "Copy Shortcuts"
     if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
         Write-Warning "Choose a client first!"
         return
@@ -292,6 +293,7 @@ function Copy-Shortcuts {
 
 # --- Source: src\functions\Install-ClientCustomLocalApps.ps1 ---
 function Install-ClientCustomLocalApps {
+    Show-FunctionBanner "Install Client Local Apps"
     if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
         Write-Warning "Choose a client first!"
         return
@@ -344,6 +346,7 @@ function Install-ClientCustomLocalApps {
 
 # --- Source: src\functions\Install-ClientCustomWingetApps.ps1 ---
 function Install-ClientCustomWingetApps {
+    Show-FunctionBanner "Install Client Winget Apps"
     if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
         Write-Warning "Choose a client first!"
         return
@@ -382,6 +385,7 @@ function Install-ClientCustomWingetApps {
 
 # --- Source: src\functions\Install-DefaultWingetApps.ps1 ---
 function Install-DefaultWingetApps {
+    Show-FunctionBanner "Install Default Winget Apps"
     # Pre-defined list of IDs
     $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams")
 
@@ -396,6 +400,7 @@ function Install-DefaultWingetApps {
 
 # --- Source: src\functions\Install-O365.ps1 ---
 function Install-O365 {
+    Show-FunctionBanner "O365 Apps Install"
     # Pre-defined list of IDs
     $Apps = @("Microsoft.Office")
 
@@ -491,6 +496,7 @@ function Refresh-Clients {
 # --- Source: src\functions\Repair-Winget.ps1 ---
 function Repair-Winget {
     # 0. Try to let Winget fix its own dependency first
+    Show-FunctionBanner "Winget Repair"
     Write-Host "Attempting to install WindowsAppRuntime 1.8 via Winget..." -ForegroundColor Yellow
     Start-Process winget -ArgumentList "install Microsoft.WindowsAppRuntime.1.8 --source winget --silent --accept-package-agreements --accept-source-agreements" -Wait -PassThru -NoNewWindow
 
@@ -558,6 +564,7 @@ function Select-ManualFolder {
 
 # --- Source: src\functions\Set-ComputerTimeZone.ps1 ---
 function Set-ComputerTimeZone {
+    Show-FunctionBanner "Set Timezone"
     # 1. Minimize GUI
     $Main.WindowState = [System.Windows.WindowState]::Minimized
 
@@ -660,6 +667,7 @@ function Set-ComputerTimeZone {
 
 # --- Source: src\functions\Set-CustomPowerOptions.ps1 ---
 function Set-CustomPowerOptions {
+    Show-FunctionBanner "Set Power Options"
     Write-Host "Configuring Power Options..." -ForegroundColor Cyan
 
     $PowerCommands = @(
@@ -786,6 +794,7 @@ function TestFunction {
 
 # --- Source: src\functions\Uninstall-Bloat.ps1 ---
 function Uninstall-Bloat {
+    Show-FunctionBanner "Uninstall Bloat"
     # Suppress the "Deployment operation progress" bar
     $OldProgress = $ProgressPreference
     $ProgressPreference = 'SilentlyContinue'
@@ -840,6 +849,7 @@ function Uninstall-Bloat {
 
 # --- Source: src\functions\Uninstall-OfficeLanguagePacks.ps1 ---
 function Uninstall-OfficeLanguagePacks {
+    Show-FunctionBanner "Language Pack Killer"
     Write-Host "Scanning for extra Office Language Packs..." -ForegroundColor Cyan
 
     # 1. Get all Office ClickToRun entries, excluding English
@@ -1048,6 +1058,19 @@ function GUI-Startup {
         $Ellipse_NASLoginStatusLight.Fill = [System.Windows.Media.Brushes]::Red
         Write-Host "NAS Not Connected! (Ping Failed)" -ForegroundColor Red
     }
+}
+
+# --- Source: src\gui functions\Show-FunctionBanner.ps1 ---
+function Show-FunctionBanner {
+    param(
+        [string]$Text
+    )
+    $len = $Text.Length + 8
+    $line = "-" * $len
+    Write-Host ""
+    Write-Host $line -ForegroundColor Cyan
+    Write-Host "--- $Text ---" -ForegroundColor Green
+    Write-Host $line -ForegroundColor Cyan
 }
 
 # --- Source: src\gui functions\Start-PowerShellLogging.ps1 ---

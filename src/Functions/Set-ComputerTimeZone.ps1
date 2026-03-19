@@ -1,4 +1,5 @@
 function Set-ComputerTimeZone {
+    Show-FunctionBanner "Set Timezone"
     # 1. Minimize GUI
     $Main.WindowState = [System.Windows.WindowState]::Minimized
 

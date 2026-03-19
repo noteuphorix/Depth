@@ -1,4 +1,5 @@
 function Install-ClientCustomWingetApps {
+    Show-FunctionBanner "Install Client Winget Apps"
     if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
         Write-Warning "Choose a client first!"
         return

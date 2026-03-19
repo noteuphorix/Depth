@@ -1,4 +1,5 @@
 function Install-DefaultWingetApps {
+    Show-FunctionBanner "Install Default Winget Apps"
     # Pre-defined list of IDs
     $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams")
 

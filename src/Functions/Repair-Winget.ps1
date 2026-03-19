@@ -1,5 +1,6 @@
 function Repair-Winget {
     # 0. Try to let Winget fix its own dependency first
+    Show-FunctionBanner "Winget Repair"
     Write-Host "Attempting to install WindowsAppRuntime 1.8 via Winget..." -ForegroundColor Yellow
     Start-Process winget -ArgumentList "install Microsoft.WindowsAppRuntime.1.8 --source winget --silent --accept-package-agreements --accept-source-agreements" -Wait -PassThru -NoNewWindow
 

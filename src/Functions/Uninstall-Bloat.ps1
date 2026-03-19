@@ -1,4 +1,5 @@
 function Uninstall-Bloat {
+    Show-FunctionBanner "Uninstall Bloat"
     # Suppress the "Deployment operation progress" bar
     $OldProgress = $ProgressPreference
     $ProgressPreference = 'SilentlyContinue'

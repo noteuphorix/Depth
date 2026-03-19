@@ -1,4 +1,5 @@
 function Set-CustomPowerOptions {
+    Show-FunctionBanner "Set Power Options"
     Write-Host "Configuring Power Options..." -ForegroundColor Cyan
 
     $PowerCommands = @(

@@ -1,4 +1,5 @@
 function Copy-Shortcuts {
+    Show-FunctionBanner "Copy Shortcuts"
     if ([string]::IsNullOrWhiteSpace($global:SelectedClient)) {
         Write-Warning "Choose a client first!"
         return
