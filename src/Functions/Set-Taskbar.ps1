@@ -36,6 +36,11 @@ function Set-Taskbar {
         }
         catch {
             Write-Warning "  [FAIL] ${Label} - Unhandled exception."
+            if ($Name -eq "TaskbarDa") {
+                Get-Process *Widget* | Stop-Process
+                Get-AppxPackage Microsoft.WidgetsPlatformRuntime -AllUsers | Remove-AppxPackage -AllUsers
+                Get-AppxPackage MicrosoftWindows.Client.WebExperience -AllUsers | Remove-AppxPackage -AllUsers
+            }
         }
     }
 
