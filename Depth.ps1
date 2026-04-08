@@ -377,8 +377,25 @@ function Install-ClientCustomWingetApps {
     }
 
     foreach ($App in $Apps) {
-        # Executes winget for each ID found in the text file
-        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements --scope machine" -Wait -PassThru -NoNewWindow
+        # Executes winget for each ID found in the text file, attempts machine scope first
+        $result = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements --scope machine" -Wait -PassThru -NoNewWindow
+
+        switch ($result.ExitCode) {
+            0            { Write-Host "Successfully installed $App" -ForegroundColor Green }
+            -1978335189  { Write-Host "$App is already up to date" -ForegroundColor Cyan }
+            -1978335216  {
+                            # APPINSTALLER_CLI_ERROR_NO_APPLICABLE_INSTALLER - retries without --scope machine
+                            Write-Warning "$App failed with --scope machine (no applicable installer), retrying without --scope..."
+                            $retryResult = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
+
+                            switch ($retryResult.ExitCode) {
+                                0            { Write-Host "Successfully installed $App (without --scope machine)" -ForegroundColor Green }
+                                -1978335189  { Write-Host "$App is already up to date" -ForegroundColor Cyan }
+                                default      { Write-Warning "Failed to install $App on retry (Exit code: $($retryResult.ExitCode))" }
+                            }
+                         }
+            default      { Write-Warning "Failed to install $App (Exit code: $($result.ExitCode))" }
+        }
     }
 
     return "Completed"
