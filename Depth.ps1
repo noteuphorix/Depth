@@ -387,17 +387,20 @@ function Install-ClientCustomWingetApps {
 # --- Source: src\functions\Install-DefaultWingetApps.ps1 ---
 function Install-DefaultWingetApps {
     Show-FunctionBanner "Install Default Winget Apps"
-    # Pre-defined list of IDs
     $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams")
 
     foreach ($App in $Apps) {
-        # Process runs and displays output in its own console window area
-        Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
+        $result = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
+        
+        switch ($result.ExitCode) {
+            0            { Write-Host "Successfully installed $App" -ForegroundColor Green }
+            -1978335189  { Write-Host "$App is already up to date" -ForegroundColor Cyan }
+            default      { Write-Warning "Failed to install $App (Exit code: $($result.ExitCode))" }
+        }
     }
 
     return "Completed"
 }
-
 
 # --- Source: src\functions\Install-O365.ps1 ---
 function Install-O365 {
