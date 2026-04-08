@@ -2,12 +2,17 @@ function Set-ComputerTimeZone {
     Show-FunctionBanner "Set Timezone"
     # 1. Minimize GUI
     try {
-    $Main.Dispatcher.Invoke([Action]{ 
-        $Main.WindowState = [System.Windows.WindowState]::Minimized 
-    })
-} catch {
-    Write-Warning "Could not minimize GUI: $_"
-}
+        if (-not $Main.Dispatcher.HasShutdownStarted) {
+            $Main.Dispatcher.Invoke(
+                [Action]{ $Main.WindowState = [System.Windows.WindowState]::Minimized },
+                [System.Windows.Threading.DispatcherPriority]::Normal,
+                [System.Threading.CancellationToken]::None,
+                [TimeSpan]::FromSeconds(3)
+            )
+        }
+    } catch {
+        Write-Warning "Could not minimize GUI (dispatcher busy or timed out): $_"
+    }
 
     # Map of Windows Time Zone IDs
     $TZ_Map = @{
