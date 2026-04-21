@@ -161,6 +161,7 @@ $mainXML = @"
 					<Button x:Name="Btn_InstallHPApp" Content="HP" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 					<Button x:Name="Btn_InstallSnapdragonApp" Content="Snapdragon" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 					<Button x:Name="Btn_InstallForticlientApp" Content="Forticlient" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+					<Button x:Name="Btn_InstallFrameworkDrivers" Content="Framework Laptops" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 				</StackPanel>
 			</Border>
 			<Border x:Name="NAS_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="856,0,0,0" Width="200" Height="197" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -281,6 +282,7 @@ $Btn_InstallLenovoApp      = $Main.FindName("Btn_InstallLenovoApp")
 $Btn_InstallHPApp          = $Main.FindName("Btn_InstallHPApp")
 $Btn_InstallSnapdragonApp  = $Main.FindName("Btn_InstallSnapdragonApp")
 $Btn_InstallForticlientApp = $Main.FindName("Btn_InstallForticlientApp")
+$Btn_InstallFrameworkDrivers = $Main.FindName("Btn_InstallFrameworkDrivers")
 
 # NAS Login Section
 $Btn_Login             = $Main.FindName("Btn_Login")
@@ -475,6 +477,12 @@ $Btn_InstallSnapdragonApp.Add_Click({
 $Btn_InstallForticlientApp.Add_Click({
     Update-Status -State "Busy"
     Start-Process "https://links.fortinet.com/forticlient/win/vpnagent"
+    Update-Status -State "Ready"
+})
+
+$Btn_InstallFrameworkDrivers.Add_Click({
+    Update-Status -State "Busy"
+    Start-Process "https://knowledgebase.frame.work/bios-and-drivers-downloads-rJ3PaCexh"
     Update-Status -State "Ready"
 })
 
