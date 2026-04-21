@@ -18,7 +18,7 @@ function Uninstall-Bloat {
         "Microsoft.OneConnect", "Microsoft.Todos", "Microsoft.People",
         "Microsoft.Edge.GameAssist", "Microsoft.SkypeApp", "SpotifyAB.SpotifyMusic",
         "Microsoft.Copilot", "Microsoft.Teams.Classic", "MicrosoftCorporationII.MicrosoftFamily",
-        "Clipchamp.Clipchamp", "Microsoft.XboxGameCallableUI"
+        "Clipchamp.Clipchamp", "Microsoft.XboxGameCallableUI", "Microsoft.MicrosoftJournal", "Microsoft.OutlookForWindows"
     )
 
     $ProcessedList = @()
