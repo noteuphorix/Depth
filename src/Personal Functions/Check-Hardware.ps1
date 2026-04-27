@@ -1,17 +1,5 @@
 function Check-Hardware {
 
-    # --- Battery Report ---
-    Write-Host "`n=== Generating Battery Report ===" -ForegroundColor Yellow
-    powercfg /batteryreport /output C:\battery-report.html
-    Start-Sleep -Seconds 2
-    Start-Process "C:\battery-report.html"
-
-    # --- WinSAT ---
-    Write-Host "`n=== Running WinSAT Formal (this may take a few minutes) ===" -ForegroundColor Yellow
-    Start-Process winsat -ArgumentList "formal" -Wait -NoNewWindow
-    Write-Host "`nWinSAT Results:" -ForegroundColor Cyan
-    Get-CimInstance Win32_WinSAT | Format-List *
-
     # --- Install Apps ---
     Write-Host "`n=== Installing Diagnostic Tools ===" -ForegroundColor Yellow
 
@@ -35,11 +23,24 @@ function Check-Hardware {
         Start-Sleep -Seconds 1
     }
 
+    # --- Battery Report ---
+    Write-Host "`n=== Generating Battery Report ===" -ForegroundColor Yellow
+    powercfg /batteryreport /output C:\battery-report.html
+    Start-Sleep -Seconds 2
+    Start-Process "C:\battery-report.html"
+
     # --- Open Web Tools ---
     Write-Host "`n=== Opening Web Diagnostic Tools ===" -ForegroundColor Yellow
     Start-Process "https://deadpixelbuddy.com/"
     Start-Process "https://danwlker.github.io/KeyboardTestingPage/"
     Start-Process "https://www.speedtest.net/"
+
+    # --- WinSAT ---
+    Write-Host "`n=== Running WinSAT Formal (this may take a few minutes) ===" -ForegroundColor Yellow
+    & winsat formal
+    Start-Sleep -Seconds 3
+    Write-Host "`nWinSAT Results:" -ForegroundColor Cyan
+    Get-CimInstance Win32_WinSAT | Format-List *
 
     Write-Host "`n=== Check-Hardware Complete ===" -ForegroundColor Green
 }
