@@ -191,7 +191,8 @@ $mainXML = @"
                 <StackPanel x:Name="EuphActions_StackPanel" Margin="6,11,6,6">
                     <Label x:Name="Lbl_Personal" Content="Personal" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
                     <Button x:Name="Btn_EnableScripting" Content="Enable Scripting" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
-                </StackPanel>
+					<Button x:Name="Btn_CheckHardware" Content="Check Hardware" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF196DDE" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+				</StackPanel>
             </Border>
         </Grid>
 		<Grid x:Name="FAQ_Grid" Margin="0,100,0,0" d:IsHidden="True">
@@ -300,6 +301,7 @@ $EuphActions_Border       = $Main.FindName("EuphActions_Border")
 $EuphActions_StackPanel   = $Main.FindName("EuphActions_StackPanel")
 $Lbl_Personal             = $Main.FindName("Lbl_Personal")
 $Btn_EnableScripting      = $Main.FindName("Btn_EnableScripting")
+$Btn_CheckHardware        = $Main.FindName("Btn_CheckHardware")
 
 # FAQ Grid
 $FAQ_StackPanel = $Main.FindName("FAQ_StackPanel")
@@ -540,6 +542,12 @@ $Btn_DISM.Add_Click({
 $Btn_EnableScripting.Add_Click({
     Update-Status -State "Busy"
     Set-ScriptingEnvironment
+    Update-Status -State "Ready"
+})
+
+$Btn_CheckHardware.Add_Click({
+    Update-Status -State "Busy"
+    Check-Hardware
     Update-Status -State "Ready"
 })
 

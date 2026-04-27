@@ -191,7 +191,8 @@ $mainXML = @"
                 <StackPanel x:Name="EuphActions_StackPanel" Margin="6,11,6,6">
                     <Label x:Name="Lbl_Personal" Content="Personal" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
                     <Button x:Name="Btn_EnableScripting" Content="Enable Scripting" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
-                </StackPanel>
+					<Button x:Name="Btn_CheckHardware" Content="Check Hardware" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF196DDE" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+				</StackPanel>
             </Border>
         </Grid>
 		<Grid x:Name="FAQ_Grid" Margin="0,100,0,0" d:IsHidden="True">
@@ -2464,6 +2465,53 @@ function Update-Status {
     [System.Windows.Forms.Application]::DoEvents()
 }
 
+# --- Source: src\personal functions\Check-Hardware.ps1 ---
+function Check-Hardware {
+
+    # --- Battery Report ---
+    Write-Host "`n=== Generating Battery Report ===" -ForegroundColor Yellow
+    powercfg /batteryreport /output C:\battery-report.html
+    Start-Sleep -Seconds 2
+    Start-Process "C:\battery-report.html"
+
+    # --- WinSAT ---
+    Write-Host "`n=== Running WinSAT Formal (this may take a few minutes) ===" -ForegroundColor Yellow
+    Start-Process winsat -ArgumentList "formal" -Wait -NoNewWindow
+    Write-Host "`nWinSAT Results:" -ForegroundColor Cyan
+    Get-CimInstance Win32_WinSAT | Format-List *
+
+    # --- Install Apps ---
+    Write-Host "`n=== Installing Diagnostic Tools ===" -ForegroundColor Yellow
+
+    $apps = @(
+        "CPUID.CPU-Z",
+        "CPUID.HWMonitor",
+        "CrystalDewWorld.CrystalDiskInfo",
+        "CrystalDewWorld.CrystalDiskMark"
+    )
+
+    foreach ($AppID in $apps) {
+        Write-Host "Installing package: $AppID..." -ForegroundColor Green
+        $result = Start-Process winget -ArgumentList "install --id $AppID --silent --accept-source-agreements --accept-package-agreements --source winget" -Wait -PassThru -NoNewWindow
+
+        switch ($result.ExitCode) {
+            0            { Write-Host "Successfully installed $AppID" -ForegroundColor Green }
+            -1978335189  { Write-Host "$AppID is already up to date" -ForegroundColor Cyan }
+            default      { Write-Warning "Failed to install $AppID (Exit code: $($result.ExitCode))" }
+        }
+
+        Start-Sleep -Seconds 1
+    }
+
+    # --- Open Web Tools ---
+    Write-Host "`n=== Opening Web Diagnostic Tools ===" -ForegroundColor Yellow
+    Start-Process "https://deadpixelbuddy.com/"
+    Start-Process "https://danwlker.github.io/KeyboardTestingPage/"
+    Start-Process "https://www.speedtest.net/"
+
+    Write-Host "`n=== Check-Hardware Complete ===" -ForegroundColor Green
+}
+
 # --- Source: src\personal functions\Set-ScriptingEnvironment.ps1 ---
 function Set-ScriptingEnvironment {
     Write-Host "Configuring User Environment..." -ForegroundColor Cyan
@@ -2565,6 +2613,7 @@ $EuphActions_Border       = $Main.FindName("EuphActions_Border")
 $EuphActions_StackPanel   = $Main.FindName("EuphActions_StackPanel")
 $Lbl_Personal             = $Main.FindName("Lbl_Personal")
 $Btn_EnableScripting      = $Main.FindName("Btn_EnableScripting")
+$Btn_CheckHardware        = $Main.FindName("Btn_CheckHardware")
 
 # FAQ Grid
 $FAQ_StackPanel = $Main.FindName("FAQ_StackPanel")
@@ -2805,6 +2854,12 @@ $Btn_DISM.Add_Click({
 $Btn_EnableScripting.Add_Click({
     Update-Status -State "Busy"
     Set-ScriptingEnvironment
+    Update-Status -State "Ready"
+})
+
+$Btn_CheckHardware.Add_Click({
+    Update-Status -State "Busy"
+    Check-Hardware
     Update-Status -State "Ready"
 })
 
