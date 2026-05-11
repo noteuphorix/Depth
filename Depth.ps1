@@ -319,9 +319,9 @@ function Install-ClientCustomLocalApps {
     Write-Host "Starting custom app deployment from: $FinalPath" -ForegroundColor Cyan
 
     $InstalledApps = @(
-        Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* 
-        Get-ItemProperty HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*
-    ) | Select-Object -ExpandProperty DisplayName
+    Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*
+    Get-ItemProperty HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*
+    ) | Where-Object { $_.DisplayName } | Select-Object -ExpandProperty DisplayName
 
     $WindowsAgentInstalled  = $InstalledApps -contains "Windows Agent"
     $GlobalProtectInstalled = $InstalledApps -contains "GlobalProtect"
