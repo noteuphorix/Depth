@@ -32,7 +32,8 @@ function Load-VisualStudioXaml {
                         -replace 'd:ItemsSource=".*?"',' ' `
                         -replace 'd:SampleData=".*?"',' ' `
                         -replace 'd:DesignHeight=".*?"',' ' `
-                        -replace 'd:DesignWidth=".*?"',' '
+                        -replace 'd:DesignWidth=".*?"',' ' `
+                        -replace '�','&#169;'
     [xml]$xml = $Cleaned
     $reader = New-Object System.Xml.XmlNodeReader $xml
     return [Windows.Markup.XamlReader]::Load($reader)
@@ -40,19 +41,45 @@ function Load-VisualStudioXaml {
 
 # --- SPLASH XAML ---
 $splashXML = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<Window x:Class="DepthSplashScreen.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Splash" Height="200" Width="800" Background="Black" ResizeMode="NoResize" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" WindowStyle="None">
-    <Grid>
-        <TextBlock x:Name="Creator_Name" HorizontalAlignment="Center" TextWrapping="Wrap" Text="Created By: Brandon Swarek" VerticalAlignment="Center" Height="72" Width="770" FontSize="48" TextAlignment="Center" Foreground="White"/>
-        <Border x:Name="Border" BorderThickness="5" HorizontalAlignment="Center" Height="200" VerticalAlignment="Center" Width="800">
-            <Border.BorderBrush>
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DepthSplashScreen"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="379" Width="632" Background="Transparent" WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="NoResize" Foreground="Transparent" AllowsTransparency="True">
+    <Window.Resources>
+        <Storyboard x:Key="Storyboard1"/>
+    </Window.Resources>
+    <Grid x:Name="GridSplash" Background="#00000000">
+        <!-- Blurred background layer -->
+        <!-- Glass overlay layer -->
+        <Border x:Name="BorderUpper" BorderBrush="Black" BorderThickness="1" Margin="0,231,0,0" Background="White"/>
+        <Border x:Name="BorderLower" BorderBrush="Black" BorderThickness="1" Margin="0,0,0,121">
+            <Border.Background>
                 <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                     <GradientStop Color="Black"/>
-                    <GradientStop Color="#FF22AEB1" Offset="1"/>
+                    <GradientStop Color="#FF1B5D9A" Offset="1"/>
                 </LinearGradientBrush>
-            </Border.BorderBrush>
+            </Border.Background>
         </Border>
+        <Label x:Name="LblSplash" Content="Euphoria LLC" Background="{x:Null}" Foreground="White" Margin="20,20,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="20" FontFamily="Segoe UI Light"/>
+        <Label x:Name="LblProgramName" Content="Depth" Background="{x:Null}" Foreground="White" Margin="0,80,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="48" FontWeight="Bold"/>
+        <Label x:Name="LblProgramPurpose" Content="Mass Deployment Tool" Background="{x:Null}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="30" FontFamily="Segoe UI Light" Margin="0,144,0,0"/>
+        <Label x:Name="LblCopyrightOne" Content="Copyright � 2025-2026 Brandon Swarek" Background="{x:Null}" Foreground="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="13" FontFamily="Segoe UI Light" Margin="0,0,30,26"/>
+        <Label x:Name="LblCopyrightTwo" Content="All rights reserved" Background="{x:Null}" Foreground="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="13" FontFamily="Segoe UI Light" Margin="0,0,30,8"/>
+        <ProgressBar x:Name="PBarLoading" Margin="0,302,0,0" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Top" HorizontalAlignment="Center" Width="400" Height="20" IsIndeterminate="True">
+            <ProgressBar.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleY="-1"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </ProgressBar.RenderTransform>
+        </ProgressBar>
+        <Label x:Name="LblCopyrightOne_Copy" Content="Loading..." Background="{x:Null}" Foreground="Black" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontFamily="Segoe UI Light" Margin="112,0,0,80"/>
     </Grid>
 </Window>
 "@
@@ -216,7 +243,13 @@ $mainXML = @"
 # 1. Show Splashscreen
 $Splash = Load-VisualStudioXaml -RawXaml $splashXML
 $Splash.Show()
-Start-Sleep -Seconds 3
+
+$end = (Get-Date).AddSeconds(5)
+while ((Get-Date) -lt $end) {
+    [System.Windows.Forms.Application]::DoEvents()
+    Start-Sleep -Milliseconds 16
+}
+
 $Splash.Close()
 
 # 2. Load main GUI object
