@@ -318,18 +318,21 @@ function Install-ClientCustomLocalApps {
 
     Write-Host "Starting custom app deployment from: $FinalPath" -ForegroundColor Cyan
 
-    # Check if Windows Agent is already installed
-    $InstalledApps = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |
-                     Select-Object -ExpandProperty DisplayName
-    $WindowsAgentInstalled = $InstalledApps -contains "Windows Agent"
+    $InstalledApps = @(
+        Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* 
+        Get-ItemProperty HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*
+    ) | Select-Object -ExpandProperty DisplayName
+
+    $WindowsAgentInstalled  = $InstalledApps -contains "Windows Agent"
+    $GlobalProtectInstalled = $InstalledApps -contains "GlobalProtect"
 
     $AppFiles = Get-ChildItem -Path $FinalPath -File
     
     foreach ($App in $AppFiles) {
 
-        # Skip WindowsAgentSetup if already installed
-        if ($App.Name -like "*WindowsAgentSetup*" -and $WindowsAgentInstalled) {
-            Write-Host "Skipping $($App.Name) — Windows Agent is already installed." -ForegroundColor DarkYellow
+        if (($App.Name -like "*WindowsAgentSetup*" -and $WindowsAgentInstalled) -or
+            ($App.Name -like "*GlobalProtect*"     -and $GlobalProtectInstalled)) {
+            Write-Host "Skipping $($App.Name) — already installed." -ForegroundColor DarkYellow
             continue
         }
 
