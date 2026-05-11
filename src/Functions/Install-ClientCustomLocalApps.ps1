@@ -5,9 +5,6 @@ function Install-ClientCustomLocalApps {
         return
     }
 
-    # 1. Determine the Base Path
-    # If it contains a ':' (C:\) or starts with '\' (\\Server), use it directly.
-    # Otherwise, assume it's a name and build the 10.24.2.5 network path.
     if ($global:SelectedClient -match ":" -or $global:SelectedClient -like "\\*") {
         $BasePath = $global:SelectedClient
     } 
@@ -15,7 +12,6 @@ function Install-ClientCustomLocalApps {
         $BasePath = "\\10.24.2.5\Clients\$global:SelectedClient"
     }
 
-    # 2. Append the "Apps" folder to the determined path
     $FinalPath = Join-Path -Path $BasePath -ChildPath "Apps"
 
     if (-not (Test-Path $FinalPath)) {
@@ -25,14 +21,25 @@ function Install-ClientCustomLocalApps {
 
     Write-Host "Starting custom app deployment from: $FinalPath" -ForegroundColor Cyan
 
+    # Check if Windows Agent is already installed
+    $InstalledApps = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* |
+                     Select-Object -ExpandProperty DisplayName
+    $WindowsAgentInstalled = $InstalledApps -contains "Windows Agent"
+
     $AppFiles = Get-ChildItem -Path $FinalPath -File
     
     foreach ($App in $AppFiles) {
+
+        # Skip WindowsAgentSetup if already installed
+        if ($App.Name -like "*WindowsAgentSetup*" -and $WindowsAgentInstalled) {
+            Write-Host "Skipping $($App.Name) — Windows Agent is already installed." -ForegroundColor DarkYellow
+            continue
+        }
+
         Write-Host "Installing: $($App.Name)..." -ForegroundColor Yellow
 
         try {
             if ($App.Extension -eq ".msi") {
-                # Wrap FullName in quotes to handle spaces correctly
                 $Args = "/i `"$($App.FullName)`" /norestart"
                 Start-Process -FilePath "msiexec.exe" -ArgumentList $Args -Wait -NoNewWindow -ErrorAction Stop
             } 
