@@ -35,9 +35,9 @@ function Install-ClientCustomWingetApps {
         switch ($result.ExitCode) {
             0            { Write-Host "Successfully installed $App" -ForegroundColor Green }
             -1978335189  { Write-Host "$App is already up to date" -ForegroundColor Cyan }
-            -1978335216  {
-                            # APPINSTALLER_CLI_ERROR_NO_APPLICABLE_INSTALLER - retries without --scope machine
-                            Write-Warning "$App failed with --scope machine (no applicable installer), retrying without --scope..."
+            { $_ -in -1978335216, -1978334957 } {
+                            # APPINSTALLER_CLI_ERROR_NO_APPLICABLE_INSTALLER or UPDATE_NOT_APPLICABLE - retries without --scope machine
+                            Write-Warning "$App failed with --scope machine (exit code: $_), retrying without --scope..."
                             $retryResult = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
 
                             switch ($retryResult.ExitCode) {
