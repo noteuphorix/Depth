@@ -9,7 +9,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
         "&([ScriptBlock]::Create((irm https://depth.narwal.llc))) $($argList -join ' ')"
     }
 
-    $powershellCmd = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "pwsh" } else { "powershell" }
+    $powershellCmd = "powershell"
     $processCmd = if (Get-Command wt.exe -ErrorAction SilentlyContinue) { "wt.exe" } else { "$powershellCmd" }
 
     if ($processCmd -eq "wt.exe") {
@@ -33,7 +33,7 @@ function Load-VisualStudioXaml {
                         -replace 'd:SampleData=".*?"',' ' `
                         -replace 'd:DesignHeight=".*?"',' ' `
                         -replace 'd:DesignWidth=".*?"',' ' `
-                        -replace '©','&#169;'
+                        -replace 'ï¿½','&#169;'
     [xml]$xml = $Cleaned
     $reader = New-Object System.Xml.XmlNodeReader $xml
     return [Windows.Markup.XamlReader]::Load($reader)
@@ -67,7 +67,7 @@ $splashXML = @"
         <Label x:Name="LblSplash" Content="Euphoria LLC" Background="{x:Null}" Foreground="White" Margin="20,20,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="20" FontFamily="Segoe UI Light"/>
         <Label x:Name="LblProgramName" Content="Depth" Background="{x:Null}" Foreground="White" Margin="0,80,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="48" FontWeight="Bold"/>
         <Label x:Name="LblProgramPurpose" Content="Mass Deployment Tool" Background="{x:Null}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="30" FontFamily="Segoe UI Light" Margin="0,144,0,0"/>
-        <Label x:Name="LblCopyrightOne" Content="Copyright © 2025-2026 Brandon Swarek" Background="{x:Null}" Foreground="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="13" FontFamily="Segoe UI Light" Margin="0,0,30,26"/>
+        <Label x:Name="LblCopyrightOne" Content="Copyright ï¿½ 2025-2026 Brandon Swarek" Background="{x:Null}" Foreground="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="13" FontFamily="Segoe UI Light" Margin="0,0,30,26"/>
         <Label x:Name="LblCopyrightTwo" Content="All rights reserved" Background="{x:Null}" Foreground="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="13" FontFamily="Segoe UI Light" Margin="0,0,30,8"/>
         <ProgressBar x:Name="PBarLoading" Margin="0,302,0,0" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Top" HorizontalAlignment="Center" Width="400" Height="20" IsIndeterminate="True">
             <ProgressBar.RenderTransform>
@@ -237,14 +237,11 @@ $mainXML = @"
 </Window>
 "@
 
-# --- GLOBAL VARIABLES ---
-
-
-# 1. Show Splashscreen
+# --- SHOW SPASHSCREEN ---
 $Splash = Load-VisualStudioXaml -RawXaml $splashXML
 $Splash.Show()
 
-$end = (Get-Date).AddSeconds(5)
+$end = (Get-Date).AddSeconds(0)
 while ((Get-Date) -lt $end) {
     [System.Windows.Forms.Application]::DoEvents()
     Start-Sleep -Milliseconds 16
@@ -252,274 +249,118 @@ while ((Get-Date) -lt $end) {
 
 $Splash.Close()
 
-# 2. Load main GUI object
+# --- LOAD MAIN GUI OBJECT ---
 $Main = Load-VisualStudioXaml -RawXaml $mainXML
+
+# --- SYNC HASHTABLE ---
+$sync = [hashtable]::Synchronized(@{
+    Main    = $Main
+    Running = [hashtable]::Synchronized(@{})
+})
 
 # --- FUNCTIONS SECTION ---
 # COMPILER_INSERT_HERE
 
 # --- UI ELEMENT MAPPING ---
+([xml]$mainXML).SelectNodes("//*[@*[local-name()='Name']]") | ForEach-Object {
+    $name = $_.GetAttribute("Name", "http://schemas.microsoft.com/winfx/2006/xaml")
+    if (-not $name) { $name = $_.Name }
+    Set-Variable -Name $name -Value $Main.FindName($name) -Scope Script
+}
 
+# --- SHARED RUNSPACE POOL ---
+$sessionState = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+$sessionState.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry 'sync', $sync, $null))
+$sessionState.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry 'PSModuleAutoLoadingPreference', 'All', $null))
 
-# Grids
-$Main_Grid       = $Main.FindName("Main_Grid")
-$Tools_Grid      = $Main.FindName("Tools_Grid")
-$Deployment_Grid = $Main.FindName("Deployment_Grid")
-$FAQ_Grid        = $Main.FindName("FAQ_Grid")
+Get-ChildItem function: | Where-Object { $_.Name -notlike '*:' } | ForEach-Object {
+    try {
+        $sessionState.Commands.Add((New-Object System.Management.Automation.Runspaces.SessionStateFunctionEntry($_.Name, $_.Definition)))
+    } catch {}
+}
 
-# Menu Bar
-$Btn_Tools      = $Main.FindName("Btn_Tools")
-$Btn_Deployment = $Main.FindName("Btn_Deployment")
-$Btn_FAQ        = $Main.FindName("Btn_FAQ")
-$Slider_Ken     = $Main.FindName("Slider_Ken")
-$Btn_RestartPC  = $Main.FindName("Btn_RestartPC")
-$Btn_Close      = $Main.FindName("Btn_Close")
-$Btn_Minimize   = $Main.FindName("Btn_Minimize")
+$sync.RunspacePool = [runspacefactory]::CreateRunspacePool(1, [int]$env:NUMBER_OF_PROCESSORS, $sessionState, $Host)
+$sync.RunspacePool.Open()
 
-# Status Indicators
-$Ellipse_StatusLight         = $Main.FindName("Ellipse_StatusLight")
-$Ellipse_NASLoginStatusLight = $Main.FindName("Ellipse_NASLoginStatusLight")
+function Invoke-BusyAction {
+    param([scriptblock]$Action)
+    Update-Status -State "Busy"
+    & $Action
+    Update-Status -State "Ready"
+}
 
-# Actions Column
-$Btn_RunAll                   = $Main.FindName("Btn_RunAll")
-$Btn_RepairWinget             = $Main.FindName("Btn_RepairWinget")
-$Btn_InstallO365              = $Main.FindName("Btn_InstallO365")
-$Btn_InstallLocalApps         = $Main.FindName("Btn_InstallLocalApps")
-$Btn_InstallDefaultWinget     = $Main.FindName("Btn_InstallDefaultWinget")
-$Btn_InstallCustomWinget      = $Main.FindName("Btn_InstallCustomWinget")
-$Btn_UninstallBloat           = $Main.FindName("Btn_UninstallBloat")
-$Btn_UninstallLanguagePacks   = $Main.FindName("Btn_UninstallLanguagePacks")
-$Btn_SetPowerOptions          = $Main.FindName("Btn_SetPowerOptions")
-$Btn_SetTimezone              = $Main.FindName("Btn_SetTimezone")
-$Btn_CopyShortcuts            = $Main.FindName("Btn_CopyShortcuts") 
+function Invoke-BusyActionAsync {
+    param(
+        [string]$Name,
+        [scriptblock]$Action
+    )
 
-# Client Selection Column
-$ListBox_Clients         = $Main.FindName("ListBox_Clients")
-$Btn_ReloadClients       = $Main.FindName("Btn_ReloadClients")
-$Btn_ManualSelection     = $Main.FindName("Btn_ManualSelection")
-$Btn_ManualSelection     = $Main.FindName("Btn_ManualSelection")
-$Lbl_SelectedClient      = $Main.FindName("Lbl_SelectedClient")
-$TxtBlock_SelectedClient = $Main.FindName("TxtBlock_SelectedClient")
+    if ($sync.Running.ContainsKey($Name)) {
+        Write-Host "`nWait! '$Name' is already running." -ForegroundColor Yellow
+        return
+    }
+    $sync.Running[$Name] = $true
 
-# Misc Column
-$Btn_ConfigUAC             = $Main.FindName("Btn_ConfigUAC")
-$Btn_ConfigTaskbar         = $Main.FindName("Btn_ConfigTaskbar")
-$Btn_UnlockWinUpdate       = $Main.FindName("Btn_UnlockWinUpdate")
-$Btn_OfficeInstallBypass   = $Main.FindName("Btn_OfficeInstallBypass")
-$Btn_RepairTakeControl     = $Main.FindName("Btn_RepairTakeControl")
+    $ps = [powershell]::Create()
+    $ps.RunspacePool = $sync.RunspacePool
+    $ps.AddScript({
+        param($Action, $Name, $SelectedClient)
+        $global:SelectedClient = $SelectedClient
+        $sync.Main.Dispatcher.Invoke([action]{ Update-Status -State "Busy" })
+        try {
+            & ([scriptblock]::Create($Action.ToString()))
+        } finally {
+            $sync.Running.Remove($Name)
+            if ($sync.Running.Count -eq 0) {
+                $sync.Main.Dispatcher.Invoke([action]{ Update-Status -State "Ready" })
+            }
+        }
+    }).AddParameter("Action", $Action).AddParameter("Name", $Name).AddParameter("SelectedClient", $global:SelectedClient) | Out-Null
 
-# Apps Column (Drivers)
-$Btn_InstallNVIDIAApp      = $Main.FindName("Btn_InstallNVIDIAApp")
-$Btn_InstallAMDApp         = $Main.FindName("Btn_InstallAMDApp")
-$Btn_InstallDellApp        = $Main.FindName("Btn_InstallDellApp")
-$Btn_InstallLenovoApp      = $Main.FindName("Btn_InstallLenovoApp")
-$Btn_InstallHPApp          = $Main.FindName("Btn_InstallHPApp")
-$Btn_InstallSnapdragonApp  = $Main.FindName("Btn_InstallSnapdragonApp")
-$Btn_InstallForticlientApp = $Main.FindName("Btn_InstallForticlientApp")
-$Btn_InstallFrameworkDrivers = $Main.FindName("Btn_InstallFrameworkDrivers")
-
-# NAS Login Section
-$Btn_Login             = $Main.FindName("Btn_Login")
-$TxtBox_Username       = $Main.FindName("TxtBox_Username")
-$PasswordBox_Password  = $Main.FindName("PasswordBox_Password")
-
-# HD Actions Section - Tools Grid
-$HDActions_Border      = $Main.FindName("HDActions_Border")
-$HDActions_StackPanel  = $Main.FindName("HDActions_StackPanel")
-$Lbl_HD_Actions        = $Main.FindName("Lbl_HD_Actions")
-$Btn_DISM              = $Main.FindName("Btn_DISM")
-
-# Personal Actions Section - Tools Grid
-$EuphActions_Border       = $Main.FindName("EuphActions_Border")
-$EuphActions_StackPanel   = $Main.FindName("EuphActions_StackPanel")
-$Lbl_Personal             = $Main.FindName("Lbl_Personal")
-$Btn_EnableScripting      = $Main.FindName("Btn_EnableScripting")
-$Btn_CheckHardware        = $Main.FindName("Btn_CheckHardware")
-
-# FAQ Grid
-$FAQ_StackPanel = $Main.FindName("FAQ_StackPanel")
-$Lbl_FAQ        = $Main.FindName("Lbl_FAQ")
-$Lbl_FAQ1       = $Main.FindName("Lbl_FAQ1")
-$TxtBlock_FAQ1  = $Main.FindName("TxtBlock_FAQ1")
-$Lbl_FAQ2       = $Main.FindName("Lbl_FAQ2")
-$TxtBlock_FAQ2  = $Main.FindName("TxtBlock_FAQ2")
-$FAQ_Border     = $Main.FindName("FAQ_Border")
-
-# Fun Additions
-$Img_Ken = $Main.FindName("Img_Ken")
-
+    $ps.BeginInvoke() | Out-Null
+}
 
 # --- ACTIONS COLUMN CLICK EVENTS ---
-$Btn_RunAll.Add_Click({
-    Update-Status -State "Busy"
+$Btn_RunAll.Add_Click({ Invoke-BusyActionAsync -Name "RunAll" -Action {
     Set-CustomPowerOptions; Copy-Shortcuts; Repair-Winget; Install-ClientCustomLocalApps
     Install-DefaultWingetApps; Install-ClientCustomWingetApps; Uninstall-Bloat
     Uninstall-OfficeLanguagePacks; Install-O365; Set-ComputerTimeZone
-    Update-Status -State "Ready"
-})
+}})
 
-$Btn_RepairWinget.Add_Click({
-    Update-Status -State "Busy"
-    Repair-Winget
-    Update-Status -State "Ready"
-})
-
-$Btn_InstallO365.Add_Click({
-    Update-Status -State "Busy"
-    Install-O365
-    Update-Status -State "Ready"
-})
-
-$Btn_InstallLocalApps.Add_Click({
-    Update-Status -State "Busy"
-    Install-ClientCustomLocalApps
-    Update-Status -State "Ready"
-})
-
-$Btn_InstallDefaultWinget.Add_Click({
-    Update-Status -State "Busy"
-    Install-DefaultWingetApps
-    Update-Status -State "Ready"
-})
-
-$Btn_InstallCustomWinget.Add_Click({
-    Update-Status -State "Busy"
-    Install-ClientCustomWingetApps
-    Update-Status -State "Ready"
-})
-
-$Btn_UninstallBloat.Add_Click({
-    Update-Status -State "Busy"
-    Uninstall-Bloat
-    Update-Status -State "Ready"
-})
-
-$Btn_UninstallLanguagePacks.Add_Click({
-    Update-Status -State "Busy"
-    Uninstall-OfficeLanguagePacks
-    Update-Status -State "Ready"
-})
-
-$Btn_SetPowerOptions.Add_Click({
-    Update-Status -State "Busy"
-    Set-CustomPowerOptions
-    Update-Status -State "Ready"
-})
-
-$Btn_SetTimezone.Add_Click({
-    Update-Status -State "Busy"
-    Set-ComputerTimeZone
-    Update-Status -State "Ready"
-})
-
-$Btn_CopyShortcuts.Add_Click({
-    Update-Status -State "Busy"
-    Copy-Shortcuts
-    Update-Status -State "Ready"
-})
-
-$Btn_Login.Add_Click({
-    Update-Status -State "Busy"
-    Connect-NAS
-    Update-Status -State "Ready"
-})
+$Btn_RepairWinget.Add_Click({ Invoke-BusyActionAsync -Name "RepairWinget" -Action { Repair-Winget } })
+$Btn_InstallO365.Add_Click({ Invoke-BusyActionAsync -Name "InstallO365" -Action { Install-O365 } })
+$Btn_InstallLocalApps.Add_Click({ Invoke-BusyActionAsync -Name "InstallLocalApps" -Action { Install-ClientCustomLocalApps } })
+$Btn_InstallDefaultWinget.Add_Click({ Invoke-BusyActionAsync -Name "InstallDefaultWinget" -Action { Install-DefaultWingetApps } })
+$Btn_InstallCustomWinget.Add_Click({ Invoke-BusyActionAsync -Name "InstallCustomWinget" -Action { Install-ClientCustomWingetApps } })
+$Btn_UninstallBloat.Add_Click({ Invoke-BusyActionAsync -Name "UninstallBloat" -Action { Uninstall-Bloat } })
+$Btn_UninstallLanguagePacks.Add_Click({ Invoke-BusyActionAsync -Name "UninstallLanguagePacks" -Action { Uninstall-OfficeLanguagePacks } })
+$Btn_SetPowerOptions.Add_Click({ Invoke-BusyActionAsync -Name "SetPowerOptions" -Action { Set-CustomPowerOptions } })
+$Btn_SetTimezone.Add_Click({ Invoke-BusyActionAsync -Name "SetTimezone" -Action { Set-ComputerTimeZone } })
+$Btn_CopyShortcuts.Add_Click({ Invoke-BusyActionAsync -Name "CopyShortcuts" -Action { Copy-Shortcuts } })
+$Btn_Login.Add_Click({ Invoke-BusyAction { Connect-NAS } })
 
 # --- CLIENT SELECT COLUMN CLICK EVENTS ---
-$Btn_ReloadClients.Add_Click({
-    Update-Status -State "Busy"
-    Refresh-Clients
-    Update-Status -State "Ready"
-})
-
-$Btn_ManualSelection.Add_Click({
-    Update-Status -State "Busy"
-    Select-ManualFolder
-    Update-Status -State "Ready"
-})
-
-$ListBox_Clients.Add_MouseDoubleClick({
-    Set-SelectedClient
-})
+$Btn_ReloadClients.Add_Click({ Invoke-BusyAction { Refresh-Clients } })
+$Btn_ManualSelection.Add_Click({ Invoke-BusyAction { Select-ManualFolder } })
+$ListBox_Clients.Add_MouseDoubleClick({ Set-SelectedClient })
 
 # --- MISC COLUMN ---
-$Btn_ConfigUAC.Add_Click({
-    Update-Status -State "Busy"
-    Set-UAC
-    Update-Status -State "Ready"
-})
-
-$Btn_ConfigTaskbar.Add_Click({
-    Update-Status -State "Busy"
-    Set-Taskbar
-    Update-Status -State "Ready"
-})
-
-$Btn_UnlockWinUpdate.Add_Click({
-    Update-Status -State "Busy"
-    Unlock-WinUpdates
-    Update-Status -State "Ready"
-})
-
-$Btn_OfficeInstallBypass.Add_Click({
-    Update-Status -State "Busy"
-    Install-O365Bypass
-    Update-Status -State "Ready"
-})
-
-$Btn_RepairTakeControl.Add_Click({
-    Update-Status -State "Busy"
-    Repair-TakeControl
-    Update-Status -State "Ready"
-})
+$Btn_ConfigUAC.Add_Click({ Invoke-BusyActionAsync -Name "ConfigUAC" -Action { Set-UAC } })
+$Btn_ConfigTaskbar.Add_Click({ Invoke-BusyActionAsync -Name "ConfigTaskbar" -Action { Set-Taskbar } })
+$Btn_UnlockWinUpdate.Add_Click({ Invoke-BusyActionAsync -Name "UnlockWinUpdate" -Action { Unlock-WinUpdates } })
+$Btn_OfficeInstallBypass.Add_Click({ Invoke-BusyActionAsync -Name "OfficeInstallBypass" -Action { Install-O365Bypass } })
+$Btn_RepairTakeControl.Add_Click({ Invoke-BusyActionAsync -Name "RepairTakeControl" -Action { Repair-TakeControl } })
 
 # --- APPS COLUMN (DRIVERS) CLICK EVENTS ---
-$Btn_InstallNVIDIAApp.Add_Click({
-    Update-Status -State "Busy"
-    Install-PassedWingetApp "TechPowerUp.NVCleanstall"
-    Update-Status -State "Ready"
-})
+$Btn_InstallNVIDIAApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallNVIDIA" -Action { Install-PassedWingetApp "TechPowerUp.NVCleanstall" } })
+$Btn_InstallAMDApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallAMD" -Action { Start-Process "https://www.amd.com/en/support/download/drivers.html" } })
+$Btn_InstallDellApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallDell" -Action { Install-PassedWingetApp "Dell.CommandUpdate" } })
+$Btn_InstallLenovoApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallLenovo" -Action { Install-PassedWingetApp "9NR5B8GVVM13" } })
+$Btn_InstallHPApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallHP" -Action { Start-Process "https://support.hp.com/us-en/help/hp-support-assistant" } })
+$Btn_InstallSnapdragonApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallSnapdragon" -Action { Start-Process "https://softwarecenter.qualcomm.com/api/download/software/tools/SnapdragonControlPanel/Windows/ARM64/2025.3.0.0/Snapdragon_Control_Panel_2025.3.0.0.zip" } })
+$Btn_InstallForticlientApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallForticlient" -Action { Start-Process "https://links.fortinet.com/forticlient/win/vpnagent" } })
+$Btn_InstallFrameworkDrivers.Add_Click({ Invoke-BusyActionAsync -Name "InstallFrameworkDrivers" -Action { Start-Process "https://knowledgebase.frame.work/bios-and-drivers-downloads-rJ3PaCexh" } })
 
-$Btn_InstallAMDApp.Add_Click({
-    Update-Status -State "Busy"
-    Start-Process "https://www.amd.com/en/support/download/drivers.html"
-    Update-Status -State "Ready"
-})
-
-$Btn_InstallDellApp.Add_Click({
-    Update-Status -State "Busy"
-    Install-PassedWingetApp "Dell.CommandUpdate"
-    Update-Status -State "Ready"
-})
-
-$Btn_InstallLenovoApp.Add_Click({
-    Update-Status -State "Busy"
-    Install-PassedWingetApp "9NR5B8GVVM13"
-    Update-Status -State "Ready"
-})
-
-$Btn_InstallHPApp.Add_Click({
-    Update-Status -State "Busy"
-    Start-Process "https://support.hp.com/us-en/help/hp-support-assistant"
-    Update-Status -State "Ready"
-})
-
-$Btn_InstallSnapdragonApp.Add_Click({
-    Update-Status -State "Busy"
-    Start-Process "https://softwarecenter.qualcomm.com/api/download/software/tools/SnapdragonControlPanel/Windows/ARM64/2025.3.0.0/Snapdragon_Control_Panel_2025.3.0.0.zip"
-    Update-Status -State "Ready"
-})
-
-$Btn_InstallForticlientApp.Add_Click({
-    Update-Status -State "Busy"
-    Start-Process "https://links.fortinet.com/forticlient/win/vpnagent"
-    Update-Status -State "Ready"
-})
-
-$Btn_InstallFrameworkDrivers.Add_Click({
-    Update-Status -State "Busy"
-    Start-Process "https://knowledgebase.frame.work/bios-and-drivers-downloads-rJ3PaCexh"
-    Update-Status -State "Ready"
-})
 
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---
 $Btn_Tools.Add_Click({
@@ -565,24 +406,11 @@ $Slider_Ken.Add_ValueChanged({
 })
 
 # --- HD Buttons --- #
-$Btn_DISM.Add_Click({
-    Update-Status -State "Busy"
-    DISMFix
-    Update-Status -State "Ready"
-})
+$Btn_DISM.Add_Click({ Invoke-BusyActionAsync { DISMFix } })
 
 # --- Personal Buttons --- #
-$Btn_EnableScripting.Add_Click({
-    Update-Status -State "Busy"
-    Set-ScriptingEnvironment
-    Update-Status -State "Ready"
-})
-
-$Btn_CheckHardware.Add_Click({
-    Update-Status -State "Busy"
-    Check-Hardware
-    Update-Status -State "Ready"
-})
+$Btn_EnableScripting.Add_Click({ Invoke-BusyActionAsync { Set-ScriptingEnvironment } })
+$Btn_CheckHardware.Add_Click({ Invoke-BusyActionAsync { Check-Hardware } })
 
 # --- GRID EVENTS ---
 $Main_Grid.Add_MouseLeftButtonDown({
