@@ -241,7 +241,7 @@ $mainXML = @"
 $Splash = Load-VisualStudioXaml -RawXaml $splashXML
 $Splash.Show()
 
-$end = (Get-Date).AddSeconds(0)
+$end = (Get-Date).AddSeconds(5)
 while ((Get-Date) -lt $end) {
     [System.Windows.Forms.Application]::DoEvents()
     Start-Sleep -Milliseconds 16
@@ -275,7 +275,7 @@ function Connect-NAS {
         # If it fails, New-SmbMapping will throw an error to the 'catch' block
         New-SmbMapping -RemotePath $NASPath -Password $Pass -UserName $User -Persistent $true -ErrorAction Stop | Out-Null
         net use $NASPath $Pass /user:$User /persistent:yes /y > $null
-
+        
         $global:NAS_Clients_Folder = $NASPath
         $ListBox_Clients.Items.Clear()
         $Folders = Get-ChildItem -Path $global:NAS_Clients_Folder -Directory -ErrorAction SilentlyContinue | Sort-Object Name
@@ -1903,9 +1903,9 @@ function Set-ComputerTimeZone {
     Show-FunctionBanner "Set Timezone"
     # 1. Minimize GUI
     try {
-        if (-not $sync.Main.Dispatcher.HasShutdownStarted) {
-            $sync.Main.Dispatcher.Invoke(
-                [Action]{ $sync.Main.WindowState = [System.Windows.WindowState]::Minimized },
+        if (-not $Main.Dispatcher.HasShutdownStarted) {
+            $Main.Dispatcher.Invoke(
+                [Action]{ $Main.WindowState = [System.Windows.WindowState]::Minimized },
                 [System.Windows.Threading.DispatcherPriority]::Normal,
                 [System.Threading.CancellationToken]::None,
                 [TimeSpan]::FromSeconds(3)
@@ -2009,7 +2009,7 @@ function Set-ComputerTimeZone {
     # 5. Restore GUI
     Write-Host "Returning to GUI..." -ForegroundColor Gray
     Start-Sleep -Seconds 1
-    $sync.Main.Dispatcher.Invoke([action]{ $sync.Main.WindowState = [System.Windows.WindowState]::Normal })
+    $Main.WindowState = [System.Windows.WindowState]::Normal
 }
 
 # --- Source: src\functions\Set-CustomPowerOptions.ps1 ---
@@ -2498,12 +2498,17 @@ function Update-Status {
         [string]$State
     )
 
-    $ellipse = $sync.Main.FindName('Ellipse_StatusLight')
+    # Change the color of the StatusLight Ellipse
     if ($State -eq "Busy") {
-        $ellipse.Fill = [System.Windows.Media.Brushes]::Red
+        # Use Red for Busy
+        $Ellipse_StatusLight.Fill = [System.Windows.Media.Brushes]::Red
     } else {
-        $ellipse.Fill = [System.Windows.Media.Brushes]::LimeGreen
+        # Use LimeGreen for Ready
+        $Ellipse_StatusLight.Fill = [System.Windows.Media.Brushes]::LimeGreen
     }
+
+    # Keeps the UI responsive during the color change
+    [System.Windows.Forms.Application]::DoEvents()
 }
 
 # --- Source: src\personal functions\Check-Hardware.ps1 ---

@@ -241,7 +241,7 @@ $mainXML = @"
 $Splash = Load-VisualStudioXaml -RawXaml $splashXML
 $Splash.Show()
 
-$end = (Get-Date).AddSeconds(0)
+$end = (Get-Date).AddSeconds(5)
 while ((Get-Date) -lt $end) {
     [System.Windows.Forms.Application]::DoEvents()
     Start-Sleep -Milliseconds 16
