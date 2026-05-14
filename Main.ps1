@@ -241,7 +241,7 @@ $mainXML = @"
 $Splash = Load-VisualStudioXaml -RawXaml $splashXML
 $Splash.Show()
 
-$end = (Get-Date).AddSeconds(0)
+$end = (Get-Date).AddSeconds(5)
 while ((Get-Date) -lt $end) {
     [System.Windows.Forms.Application]::DoEvents()
     Start-Sleep -Milliseconds 16
@@ -409,8 +409,8 @@ $Slider_Ken.Add_ValueChanged({
 $Btn_DISM.Add_Click({ Invoke-BusyActionAsync { DISMFix } })
 
 # --- Personal Buttons --- #
-$Btn_EnableScripting.Add_Click({ Invoke-BusyActionAsync { Set-ScriptingEnvironment } })
-$Btn_CheckHardware.Add_Click({ Invoke-BusyActionAsync { Check-Hardware } })
+$Btn_EnableScripting.Add_Click({ Invoke-BusyActionAsync -Name "EnableScripting" -Action { Set-ScriptingEnvironment } })
+$Btn_CheckHardware.Add_Click({ Invoke-BusyActionAsync -Name "CheckHardware" -Action { Check-Hardware } })
 
 # --- GRID EVENTS ---
 $Main_Grid.Add_MouseLeftButtonDown({
