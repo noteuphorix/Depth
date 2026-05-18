@@ -3,6 +3,7 @@ function Repair-Winget {
     Show-FunctionBanner "Winget Repair"
     Write-Host "Attempting to install WindowsAppRuntime 1.8 via Winget..." -ForegroundColor Yellow
     Start-Process winget -ArgumentList "install Microsoft.WindowsAppRuntime.1.8 --source winget --silent --accept-package-agreements --accept-source-agreements" -Wait -PassThru -NoNewWindow
+    Start-Process winget -ArgumentList "install Microsoft.VCLibs.Desktop.14 --source winget --silent --accept-package-agreements --accept-source-agreements" -Wait -PassThru -NoNewWindow
 
     Write-Host "Checking for AppInstaller updates..." -ForegroundColor Cyan
     
