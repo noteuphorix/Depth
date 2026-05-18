@@ -2317,6 +2317,20 @@ function Unlock-WinUpdates {
     Write-Host "`nWindows Update has been unlocked." -ForegroundColor Green
 }
 
+# --- Source: src\functions\Upgrade-AllWinget.ps1 ---
+function Upgrade-AllWinget {
+    Show-FunctionBanner "Full Upgrade"
+    Write-Host "Running winget upgrade for all packages..." -ForegroundColor Yellow
+    $upgradeResult = Start-Process winget -ArgumentList "upgrade --all --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
+
+    switch ($upgradeResult.ExitCode) {
+        0       { Write-Host "All packages upgraded successfully" -ForegroundColor Green }
+        default { Write-Warning "winget upgrade completed with exit code: $($upgradeResult.ExitCode)" }
+    }
+
+    return "Completed"
+}
+
 # --- Source: src\hd functions\HD_DISMFix.ps1 ---
 function DISMFix {
 
@@ -2644,9 +2658,17 @@ function Invoke-BusyActionAsync {
 
 # --- ACTIONS COLUMN CLICK EVENTS ---
 $Btn_RunAll.Add_Click({ Invoke-BusyActionAsync -Name "RunAll" -Action {
-    Set-CustomPowerOptions; Copy-Shortcuts; Repair-Winget; Install-ClientCustomLocalApps
-    Install-DefaultWingetApps; Install-ClientCustomWingetApps; Uninstall-Bloat
-    Uninstall-OfficeLanguagePacks; Install-O365; Set-ComputerTimeZone
+    Set-CustomPowerOptions
+    Copy-Shortcuts
+    Repair-Winget
+    Uninstall-Bloat
+    Upgrade-AllWinget 
+    Install-ClientCustomLocalApps
+    Install-DefaultWingetApps
+    Install-ClientCustomWingetApps
+    Uninstall-OfficeLanguagePacks
+    Install-O365
+    Set-ComputerTimeZone
 }})
 
 $Btn_RepairWinget.Add_Click({ Invoke-BusyActionAsync -Name "RepairWinget" -Action { Repair-Winget } })

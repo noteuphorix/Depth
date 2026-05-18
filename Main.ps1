@@ -322,9 +322,17 @@ function Invoke-BusyActionAsync {
 
 # --- ACTIONS COLUMN CLICK EVENTS ---
 $Btn_RunAll.Add_Click({ Invoke-BusyActionAsync -Name "RunAll" -Action {
-    Set-CustomPowerOptions; Copy-Shortcuts; Repair-Winget; Install-ClientCustomLocalApps
-    Install-DefaultWingetApps; Install-ClientCustomWingetApps; Uninstall-Bloat
-    Uninstall-OfficeLanguagePacks; Install-O365; Set-ComputerTimeZone
+    Set-CustomPowerOptions
+    Copy-Shortcuts
+    Repair-Winget
+    Uninstall-Bloat
+    Upgrade-AllWinget 
+    Install-ClientCustomLocalApps
+    Install-DefaultWingetApps
+    Install-ClientCustomWingetApps
+    Uninstall-OfficeLanguagePacks
+    Install-O365
+    Set-ComputerTimeZone
 }})
 
 $Btn_RepairWinget.Add_Click({ Invoke-BusyActionAsync -Name "RepairWinget" -Action { Repair-Winget } })
