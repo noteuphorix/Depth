@@ -2661,13 +2661,13 @@ function Invoke-BusyActionAsync {
 $Btn_RunAll.Add_Click({ Invoke-BusyActionAsync -Name "RunAll" -Action {
     Set-CustomPowerOptions
     Copy-Shortcuts
+    Install-ClientCustomLocalApps
     Repair-Winget
     Uninstall-Bloat
-    Upgrade-AllWinget 
-    Install-ClientCustomLocalApps
+    Uninstall-OfficeLanguagePacks
+    Upgrade-AllWinget
     Install-DefaultWingetApps
     Install-ClientCustomWingetApps
-    Uninstall-OfficeLanguagePacks
     Install-O365
     Set-ComputerTimeZone
 }})
