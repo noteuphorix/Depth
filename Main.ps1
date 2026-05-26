@@ -414,11 +414,11 @@ $Slider_Ken.Add_ValueChanged({
 })
 
 # --- HD Buttons --- #
-$Btn_DISM.Add_Click({ Invoke-BusyActionAsync { DISMFix } })
+$Btn_DISM.Add_Click({ Invoke-BusyActionAsync -Name "DISMFix" -Action { DISMFix } })
 
 # --- Personal Buttons --- #
-$Btn_EnableScripting.Add_Click({ Invoke-BusyActionAsync { Set-ScriptingEnvironment } })
-$Btn_CheckHardware.Add_Click({ Invoke-BusyActionAsync { Check-Hardware } })
+$Btn_EnableScripting.Add_Click({ Invoke-BusyActionAsync -Name "Set-ScriptingEnvironment" -Action { Set-ScriptingEnvironment } })
+$Btn_CheckHardware.Add_Click({ Invoke-BusyActionAsync -Name "Check-Hardware" -Action { Check-Hardware } })
 
 # --- GRID EVENTS ---
 $Main_Grid.Add_MouseLeftButtonDown({
