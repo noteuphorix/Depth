@@ -33,6 +33,11 @@ function Install-ClientCustomLocalApps {
     
     foreach ($App in $AppFiles) {
 
+        if ($App.Name -match "WindowsAgentSetup" -and $App.Name -cnotmatch "VALID") {
+            Write-Host "Generic installer blocked - please update NAS with correct n-able installer" -ForegroundColor Red
+            continue
+        }
+
         if (($App.Name -like "*WindowsAgentSetup*" -and $WindowsAgentInstalled) -or
             ($App.Name -like "*GlobalProtect*"     -and $GlobalProtectInstalled)) {
             Write-Host "Skipping $($App.Name) - already installed." -ForegroundColor DarkYellow
