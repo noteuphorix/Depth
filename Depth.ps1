@@ -66,7 +66,7 @@ $splashXML = @"
         <Label x:Name="LblSplash" Content="Euphoria LLC" Background="{x:Null}" Foreground="White" Margin="20,20,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="20" FontFamily="Segoe UI Light"/>
         <Label x:Name="LblProgramName" Content="Depth" Background="{x:Null}" Foreground="White" Margin="0,80,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="48" FontWeight="Bold"/>
         <Label x:Name="LblProgramPurpose" Content="Mass Deployment Tool" Background="{x:Null}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="30" FontFamily="Segoe UI Light" Margin="0,144,0,0"/>
-        <Label x:Name="LblCopyrightOne" Content="Copyright � 2025-2026 Brandon Swarek" Background="{x:Null}" Foreground="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="13" FontFamily="Segoe UI Light" Margin="0,0,30,26"/>
+        <Label x:Name="LblCopyrightOne" Content="Copyright (c) 2025-2026 Brandon Swarek" Background="{x:Null}" Foreground="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="13" FontFamily="Segoe UI Light" Margin="0,0,30,26"/>
         <Label x:Name="LblCopyrightTwo" Content="All rights reserved" Background="{x:Null}" Foreground="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="13" FontFamily="Segoe UI Light" Margin="0,0,30,8"/>
         <ProgressBar x:Name="PBarLoading" Margin="0,302,0,0" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Top" HorizontalAlignment="Center" Width="400" Height="20" IsIndeterminate="True">
             <ProgressBar.RenderTransform>
