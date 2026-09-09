@@ -32,8 +32,7 @@ function Load-VisualStudioXaml {
                         -replace 'd:ItemsSource=".*?"',' ' `
                         -replace 'd:SampleData=".*?"',' ' `
                         -replace 'd:DesignHeight=".*?"',' ' `
-                        -replace 'd:DesignWidth=".*?"',' ' `
-                        -replace '�','&#169;'
+                        -replace 'd:DesignWidth=".*?"',' '
     [xml]$xml = $Cleaned
     $reader = New-Object System.Xml.XmlNodeReader $xml
     return [Windows.Markup.XamlReader]::Load($reader)
@@ -142,7 +141,7 @@ $mainXML = @"
 		</Grid>
 		<Grid x:Name="Deployment_Grid" Margin="0,100,0,0">
 			<Image x:Name="Img_Ken" Width="1100" Height="550" HorizontalAlignment="Center" VerticalAlignment="Top" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken2.png?raw=true" Stretch="Fill" Opacity="0"/>
-			<Border x:Name="Actions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="20,0,0,0" Width="196" HorizontalAlignment="Left" Height="490" VerticalAlignment="Top">
+			<Border x:Name="Actions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="20,0,0,0" Width="196" HorizontalAlignment="Left" Height="520" VerticalAlignment="Top">
 				<StackPanel x:Name="Actions_StackPanel" Margin="6,11,6,6">
 					<Label x:Name="Lbl_Actions" Content="Actions" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_RunAll" Content="Run All" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF269832" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
@@ -156,9 +155,10 @@ $mainXML = @"
 					<Button x:Name="Btn_SetPowerOptions" Content="Set Power Options" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 					<Button x:Name="Btn_SetTimezone" Content="Set Timezone" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 					<Button x:Name="Btn_CopyShortcuts" Content="Copy Shortcuts" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+					<Button x:Name="Btn_CTTWinUtil" Content="CTT WinUtil" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 				</StackPanel>
 			</Border>
-			<Border x:Name="ClientSelect_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="226,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
+			<Border x:Name="ClientSelect_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="226,0,0,0" Width="200" Height="520" HorizontalAlignment="Left" VerticalAlignment="Top">
 				<StackPanel x:Name="ClientSelect_StackPanel" Margin="6,11,10,6">
 					<Label x:Name="Lbl_ClientSelect" Content="Client Select" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_ReloadClients" Content="Reload Client List" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
@@ -168,7 +168,7 @@ $mainXML = @"
 					<TextBlock x:Name="TxtBlock_SelectedClient" TextWrapping="Wrap" Text="None" FontFamily="Leelawadee" FontSize="16" Foreground="Red" Margin="4,-5,4,0"/>
 				</StackPanel>
 			</Border>
-			<Border x:Name="Misc_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="436,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
+			<Border x:Name="Misc_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="436,0,0,0" Width="200" Height="370" HorizontalAlignment="Left" VerticalAlignment="Top">
 				<StackPanel x:Name="Misc_StackPanel" Margin="6,11,10,6">
 					<Label x:Name="Lbl_Misc" Content="Misc" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_ConfigUAC" Content="Set UAC" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
@@ -178,7 +178,7 @@ $mainXML = @"
 					<Button x:Name="Btn_RepairTakeControl" Content="Repair Take Control" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
 				</StackPanel>
 			</Border>
-			<Border x:Name="Apps_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="646,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
+			<Border x:Name="Apps_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="646,0,0,0" Width="200" Height="370" HorizontalAlignment="Left" VerticalAlignment="Top">
 				<StackPanel x:Name="Apps_StackPanel" Margin="6,11,10,6">
 					<Label x:Name="Lbl_Apps" Content="Apps" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_InstallNVIDIAApp" Content="NVIDIA" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
@@ -328,6 +328,82 @@ function Copy-Shortcuts {
     catch {
         Write-Warning "Failed to copy: $($_.Exception.Message)"
     }
+}
+
+# --- Source: src\functions\CTTWinUtil.ps1 ---
+<#
+.SYNOPSIS
+    Runs Chris Titus Tech's WinUtil unattended with a custom tweak selection.
+
+.DESCRIPTION
+    Writes out a WinUtil-compatible config JSON containing the specified tweak
+    keys, then launches WinUtil with -Config <file> -Run so it applies them
+    automatically (no manual "Run Tweaks" click required).
+
+    NOTE: This still opens the WinUtil GUI window while it runs — WinUtil has
+    no true headless/CLI-only mode as of this writing (see upstream issue
+    https://github.com/ChrisTitusTech/winutil/issues/3138). If you need a
+    fully invisible, no-window run, the tweaks would need to be reimplemented
+    as plain registry/PowerShell commands instead of driven through WinUtil.
+
+.NOTES
+    Must be run as Administrator.
+
+.EXAMPLE
+    RunCTTWinUtilCustom
+#>
+function RunCTTWinUtilCustom {
+    [CmdletBinding()]
+    param()
+
+    $ErrorActionPreference = 'Stop'
+
+    # --- 1. Define the tweak selection -----------------------------------------
+    $tweaks = @(
+        "WPFTweaksConsumerFeatures",
+        "WPFTweaksDisableExplorerAutoDiscovery",
+        "WPFTweaksLocation",
+        "WPFTweaksServices",
+        "WPFTweaksTelemetry",
+        "WPFTweaksDeliveryOptimization",
+        "WPFTweaksDeleteTempFiles",
+        "WPFTweaksEndTaskOnTaskbar",
+        "WPFTweaksDisableStoreSearch",
+        "WPFTweaksRevertStartMenu",
+        "WPFTweaksWindowsAI",
+        "WPFTweaksRightClickMenu",
+        "WPFTweaksEdgeDebloat",
+        "WPFTweaksDisableWarningForUnsignedRdp"
+    )
+
+    # --- 2. Write the config file WinUtil expects -------------------------------
+    # Current WinUtil config format is a flat JSON array of selection keys.
+    $configPath = Join-Path -Path $env:TEMP -ChildPath "winutil-custom-config.json"
+    $tweaks | ConvertTo-Json | Set-Content -Path $configPath -Encoding UTF8
+
+    Write-Host "Wrote WinUtil config to: $configPath" -ForegroundColor Cyan
+    Write-Host "Selected tweaks:" -ForegroundColor Cyan
+    $tweaks | ForEach-Object { Write-Host "  - $_" }
+
+    # --- 3. Launch WinUtil unattended, in its own console --------------------
+    # WinUtil calls Clear-Host on startup. Running it inline shares the current
+    # console/host, which would wipe out everything printed by the calling
+    # script/GUI. Spawning it as a separate powershell.exe process isolates
+    # its console so it can't touch the parent window's buffer.
+    Write-Host "`nLaunching WinUtil in a separate window with -Config -Run ..." -ForegroundColor Yellow
+
+    $winutilCommand = "& ([ScriptBlock]::Create((irm https://christitus.com/win))) -Config `"$configPath`" -Run"
+
+    Start-Process -FilePath "powershell.exe" `
+        -ArgumentList @(
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-Command", $winutilCommand
+        ) `
+        -Verb RunAs `
+        -Wait
+
+    Write-Host "`nDone. Check the WinUtil window/log for per-tweak results." -ForegroundColor Green
 }
 
 # --- Source: src\functions\Install-ClientCustomLocalApps.ps1 ---
@@ -2674,6 +2750,7 @@ $Btn_RunAll.Add_Click({ Invoke-BusyActionAsync -Name "RunAll" -Action {
     Install-DefaultWingetApps
     Install-ClientCustomWingetApps
     Install-O365
+    RunCTTWinUtilCustom
     Set-ComputerTimeZone
 }})
 
@@ -2710,7 +2787,7 @@ $Btn_InstallHPApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallHP" -Action {
 $Btn_InstallSnapdragonApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallSnapdragon" -Action { Start-Process "https://softwarecenter.qualcomm.com/api/download/software/tools/SnapdragonControlPanel/Windows/ARM64/2025.3.0.0/Snapdragon_Control_Panel_2025.3.0.0.zip" } })
 $Btn_InstallForticlientApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallForticlient" -Action { Start-Process "https://links.fortinet.com/forticlient/win/vpnagent" } })
 $Btn_InstallFrameworkDrivers.Add_Click({ Invoke-BusyActionAsync -Name "InstallFrameworkDrivers" -Action { Start-Process "https://knowledgebase.frame.work/bios-and-drivers-downloads-rJ3PaCexh" } })
-
+$Btn_CTTWinUtil.Add_Click({ Invoke-BusyActionAsync -Name "Btn_CTTWinUtil" -Action { RunCTTWinUtilCustom } })
 
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---
 $Btn_Tools.Add_Click({

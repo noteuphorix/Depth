@@ -32,8 +32,7 @@ function Load-VisualStudioXaml {
                         -replace 'd:ItemsSource=".*?"',' ' `
                         -replace 'd:SampleData=".*?"',' ' `
                         -replace 'd:DesignHeight=".*?"',' ' `
-                        -replace 'd:DesignWidth=".*?"',' ' `
-                        -replace '�','&#169;'
+                        -replace 'd:DesignWidth=".*?"',' '
     [xml]$xml = $Cleaned
     $reader = New-Object System.Xml.XmlNodeReader $xml
     return [Windows.Markup.XamlReader]::Load($reader)
@@ -142,7 +141,7 @@ $mainXML = @"
 		</Grid>
 		<Grid x:Name="Deployment_Grid" Margin="0,100,0,0">
 			<Image x:Name="Img_Ken" Width="1100" Height="550" HorizontalAlignment="Center" VerticalAlignment="Top" Source="https://github.com/noteuphorix/Depth/blob/master/src/imgs/Ken2.png?raw=true" Stretch="Fill" Opacity="0"/>
-			<Border x:Name="Actions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="20,0,0,0" Width="196" HorizontalAlignment="Left" Height="490" VerticalAlignment="Top">
+			<Border x:Name="Actions_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="20,0,0,0" Width="196" HorizontalAlignment="Left" Height="520" VerticalAlignment="Top">
 				<StackPanel x:Name="Actions_StackPanel" Margin="6,11,6,6">
 					<Label x:Name="Lbl_Actions" Content="Actions" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_RunAll" Content="Run All" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF269832" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
@@ -156,9 +155,10 @@ $mainXML = @"
 					<Button x:Name="Btn_SetPowerOptions" Content="Set Power Options" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 					<Button x:Name="Btn_SetTimezone" Content="Set Timezone" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 					<Button x:Name="Btn_CopyShortcuts" Content="Copy Shortcuts" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
+					<Button x:Name="Btn_CTTWinUtil" Content="CTT WinUtil" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
 				</StackPanel>
 			</Border>
-			<Border x:Name="ClientSelect_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="226,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
+			<Border x:Name="ClientSelect_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="226,0,0,0" Width="200" Height="520" HorizontalAlignment="Left" VerticalAlignment="Top">
 				<StackPanel x:Name="ClientSelect_StackPanel" Margin="6,11,10,6">
 					<Label x:Name="Lbl_ClientSelect" Content="Client Select" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_ReloadClients" Content="Reload Client List" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
@@ -168,7 +168,7 @@ $mainXML = @"
 					<TextBlock x:Name="TxtBlock_SelectedClient" TextWrapping="Wrap" Text="None" FontFamily="Leelawadee" FontSize="16" Foreground="Red" Margin="4,-5,4,0"/>
 				</StackPanel>
 			</Border>
-			<Border x:Name="Misc_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="436,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
+			<Border x:Name="Misc_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="436,0,0,0" Width="200" Height="370" HorizontalAlignment="Left" VerticalAlignment="Top">
 				<StackPanel x:Name="Misc_StackPanel" Margin="6,11,10,6">
 					<Label x:Name="Lbl_Misc" Content="Misc" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_ConfigUAC" Content="Set UAC" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
@@ -178,7 +178,7 @@ $mainXML = @"
 					<Button x:Name="Btn_RepairTakeControl" Content="Repair Take Control" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FFE4B307" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,10,0,0"/>
 				</StackPanel>
 			</Border>
-			<Border x:Name="Apps_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="646,0,0,0" Width="200" Height="490" HorizontalAlignment="Left" VerticalAlignment="Top">
+			<Border x:Name="Apps_Border" BorderBrush="#FF2B3842" BorderThickness="4,4,4,4" Margin="646,0,0,0" Width="200" Height="370" HorizontalAlignment="Left" VerticalAlignment="Top">
 				<StackPanel x:Name="Apps_StackPanel" Margin="6,11,10,6">
 					<Label x:Name="Lbl_Apps" Content="Apps" Foreground="#FF3D6EE6" FontFamily="Leelawadee" FontSize="20" Height="35" Width="180" FontWeight="Bold"/>
 					<Button x:Name="Btn_InstallNVIDIAApp" Content="NVIDIA" Style="{StaticResource CleanButtons}" Height="30" Width="160" Background="#FF1C5971" BorderBrush="White" FontFamily="Leelawadee" FontSize="16" BorderThickness="1,1,1,1" Foreground="White" Padding="0,0,0,0" Margin="0,8,0,0"/>
@@ -332,6 +332,7 @@ $Btn_RunAll.Add_Click({ Invoke-BusyActionAsync -Name "RunAll" -Action {
     Install-DefaultWingetApps
     Install-ClientCustomWingetApps
     Install-O365
+    RunCTTWinUtilCustom
     Set-ComputerTimeZone
 }})
 
@@ -368,7 +369,7 @@ $Btn_InstallHPApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallHP" -Action {
 $Btn_InstallSnapdragonApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallSnapdragon" -Action { Start-Process "https://softwarecenter.qualcomm.com/api/download/software/tools/SnapdragonControlPanel/Windows/ARM64/2025.3.0.0/Snapdragon_Control_Panel_2025.3.0.0.zip" } })
 $Btn_InstallForticlientApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallForticlient" -Action { Start-Process "https://links.fortinet.com/forticlient/win/vpnagent" } })
 $Btn_InstallFrameworkDrivers.Add_Click({ Invoke-BusyActionAsync -Name "InstallFrameworkDrivers" -Action { Start-Process "https://knowledgebase.frame.work/bios-and-drivers-downloads-rJ3PaCexh" } })
-
+$Btn_CTTWinUtil.Add_Click({ Invoke-BusyActionAsync -Name "Btn_CTTWinUtil" -Action { RunCTTWinUtilCustom } })
 
 # --- TAB SWITCHING BUTTON CLICK EVENTS ---
 $Btn_Tools.Add_Click({
