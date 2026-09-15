@@ -2783,7 +2783,7 @@ $Btn_InstallNVIDIAApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallNVIDIA" -
 $Btn_InstallAMDApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallAMD" -Action { Start-Process "https://www.amd.com/en/support/download/drivers.html" } })
 $Btn_InstallDellApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallDell" -Action { Install-PassedWingetApp "Dell.CommandUpdate" } })
 $Btn_InstallLenovoApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallLenovo" -Action { Install-PassedWingetApp "9NR5B8GVVM13" } })
-$Btn_InstallHPApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallHP" -Action { Install-PassedWingetApp "HPInc.HPSupportAssistant" } })
+$Btn_InstallHPApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallHP" -Action { Start-Process "https://support.hp.com/us-en/help/hp-support-assistant" } })
 $Btn_InstallSnapdragonApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallSnapdragon" -Action { Start-Process "https://softwarecenter.qualcomm.com/api/download/software/tools/SnapdragonControlPanel/Windows/ARM64/2025.3.0.0/Snapdragon_Control_Panel_2025.3.0.0.zip" } })
 $Btn_InstallForticlientApp.Add_Click({ Invoke-BusyActionAsync -Name "InstallForticlient" -Action { Start-Process "https://links.fortinet.com/forticlient/win/vpnagent" } })
 $Btn_InstallFrameworkDrivers.Add_Click({ Invoke-BusyActionAsync -Name "InstallFrameworkDrivers" -Action { Start-Process "https://knowledgebase.frame.work/bios-and-drivers-downloads-rJ3PaCexh" } })
