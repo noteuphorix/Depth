@@ -32,7 +32,7 @@ function Install-ClientCustomWingetApps {
         Stop-BlockingInstallerProcesses
 
         # Executes winget for each ID found in the text file, attempts machine scope first
-        $result = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements --scope machine" -Wait -PassThru -NoNewWindow
+        $result = Invoke-WingetProcess -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements --scope machine"
 
         switch ($result.ExitCode) {
             0            { Write-Host "Successfully installed $App" -ForegroundColor Green }
@@ -41,7 +41,7 @@ function Install-ClientCustomWingetApps {
                             # APPINSTALLER_CLI_ERROR_NO_APPLICABLE_INSTALLER - retries without --scope machine
                             Write-Warning "$App failed with --scope machine (no applicable installer), retrying without --scope..."
                             Stop-BlockingInstallerProcesses
-                            $retryResult = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
+                            $retryResult = Invoke-WingetProcess -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements"
 
                             switch ($retryResult.ExitCode) {
                                 0            { Write-Host "Successfully installed $App (without --scope machine)" -ForegroundColor Green }

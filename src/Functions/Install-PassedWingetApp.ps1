@@ -5,7 +5,7 @@ function Install-PassedWingetApp {
     if ($AppID -eq "Dell.CommandUpdate" -or $AppID -eq "Dell.CommandUpdate.Universal") {
         Write-Host "Dell Command Update detected. Running full system upgrade first..." -ForegroundColor Cyan
         Stop-BlockingInstallerProcesses
-        $upgradeResult = Start-Process winget -ArgumentList "upgrade --all --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
+        $upgradeResult = Invoke-WingetProcess -ArgumentList "upgrade --all --silent --accept-source-agreements --accept-package-agreements"
 
         switch ($upgradeResult.ExitCode) {
             0            { Write-Host "System upgrade completed successfully" -ForegroundColor Green }
@@ -17,7 +17,7 @@ function Install-PassedWingetApp {
     # 2. Proceed to install the requested AppID (including Dell apps)
     Stop-BlockingInstallerProcesses
     Write-Host "Installing package: $AppID..." -ForegroundColor Green
-    $result = Start-Process winget -ArgumentList "install --id $AppID --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
+    $result = Invoke-WingetProcess -ArgumentList "install --id $AppID --silent --accept-source-agreements --accept-package-agreements"
 
     switch ($result.ExitCode) {
         0            { Write-Host "Successfully installed $AppID" -ForegroundColor Green }

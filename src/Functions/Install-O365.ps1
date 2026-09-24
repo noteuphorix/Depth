@@ -5,7 +5,7 @@ function Install-O365 {
     foreach ($App in $Apps) {
         Stop-BlockingInstallerProcesses
 
-        $result = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
+        $result = Invoke-WingetProcess -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements"
         
         switch ($result.ExitCode) {
             0            { Write-Host "Successfully installed $App" -ForegroundColor Green }
