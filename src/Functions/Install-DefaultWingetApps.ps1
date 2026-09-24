@@ -3,6 +3,8 @@ function Install-DefaultWingetApps {
     $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams")
 
     foreach ($App in $Apps) {
+        Stop-BlockingInstallerProcesses
+
         $result = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
         
         switch ($result.ExitCode) {

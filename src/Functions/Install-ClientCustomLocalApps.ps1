@@ -44,6 +44,8 @@ function Install-ClientCustomLocalApps {
             continue
         }
 
+        Stop-BlockingInstallerProcesses
+
         Write-Host "Installing: $($App.Name)..." -ForegroundColor Yellow
 
         try {

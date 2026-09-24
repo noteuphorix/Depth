@@ -453,6 +453,8 @@ function Install-ClientCustomLocalApps {
             continue
         }
 
+        Stop-BlockingInstallerProcesses
+
         Write-Host "Installing: $($App.Name)..." -ForegroundColor Yellow
 
         try {
@@ -506,6 +508,8 @@ function Install-ClientCustomWingetApps {
     }
 
     foreach ($App in $Apps) {
+        Stop-BlockingInstallerProcesses
+
         # Executes winget for each ID found in the text file, attempts machine scope first
         $result = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements --scope machine" -Wait -PassThru -NoNewWindow
 
@@ -515,6 +519,7 @@ function Install-ClientCustomWingetApps {
             -1978335216  {
                             # APPINSTALLER_CLI_ERROR_NO_APPLICABLE_INSTALLER - retries without --scope machine
                             Write-Warning "$App failed with --scope machine (no applicable installer), retrying without --scope..."
+                            Stop-BlockingInstallerProcesses
                             $retryResult = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
 
                             switch ($retryResult.ExitCode) {
@@ -536,6 +541,8 @@ function Install-DefaultWingetApps {
     $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams")
 
     foreach ($App in $Apps) {
+        Stop-BlockingInstallerProcesses
+
         $result = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
         
         switch ($result.ExitCode) {
@@ -554,6 +561,8 @@ function Install-O365 {
     $Apps = @("Microsoft.Office")
 
     foreach ($App in $Apps) {
+        Stop-BlockingInstallerProcesses
+
         $result = Start-Process winget -ArgumentList "install --id $App --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
         
         switch ($result.ExitCode) {
@@ -614,6 +623,7 @@ function Install-PassedWingetApp {
     # 1. Check if we need to run the full system upgrade first
     if ($AppID -eq "Dell.CommandUpdate" -or $AppID -eq "Dell.CommandUpdate.Universal") {
         Write-Host "Dell Command Update detected. Running full system upgrade first..." -ForegroundColor Cyan
+        Stop-BlockingInstallerProcesses
         $upgradeResult = Start-Process winget -ArgumentList "upgrade --all --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
 
         switch ($upgradeResult.ExitCode) {
@@ -624,6 +634,7 @@ function Install-PassedWingetApp {
     }
 
     # 2. Proceed to install the requested AppID (including Dell apps)
+    Stop-BlockingInstallerProcesses
     Write-Host "Installing package: $AppID..." -ForegroundColor Green
     $result = Start-Process winget -ArgumentList "install --id $AppID --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
 
@@ -2219,6 +2230,86 @@ function Set-UAC {
     
     Write-Host "UAC configured." -ForegroundColor Green
 }
+
+# --- Source: src\functions\Stop-BlockingInstallerProcesses.ps1 ---
+function Stop-BlockingInstallerProcesses {
+    <#
+    .SYNOPSIS
+        Kills known installer/updater processes and resets the Windows Installer
+        service so a queued winget/MSI install doesn't fail because of a
+        background installer this script never launched.
+
+    .DESCRIPTION
+        Winget and MSI installs frequently die with "another installation is
+        already in progress" (ERROR_INSTALL_ALREADY_RUNNING / Win32 1618)
+        because something else on the machine - Windows Update servicing,
+        OneDrive, Office Click-to-Run, a leftover vendor bootstrapper, etc. -
+        is holding the global MSI mutex or its own installer lock. Call this
+        immediately before every single app install attempt to clear the
+        field first.
+
+    .NOTES
+        Shared helper, called once per app right before the install is
+        attempted from Install-ClientCustomLocalApps, Install-ClientCustomWingetApps,
+        Install-DefaultWingetApps, Install-O365 and Install-PassedWingetApp.
+    #>
+    [CmdletBinding()]
+    param()
+
+    # Processes known to hold the MSI/installer lock or otherwise collide
+    # with a fresh silent install.
+    $KnownInstallerProcesses = @(
+        "msiexec",             # Windows Installer engine
+        "TiWorker",            # Windows Modules Installer Worker
+        "TrustedInstaller",    # Windows Modules Installer service host
+        "wuauclt",             # Legacy Windows Update client
+        "UsoClient",           # Update Session Orchestrator
+        "MoUsoCoreWorker",     # Update Orchestrator worker
+        "OneDriveSetup",
+        "OfficeClickToRun",    # Office C2R service host - notorious for blocking Office/MSI installs
+        "OfficeC2RClient",
+        "AppInstallerCLI",
+        "winget",              # Leftover/hung winget from a previous attempt
+        "GoogleUpdate",
+        "MicrosoftEdgeUpdate"
+    )
+
+    $Killed = @()
+
+    Get-Process -Name $KnownInstallerProcesses -ErrorAction SilentlyContinue | ForEach-Object {
+        $Killed += $_.ProcessName
+        $_ | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+
+    # Catch anything else that looks like a vendor bootstrapper (*setup*,
+    # *install*, *update*) but wasn't launched by this script - excluding
+    # our own process and its parent so we can never self-terminate.
+    $ProtectedPids = @($PID)
+    try {
+        $ProtectedPids += (Get-CimInstance Win32_Process -Filter "ProcessId=$PID" -ErrorAction Stop).ParentProcessId
+    } catch {}
+
+    Get-Process | Where-Object {
+        $_.Id -notin $ProtectedPids -and
+        $KnownInstallerProcesses -notcontains $_.ProcessName -and
+        $_.ProcessName -match '(setup|install|updater?)'
+    } | ForEach-Object {
+        $Killed += $_.ProcessName
+        $_ | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+
+    # Reset the Windows Installer service - this clears a stuck
+    # Global\_MSIExecute mutex (ERROR_INSTALL_ALREADY_RUNNING) even when no
+    # msiexec.exe process is visibly running. It restarts on-demand the next
+    # time anything calls into MSI, so it's safe to do before every install.
+    try { Restart-Service -Name msiserver -Force -ErrorAction SilentlyContinue } catch {}
+
+    if ($Killed.Count -gt 0) {
+        $Unique = $Killed | Select-Object -Unique
+        Write-Host "Cleared possible blocking installers: $($Unique -join ', ')" -ForegroundColor DarkYellow
+    }
+}
+
 
 # --- Source: src\functions\TestFunction.ps1 ---
 function TestFunction {
