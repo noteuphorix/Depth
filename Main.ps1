@@ -490,21 +490,22 @@ $mainXML = @"
 				<Button x:Name="Btn_RunSelected" Content="Run Selected" Style="{StaticResource RunButton}" Width="150" Height="36" Grid.Column="1" Margin="0,0,12,0"/>
 			</Grid>
 
-			<Border x:Name="Actions_Border" Style="{StaticResource PanelCard}" Margin="24,60,0,0" Width="216" HorizontalAlignment="Left" Height="530" VerticalAlignment="Top">
+			<Border x:Name="Actions_Border" Style="{StaticResource PanelCard}" Margin="24,60,0,0" Width="216" HorizontalAlignment="Left" Height="570" VerticalAlignment="Top">
 				<StackPanel x:Name="Actions_StackPanel" Margin="14,14,14,10">
 					<TextBlock x:Name="Lbl_Actions" Text="Actions" Style="{StaticResource SectionHeaderText}"/>
 					<Border Height="2" Width="28" Background="{StaticResource AccentBrush}" CornerRadius="1" HorizontalAlignment="Left" Margin="1,6,0,4"/>
-					<CheckBox x:Name="Chk_RepairWinget" Content="Repair Winget" Style="{StaticResource ActionCheckBox}"/>
-					<CheckBox x:Name="Chk_InstallO365" Content="Install O365 Apps" Style="{StaticResource ActionCheckBox}"/>
+					<CheckBox x:Name="Chk_SetPowerOptions" Content="Set Power Options" Style="{StaticResource ActionCheckBox}"/>
+					<CheckBox x:Name="Chk_CopyShortcuts" Content="Copy Shortcuts" Style="{StaticResource ActionCheckBox}"/>
 					<CheckBox x:Name="Chk_InstallLocalApps" Content="Install Local Apps" Style="{StaticResource ActionCheckBox}"/>
-					<CheckBox x:Name="Chk_InstallDefaultWinget" Content="Default Winget" Style="{StaticResource ActionCheckBox}"/>
-					<CheckBox x:Name="Chk_InstallCustomWinget" Content="Custom Winget" Style="{StaticResource ActionCheckBox}"/>
+					<CheckBox x:Name="Chk_RepairWinget" Content="Repair Winget" Style="{StaticResource ActionCheckBox}"/>
 					<CheckBox x:Name="Chk_UninstallBloat" Content="Uninstall Bloat" Style="{StaticResource ActionCheckBox}"/>
 					<CheckBox x:Name="Chk_UninstallLanguagePacks" Content="Language Pack Killer" Style="{StaticResource ActionCheckBox}"/>
-					<CheckBox x:Name="Chk_SetPowerOptions" Content="Set Power Options" Style="{StaticResource ActionCheckBox}"/>
-					<CheckBox x:Name="Chk_SetTimezone" Content="Set Timezone" Style="{StaticResource ActionCheckBox}"/>
-					<CheckBox x:Name="Chk_CopyShortcuts" Content="Copy Shortcuts" Style="{StaticResource ActionCheckBox}"/>
+					<CheckBox x:Name="Chk_UpgradeWinget" Content="Upgrade Winget" Style="{StaticResource ActionCheckBox}"/>
+					<CheckBox x:Name="Chk_InstallDefaultWinget" Content="Default Winget" Style="{StaticResource ActionCheckBox}"/>
+					<CheckBox x:Name="Chk_InstallCustomWinget" Content="Custom Winget" Style="{StaticResource ActionCheckBox}"/>
+					<CheckBox x:Name="Chk_InstallO365" Content="Install O365 Apps" Style="{StaticResource ActionCheckBox}"/>
 					<CheckBox x:Name="Chk_CTTWinUtil" Content="CTT WinUtil" Style="{StaticResource ActionCheckBox}"/>
+					<CheckBox x:Name="Chk_SetTimezone" Content="Set Timezone" Style="{StaticResource ActionCheckBox}"/>
 				</StackPanel>
 			</Border>
 
@@ -734,6 +735,43 @@ function Invoke-BusyActionAsync {
     $ps.BeginInvoke() | Out-Null
 }
 
+# Runs several NAMED actions in strict sequence on a single background runspace - the next one
+# does not start until the previous one finishes (unlike firing several Invoke-BusyActionAsync
+# calls, which would let the runspace pool run them at the same time). Each action is still
+# locked individually in $sync.Running as it runs, and unlocked the moment IT finishes rather
+# than waiting for the whole queue - so a second, unrelated "Run Selected" click can start
+# immediately on anything in this queue that hasn't reached the front yet, while correctly
+# skipping whatever's currently mid-run.
+#
+# $Actions is an [ordered] Name -> command-text hashtable. Callers MUST reserve every key in
+# $sync.Running (on the UI thread, before calling this) so two rapid clicks can't both grab the
+# same action - see Btn_RunSelected below.
+function Invoke-BusyActionQueueAsync {
+    param([System.Collections.Specialized.OrderedDictionary]$Actions)
+
+    if ($Actions.Count -eq 0) { return }
+
+    $ps = [powershell]::Create()
+    $ps.RunspacePool = $sync.RunspacePool
+    $ps.AddScript({
+        param($Actions, $SelectedClient)
+        $global:SelectedClient = $SelectedClient
+        $sync.Main.Dispatcher.Invoke([action]{ Update-Status -State "Busy" })
+        foreach ($name in $Actions.Keys) {
+            try {
+                & ([scriptblock]::Create($Actions[$name]))
+            } finally {
+                $sync.Running.Remove($name)
+                if ($sync.Running.Count -eq 0) {
+                    $sync.Main.Dispatcher.Invoke([action]{ Update-Status -State "Ready" })
+                }
+            }
+        }
+    }).AddParameter("Actions", $Actions).AddParameter("SelectedClient", $global:SelectedClient) | Out-Null
+
+    $ps.BeginInvoke() | Out-Null
+}
+
 # ============================================================
 # 9. ACTION MAPS
 # Maps each selection CheckBox's x:Name to the literal command it should run. These are strings
@@ -745,13 +783,16 @@ function Invoke-BusyActionAsync {
 # old "Run All" button's sequence: system settings first, then cleanup, then installs).
 # ============================================================
 $DeploymentActionMap = [ordered]@{
-    # Actions panel
+    # Actions panel - order matches the old "Run All" button's sequence exactly (system settings
+    # first, then cleanup, then winget upgrade, then installs). Run Selected dispatches checked
+    # actions in this order (see Btn_RunSelected below).
     'Chk_SetPowerOptions'         = 'Set-CustomPowerOptions'
     'Chk_CopyShortcuts'           = 'Copy-Shortcuts'
     'Chk_InstallLocalApps'        = 'Install-ClientCustomLocalApps'
     'Chk_RepairWinget'            = 'Repair-Winget'
     'Chk_UninstallBloat'          = 'Uninstall-Bloat'
     'Chk_UninstallLanguagePacks'  = 'Uninstall-OfficeLanguagePacks'
+    'Chk_UpgradeWinget'           = 'Upgrade-AllWinget'
     'Chk_InstallDefaultWinget'    = 'Install-DefaultWingetApps'
     'Chk_InstallCustomWinget'     = 'Install-ClientCustomWingetApps'
     'Chk_InstallO365'             = 'Install-O365'
@@ -766,7 +807,10 @@ $DeploymentActionMap = [ordered]@{
     # Apps panel (driver / vendor utilities)
     'Chk_InstallNVIDIAApp'        = 'Install-PassedWingetApp "TechPowerUp.NVCleanstall"'
     'Chk_InstallAMDApp'           = 'Start-Process "https://www.amd.com/en/support/download/drivers.html"'
-    'Chk_InstallDellApp'          = 'Install-PassedWingetApp "Dell.CommandUpdate"'
+    # Dell's updater needs a current winget before it'll install cleanly, so this is the one app
+    # entry that upgrades winget first - it's bundled into this single action (and its own lock)
+    # rather than depending on the separate "Upgrade Winget" checkbox being checked too.
+    'Chk_InstallDellApp'          = "Upgrade-AllWinget`nInstall-PassedWingetApp `"Dell.CommandUpdate`""
     'Chk_InstallLenovoApp'        = 'Install-PassedWingetApp "9NR5B8GVVM13"'
     'Chk_InstallHPApp'            = 'Start-Process "https://support.hp.com/us-en/help/hp-support-assistant"'
     'Chk_InstallSnapdragonApp'    = 'Start-Process "https://softwarecenter.qualcomm.com/api/download/software/tools/SnapdragonControlPanel/Windows/ARM64/2025.3.0.0/Snapdragon_Control_Panel_2025.3.0.0.zip"'
@@ -780,23 +824,17 @@ $ToolsActionMap = [ordered]@{
     'Chk_CheckHardware'   = 'Check-Hardware'
 }
 
-# The old "Run All" button also silently ran Upgrade-AllWinget even though no button on the UI
-# ever triggered it by itself. There's still no dedicated checkbox for it, so we run it whenever
-# ANY winget-related box is checked (see Btn_RunSelected below). Flagging this here in case you'd
-# rather give it its own checkbox instead.
-$WingetRelatedChecks = @('Chk_RepairWinget', 'Chk_InstallDefaultWinget', 'Chk_InstallCustomWinget')
-
 # Only the Actions panel is affected by "Select All" (Misc and Apps are left untouched - see
 # Btn_SelectAll below).
 $ActionsPanelChecks = @(
     'Chk_RepairWinget', 'Chk_InstallO365', 'Chk_InstallLocalApps', 'Chk_InstallDefaultWinget',
-    'Chk_InstallCustomWinget', 'Chk_UninstallBloat', 'Chk_UninstallLanguagePacks',
+    'Chk_InstallCustomWinget', 'Chk_UninstallBloat', 'Chk_UninstallLanguagePacks', 'Chk_UpgradeWinget',
     'Chk_SetPowerOptions', 'Chk_SetTimezone', 'Chk_CopyShortcuts', 'Chk_CTTWinUtil'
 )
 
 # What "Winget Apps Only" checks (and clears everything else to). Deliberately includes
-# Install O365 Apps alongside the three winget-specific actions.
-$WingetOnlySelection = @('Chk_RepairWinget', 'Chk_InstallDefaultWinget', 'Chk_InstallCustomWinget', 'Chk_InstallO365')
+# Install O365 Apps alongside the winget-specific actions.
+$WingetOnlySelection = @('Chk_RepairWinget', 'Chk_UpgradeWinget', 'Chk_InstallDefaultWinget', 'Chk_InstallCustomWinget', 'Chk_InstallO365')
 
 # Helper: fetch a checkbox by its x:Name string from script scope (used because we only have the
 # name as a string key while iterating the maps above).
@@ -831,23 +869,37 @@ $Btn_SelectWingetOnly.Add_Click({
 })
 
 $Btn_RunSelected.Add_Click({
-    $commands = foreach ($key in $DeploymentActionMap.Keys) {
+    $selectedKeys = foreach ($key in $DeploymentActionMap.Keys) {
         $cb = Get-CheckboxByName $key
-        if ($cb -and $cb.IsChecked) { $DeploymentActionMap[$key] }
+        if ($cb -and $cb.IsChecked) { $key }
     }
 
-    # See the $WingetRelatedChecks note above - Upgrade-AllWinget has no checkbox of its own.
-    if ($Chk_RepairWinget.IsChecked -or $Chk_InstallDefaultWinget.IsChecked -or $Chk_InstallCustomWinget.IsChecked) {
-        $commands = @('Upgrade-AllWinget') + $commands
-    }
-
-    if (-not $commands -or $commands.Count -eq 0) {
+    if (-not $selectedKeys -or $selectedKeys.Count -eq 0) {
         Write-Host "`nNo actions selected. Check at least one box before running." -ForegroundColor Yellow
         return
     }
 
-    $actionBlock = [scriptblock]::Create(($commands -join "`n"))
-    Invoke-BusyActionAsync -Name "RunSelected" -Action $actionBlock
+    # Reserve a lock for every selected action that ISN'T already running elsewhere, right here on
+    # the UI thread, so two rapid clicks can never both grab the same action. Anything already
+    # running gets skipped with its own warning instead of blocking the rest of the batch.
+    $queued = [ordered]@{}
+    foreach ($key in $selectedKeys) {
+        if ($sync.Running.ContainsKey($key)) {
+            Write-Host "`nWait! '$key' is already running." -ForegroundColor Yellow
+            continue
+        }
+        $sync.Running[$key] = $true
+        $queued[$key] = $DeploymentActionMap[$key]
+    }
+
+    if ($queued.Count -eq 0) { return }
+
+    # The accepted actions run ONE AFTER ANOTHER on a single background runspace, in the order
+    # they appear in $DeploymentActionMap (top-to-bottom in the Actions/Misc/Apps panels) - the
+    # next one does not start until the previous one finishes. Each is still unlocked in
+    # $sync.Running the moment IT completes, so a later "Run Selected" click can start on it again
+    # right away without waiting for the rest of this queue.
+    Invoke-BusyActionQueueAsync -Actions $queued
 })
 
 $Btn_Login.Add_Click({ Invoke-BusyAction { Connect-NAS } })
