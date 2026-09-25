@@ -485,6 +485,7 @@ $mainXML = @"
 				<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
 					<Button x:Name="Btn_SelectAll" Content="Select All" Style="{StaticResource ToolbarButton}" Margin="0,0,8,0"/>
 					<Button x:Name="Btn_SelectWingetOnly" Content="Winget Apps Only" Style="{StaticResource ToolbarButton}" Margin="0,0,8,0"/>
+					<Button x:Name="Btn_BrandonsSpecial" Content="Brandon's Special" Style="{StaticResource ToolbarButton}" Margin="0,0,8,0"/>
 					<Button x:Name="Btn_ClearSelection" Content="Clear Selection" Style="{StaticResource ToolbarButton}"/>
 				</StackPanel>
 				<Button x:Name="Btn_RunSelected" Content="Run Selected" Style="{StaticResource RunButton}" Width="150" Height="36" Grid.Column="1" Margin="0,0,12,0"/>
@@ -849,6 +850,16 @@ function Get-CheckboxByName {
 $Btn_SelectAll.Add_Click({
     # Actions panel only - Misc and Apps are left exactly as the user set them.
     foreach ($key in $ActionsPanelChecks) {
+        $cb = Get-CheckboxByName $key
+        if ($cb) { $cb.IsChecked = $true }
+    }
+})
+
+# Everything Select All checks, plus UAC / Taskbar / Unlock Win Updates from the Misc panel.
+$BrandonsSpecialChecks = @('Chk_ConfigUAC', 'Chk_ConfigTaskbar', 'Chk_UnlockWinUpdate') + $ActionsPanelChecks
+
+$Btn_BrandonsSpecial.Add_Click({
+    foreach ($key in $BrandonsSpecialChecks) {
         $cb = Get-CheckboxByName $key
         if ($cb) { $cb.IsChecked = $true }
     }
