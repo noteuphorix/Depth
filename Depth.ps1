@@ -738,7 +738,7 @@ function Copy-Shortcuts {
     keys, then launches WinUtil with -Config <file> -Run so it applies them
     automatically (no manual "Run Tweaks" click required).
 
-    NOTE: This still opens the WinUtil GUI window while it runs â€” WinUtil has
+    NOTE: This still opens the WinUtil GUI window while it runs — WinUtil has
     no true headless/CLI-only mode as of this writing (see upstream issue
     https://github.com/ChrisTitusTech/winutil/issues/3138). If you need a
     fully invisible, no-window run, the tweaks would need to be reimplemented
@@ -3404,7 +3404,7 @@ $ActionsPanelChecks = @(
 
 # What "Winget Apps Only" checks (and clears everything else to). Deliberately includes
 # Install O365 Apps alongside the winget-specific actions.
-$WingetOnlySelection = @('Chk_RepairWinget', 'Chk_UpgradeWinget', 'Chk_InstallDefaultWinget', 'Chk_InstallCustomWinget', 'Chk_InstallO365')
+$WingetOnlySelection = @('Chk_UpgradeWinget', 'Chk_InstallDefaultWinget', 'Chk_InstallCustomWinget', 'Chk_InstallO365')
 
 # Helper: fetch a checkbox by its x:Name string from script scope (used because we only have the
 # name as a string key while iterating the maps above).
