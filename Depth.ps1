@@ -1166,7 +1166,7 @@ param(
     [Parameter(Mandatory = $false, HelpMessage = "Restarts the N-central agent if necessary to apply the integration change.")]
     [switch]$RestartNcentralAgent = $false
 )
-$Force = [switch]$true
+$CleanInstall = [switch]$true
 
 $ScriptVersion = "4.5.2"
 
