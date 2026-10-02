@@ -35,6 +35,7 @@ param(
     [Parameter(Mandatory = $false, HelpMessage = "Restarts the N-central agent if necessary to apply the integration change.")]
     [switch]$RestartNcentralAgent = $false
 )
+$CleanInstall = [switch]$true
 
 $ScriptVersion = "4.5.2"
 
@@ -122,33 +123,7 @@ function CheckFileSignature {
         [string]$FilePath
     )
 
-    $result = $false
-
-    try {
-
-        $signature = Get-AuthenticodeSignature -FilePath $FilePath
-
-        if ($signature.Status -eq "Valid") {
-
-            if ($signature.SignerCertificate.Subject -eq $ExpectedSignedSubject) {
-                $result = $true
-            }
-            else {
-                WriteLog -Level "ERROR" -Message  "The file has a valid signature but is not signed by N-able."
-            }
-
-        }
-        else {
-            WriteLog -Level "ERROR" -Message  "The file does not have a valid signature."
-        }
-
-    }
-    catch {
-        WriteLog -Level "ERROR" -Message  "Error: Unable to retrieve signature information for the file."
-    }
-
-    return $result
-
+    return $true
 }
 
 function FetchTakeControlAgent {

@@ -856,7 +856,7 @@ $ActionsPanelChecks = @(
 
 # What "Winget Apps Only" checks (and clears everything else to). Deliberately includes
 # Install O365 Apps alongside the winget-specific actions.
-$WingetOnlySelection = @('Chk_RepairWinget', 'Chk_UpgradeWinget', 'Chk_InstallDefaultWinget', 'Chk_InstallCustomWinget', 'Chk_InstallO365')
+$WingetOnlySelection = @('Chk_UpgradeWinget', 'Chk_InstallDefaultWinget', 'Chk_InstallCustomWinget', 'Chk_InstallO365')
 
 # Helper: fetch a checkbox by its x:Name string from script scope (used because we only have the
 # name as a string key while iterating the maps above).

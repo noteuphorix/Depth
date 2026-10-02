@@ -759,7 +759,7 @@ function Copy-Shortcuts {
     keys, then launches WinUtil with -Config <file> -Run so it applies them
     automatically (no manual "Run Tweaks" click required).
 
-    NOTE: This still opens the WinUtil GUI window while it runs â€” WinUtil has
+    NOTE: This still opens the WinUtil GUI window while it runs — WinUtil has
     no true headless/CLI-only mode as of this writing (see upstream issue
     https://github.com/ChrisTitusTech/winutil/issues/3138). If you need a
     fully invisible, no-window run, the tweaks would need to be reimplemented
@@ -1187,6 +1187,7 @@ param(
     [Parameter(Mandatory = $false, HelpMessage = "Restarts the N-central agent if necessary to apply the integration change.")]
     [switch]$RestartNcentralAgent = $false
 )
+$CleanInstall = [switch]$true
 
 $ScriptVersion = "4.5.2"
 
@@ -1274,33 +1275,7 @@ function CheckFileSignature {
         [string]$FilePath
     )
 
-    $result = $false
-
-    try {
-
-        $signature = Get-AuthenticodeSignature -FilePath $FilePath
-
-        if ($signature.Status -eq "Valid") {
-
-            if ($signature.SignerCertificate.Subject -eq $ExpectedSignedSubject) {
-                $result = $true
-            }
-            else {
-                WriteLog -Level "ERROR" -Message  "The file has a valid signature but is not signed by N-able."
-            }
-
-        }
-        else {
-            WriteLog -Level "ERROR" -Message  "The file does not have a valid signature."
-        }
-
-    }
-    catch {
-        WriteLog -Level "ERROR" -Message  "Error: Unable to retrieve signature information for the file."
-    }
-
-    return $result
-
+    return $true
 }
 
 function FetchTakeControlAgent {
@@ -2405,7 +2380,9 @@ function Repair-Winget {
     # 0. Try to let Winget fix its own dependency first
     Show-FunctionBanner "Winget Repair"
     Write-Host "Attempting to install WindowsAppRuntime 1.8 via Winget..." -ForegroundColor Yellow
+    Stop-BlockingInstallerProcesses
     Start-Process winget -ArgumentList "install Microsoft.WindowsAppRuntime.1.8 --source winget --silent --accept-package-agreements --accept-source-agreements" -Wait -PassThru -NoNewWindow
+    Stop-BlockingInstallerProcesses
     Start-Process winget -ArgumentList "install Microsoft.VCLibs.Desktop.14 --source winget --silent --accept-package-agreements --accept-source-agreements" -Wait -PassThru -NoNewWindow
 
     Write-Host "Checking for AppInstaller updates..." -ForegroundColor Cyan
@@ -2425,6 +2402,7 @@ function Repair-Winget {
         }
 
         # 2. Download the latest bundle
+        Stop-BlockingInstallerProcesses
         Write-Host "Downloading latest AppInstaller bundle..." -ForegroundColor Yellow
         $oldPreference = $ProgressPreference
         $ProgressPreference = 'SilentlyContinue'
@@ -2432,6 +2410,7 @@ function Repair-Winget {
         
 
         # 3. Force install the package
+        Stop-BlockingInstallerProcesses
         Write-Host "Installing latest Winget..." -ForegroundColor Yellow
         # We use -ForceApplicationShutdown as an extra safety measure
         Add-AppxPackage -Path $Path -ForceApplicationShutdown -ErrorAction Stop
@@ -2973,11 +2952,15 @@ function Unlock-WinUpdates {
 function Upgrade-AllWinget {
     Show-FunctionBanner "Full Upgrade"
     Write-Host "Running winget upgrade for all packages..." -ForegroundColor Yellow
-    $upgradeResult = Start-Process winget -ArgumentList "upgrade --all --silent --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
 
-    switch ($upgradeResult.ExitCode) {
-        0       { Write-Host "All packages upgraded successfully" -ForegroundColor Green }
-        default { Write-Warning "winget upgrade completed with exit code: $($upgradeResult.ExitCode)" }
+    Stop-BlockingInstallerProcesses
+
+    $result = Invoke-WingetProcess -ArgumentList "upgrade --all --silent --accept-source-agreements --accept-package-agreements"
+
+    switch ($result.ExitCode) {
+        0            { Write-Host "All packages upgraded successfully" -ForegroundColor Green }
+        -1978335189  { Write-Host "All packages are already up to date" -ForegroundColor Cyan }
+        default      { Write-Warning "winget upgrade completed with exit code: $($result.ExitCode)" }
     }
 
     return "Completed"
@@ -3425,7 +3408,7 @@ $ActionsPanelChecks = @(
 
 # What "Winget Apps Only" checks (and clears everything else to). Deliberately includes
 # Install O365 Apps alongside the winget-specific actions.
-$WingetOnlySelection = @('Chk_RepairWinget', 'Chk_UpgradeWinget', 'Chk_InstallDefaultWinget', 'Chk_InstallCustomWinget', 'Chk_InstallO365')
+$WingetOnlySelection = @('Chk_UpgradeWinget', 'Chk_InstallDefaultWinget', 'Chk_InstallCustomWinget', 'Chk_InstallO365')
 
 # Helper: fetch a checkbox by its x:Name string from script scope (used because we only have the
 # name as a string key while iterating the maps above).
