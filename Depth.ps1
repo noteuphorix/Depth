@@ -623,7 +623,28 @@ $mainXML = @"
 			<Border x:Name="FAQ_Border" BorderBrush="{StaticResource WindowBorderBrush}" BorderThickness="1" CornerRadius="10" Margin="14,14,14,14"/>
 		</Grid>
 
-		<TextBlock x:Name="Lbl_Copyright" Text="Created By: Brandon Swarek" FontFamily="Segoe UI" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,14,8"/>
+		<TextBlock x:Name="Lbl_Copyright" Text="Created By: Brandon Swarek" FontFamily="Segoe UI" FontSize="26" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,14,8">
+			<TextBlock.Foreground>
+				<SolidColorBrush Color="#FF5555"/>
+			</TextBlock.Foreground>
+			<TextBlock.Triggers>
+				<EventTrigger RoutedEvent="FrameworkElement.Loaded">
+					<BeginStoryboard>
+						<Storyboard>
+							<ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(TextBlock.Foreground).(SolidColorBrush.Color)" Duration="0:0:18" RepeatBehavior="Forever">
+								<LinearColorKeyFrame Value="#FF5555" KeyTime="0:0:0"/>
+								<LinearColorKeyFrame Value="#FFAA44" KeyTime="0:0:3"/>
+								<LinearColorKeyFrame Value="#FFEE55" KeyTime="0:0:6"/>
+								<LinearColorKeyFrame Value="#55DD66" KeyTime="0:0:9"/>
+								<LinearColorKeyFrame Value="#55AAFF" KeyTime="0:0:12"/>
+								<LinearColorKeyFrame Value="#AA77FF" KeyTime="0:0:15"/>
+								<LinearColorKeyFrame Value="#FF5555" KeyTime="0:0:18"/>
+							</ColorAnimationUsingKeyFrames>
+						</Storyboard>
+					</BeginStoryboard>
+				</EventTrigger>
+			</TextBlock.Triggers>
+		</TextBlock>
 	</Grid>
 </Window>
 "@
