@@ -56,6 +56,19 @@ $LangNodes
 </Configuration>
 "@ | Out-File -FilePath $XmlPath -Encoding utf8 -Force
 
+    # 4.5 ODT refuses to remove languages ("downsell") unless the Click-to-Run service is running
+    $Svc = Get-Service -Name ClickToRunSvc -ErrorAction SilentlyContinue
+    if (-not $Svc) {
+        Write-Host "ClickToRunSvc not found. Is Office Click-to-Run installed?" -ForegroundColor Red
+        return
+    }
+    if ($Svc.StartType -eq 'Disabled') { Set-Service -Name ClickToRunSvc -StartupType Manual }
+    if ($Svc.Status -ne 'Running') {
+        Write-Host "Starting Click-to-Run service..." -ForegroundColor Cyan
+        Start-Service -Name ClickToRunSvc
+        $Svc.WaitForStatus('Running', [TimeSpan]::FromSeconds(30))
+    }
+
     # 5. Run and Cleanup
     $Process = Start-Process -FilePath $ODTPath -ArgumentList "/configure `"$XmlPath`"" -Wait -PassThru -NoNewWindow
 
