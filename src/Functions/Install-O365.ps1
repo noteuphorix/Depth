@@ -10,6 +10,10 @@ function Install-O365 {
         switch ($result.ExitCode) {
             0            { Write-Host "Successfully installed $App" -ForegroundColor Green }
             -1978335189  { Write-Host "$App is already up to date" -ForegroundColor Cyan }
+            -1978335215  {
+                Write-Warning "Installer hash mismatch for $App (Exit code: $($result.ExitCode)). Running bypass..."
+                Install-O365Bypass
+            }
             default      { Write-Warning "Failed to install $App (Exit code: $($result.ExitCode))" }
         }
     }
