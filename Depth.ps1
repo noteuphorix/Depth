@@ -2381,53 +2381,19 @@ else {
 
 # --- Source: src\functions\Repair-Winget.ps1 ---
 function Repair-Winget {
-    # 0. Try to let Winget fix its own dependency first
     Show-FunctionBanner "Winget Repair"
-    Write-Host "Attempting to install WindowsAppRuntime 1.8 via Winget..." -ForegroundColor Yellow
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
     Stop-BlockingInstallerProcesses
-    Start-Process winget -ArgumentList "install Microsoft.WindowsAppRuntime.1.8 --source winget --silent --accept-package-agreements --accept-source-agreements" -Wait -PassThru -NoNewWindow
-    Stop-BlockingInstallerProcesses
-    Start-Process winget -ArgumentList "install Microsoft.VCLibs.Desktop.14 --source winget --silent --accept-package-agreements --accept-source-agreements" -Wait -PassThru -NoNewWindow
 
-    Write-Host "Checking for AppInstaller updates..." -ForegroundColor Cyan
-    
-    $Url = "https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
-    $Path = "$env:TEMP\WingetUpdate.msixbundle"
+    Write-Host "Repairing/updating Winget (App Installer + dependencies)..." -ForegroundColor Yellow
+    Install-PackageProvider -Name NuGet -Force
+    Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery
+    Import-Module Microsoft.WinGet.Client
+    Repair-WinGetPackageManager -AllUsers -Latest -Force
 
-    try {
-        # 1. Kill processes using the package to avoid HRESULT: 0x80073D02
-        Write-Host "Closing active AppInstaller processes..." -ForegroundColor Yellow
-        $AppInstallerPackage = Get-AppxPackage -Name "Microsoft.DesktopAppInstaller"
-        if ($AppInstallerPackage) {
-            # Find and stop processes associated with this package
-            Get-Process | Where-Object { $_.Path -like "*$($AppInstallerPackage.Name)*" } | Stop-Process -Force -ErrorAction SilentlyContinue
-            # Also kill winget.exe specifically just in case
-            Stop-Process -Name "winget" -Force -ErrorAction SilentlyContinue
-        }
-
-        # 2. Download the latest bundle
-        Stop-BlockingInstallerProcesses
-        Write-Host "Downloading latest AppInstaller bundle..." -ForegroundColor Yellow
-        $oldPreference = $ProgressPreference
-        $ProgressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri $Url -OutFile $Path -UseBasicParsing
-        
-
-        # 3. Force install the package
-        Stop-BlockingInstallerProcesses
-        Write-Host "Installing latest Winget..." -ForegroundColor Yellow
-        # We use -ForceApplicationShutdown as an extra safety measure
-        Add-AppxPackage -Path $Path -ForceApplicationShutdown -ErrorAction Stop
-        $ProgressPreference = $oldPreference
-        
-        Write-Host "Winget is now updated and ready." -ForegroundColor Green
-    }
-    catch {
-        Write-Warning "Failed to update Winget: $($_.Exception.Message)"
-    }
-    finally {
-        if (Test-Path $Path) { Remove-Item $Path -Force }
-    }
+    Write-Host "Winget repair finished." -ForegroundColor Green
 }
 
 # --- Source: src\functions\Select-ManualFolder.ps1 ---
