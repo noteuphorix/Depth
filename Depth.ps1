@@ -2941,8 +2941,10 @@ function Update-Windows {
 
     Write-Host "Preparing PSWindowsUpdate module..." -ForegroundColor Cyan
     if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
+        Write-Host "PSWindowsUpdate module not found, installing the NuGet provider and PSWindowsUpdate from PSGallery..." -ForegroundColor Red
         Install-PackageProvider -Name NuGet -Force
         Install-Module -Name PSWindowsUpdate -Force -Repository PSGallery
+        Write-Host "PSWindowsUpdate module installed." -ForegroundColor Green
     }
     Import-Module PSWindowsUpdate
 
