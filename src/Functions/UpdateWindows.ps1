@@ -5,8 +5,10 @@ function Update-Windows {
     Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
     Write-Host "Preparing PSWindowsUpdate module..." -ForegroundColor Cyan
-    Install-PackageProvider -Name NuGet -Force
-    Install-Module -Name PSWindowsUpdate -Force -Repository PSGallery
+    if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
+        Install-PackageProvider -Name NuGet -Force
+        Install-Module -Name PSWindowsUpdate -Force -Repository PSGallery
+    }
     Import-Module PSWindowsUpdate
 
     Write-Host "Checking for available updates..." -ForegroundColor Cyan
