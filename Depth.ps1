@@ -522,7 +522,7 @@ $mainXML = @"
 				</StackPanel>
 			</Border>
 
-			<Border x:Name="Misc_Border" Style="{StaticResource PanelCard}" Margin="472,60,0,0" Width="216" Height="300" HorizontalAlignment="Left" VerticalAlignment="Top">
+			<Border x:Name="Misc_Border" Style="{StaticResource PanelCard}" Margin="472,60,0,0" Width="216" Height="340" HorizontalAlignment="Left" VerticalAlignment="Top">
 				<StackPanel x:Name="Misc_StackPanel" Margin="14,14,14,10">
 					<TextBlock x:Name="Lbl_Misc" Text="Misc" Style="{StaticResource SectionHeaderText}"/>
 					<Border Height="2" Width="28" Background="{StaticResource WarningBrush}" CornerRadius="1" HorizontalAlignment="Left" Margin="1,6,0,4"/>
@@ -531,6 +531,7 @@ $mainXML = @"
 					<CheckBox x:Name="Chk_UnlockWinUpdate" Content="Unlock Win Updates" Style="{StaticResource ActionCheckBox}" Tag="{StaticResource WarningBrush}"/>
 					<CheckBox x:Name="Chk_OfficeInstallBypass" Content="O365 Install Bypass" Style="{StaticResource ActionCheckBox}" Tag="{StaticResource WarningBrush}"/>
 					<CheckBox x:Name="Chk_RepairTakeControl" Content="Repair Take Control" Style="{StaticResource ActionCheckBox}" Tag="{StaticResource WarningBrush}"/>
+					<CheckBox x:Name="Chk_UpdateWindows" Content="Update Windows" Style="{StaticResource ActionCheckBox}" Tag="{StaticResource WarningBrush}"/>
 				</StackPanel>
 			</Border>
 
@@ -2931,6 +2932,28 @@ function Unlock-WinUpdates {
     Write-Host "`nWindows Update has been unlocked." -ForegroundColor Green
 }
 
+# --- Source: src\functions\UpdateWindows.ps1 ---
+function Update-Windows {
+    Show-FunctionBanner "Windows Update"
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+
+    Write-Host "Preparing PSWindowsUpdate module..." -ForegroundColor Cyan
+    Install-PackageProvider -Name NuGet -Force
+    Install-Module -Name PSWindowsUpdate -Force -Repository PSGallery
+    Import-Module PSWindowsUpdate
+
+    Write-Host "Checking for available updates..." -ForegroundColor Cyan
+    Get-WindowsUpdate -MicrosoftUpdate
+
+    Write-Host "Installing updates..." -ForegroundColor Cyan
+    Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot
+
+    Write-Host "Windows Update finished." -ForegroundColor Green
+}
+
+
 # --- Source: src\functions\Upgrade-AllWinget.ps1 ---
 function Upgrade-AllWinget {
     Show-FunctionBanner "Full Upgrade"
@@ -3361,6 +3384,7 @@ $DeploymentActionMap = [ordered]@{
     'Chk_UnlockWinUpdate'         = 'Unlock-WinUpdates'
     'Chk_OfficeInstallBypass'     = 'Install-O365Bypass'
     'Chk_RepairTakeControl'       = 'Repair-TakeControl'
+    'Chk_UpdateWindows'           = 'Update-Windows'
     # Apps panel (driver / vendor utilities)
     'Chk_InstallNVIDIAApp'        = 'Install-PassedWingetApp "TechPowerUp.NVCleanstall"'
     'Chk_InstallAMDApp'           = 'Start-Process "https://www.amd.com/en/support/download/drivers.html"'
@@ -3411,8 +3435,8 @@ $Btn_SelectAll.Add_Click({
     }
 })
 
-# Everything Select All checks, plus UAC / Taskbar / Unlock Win Updates from the Misc panel.
-$BrandonsSpecialChecks = @('Chk_ConfigUAC', 'Chk_ConfigTaskbar', 'Chk_UnlockWinUpdate') + $ActionsPanelChecks
+# Everything Select All checks, plus UAC / Taskbar / Unlock Win Updates / Update Windows from the Misc panel.
+$BrandonsSpecialChecks = @('Chk_ConfigUAC', 'Chk_ConfigTaskbar', 'Chk_UnlockWinUpdate', 'Chk_UpdateWindows') + $ActionsPanelChecks
 
 $Btn_BrandonsSpecial.Add_Click({
     foreach ($key in $BrandonsSpecialChecks) {
