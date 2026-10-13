@@ -1,4 +1,8 @@
 function Update-Windows {
+    # -AutoReboot restarts the machine once updates install (if they need a reboot) instead of
+    # suppressing it. Repair-Winget uses this when App Installer is stuck.
+    param([switch]$AutoReboot)
+
     Show-FunctionBanner "Windows Update"
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -17,7 +21,11 @@ function Update-Windows {
     Get-WindowsUpdate -MicrosoftUpdate
 
     Write-Host "Installing updates..." -ForegroundColor Cyan
-    Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot
+    if ($AutoReboot) {
+        Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot
+    } else {
+        Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot
+    }
 
     Write-Host "Windows Update finished." -ForegroundColor Green
 }
