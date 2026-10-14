@@ -2385,7 +2385,7 @@ function Repair-Winget {
         $output = winget show --id 9NBLGGH4NNS1 --source msstore --exact --accept-source-agreements --disable-interactivity 2>&1
         if ($LASTEXITCODE -eq 0) { return $true }
 
-        Write-Host ("msstore source check failed (winget exit code 0x{0:X8}):" -f $LASTEXITCODE) -ForegroundColor Red
+        Write-Host ("msstore source check failed (winget exit code 0x{0:X8}):" -f $LASTEXITCODE) -ForegroundColor White -BackgroundColor DarkRed
         $output | ForEach-Object { "$_".Trim() } | Where-Object { $_ } | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
         return $false
     }
@@ -2404,7 +2404,7 @@ function Repair-Winget {
                 return
             }
         } else {
-            Write-Host "Winget is not installed." -ForegroundColor Red
+            Write-Host "Winget is not installed." -ForegroundColor White -BackgroundColor DarkRed
         }
 
         $step = "Closing blocking processes"
@@ -2443,48 +2443,45 @@ function Repair-Winget {
         $handle = $repair.BeginInvoke()
 
         if ($handle.AsyncWaitHandle.WaitOne([TimeSpan]::FromMinutes(3))) {
-            # Finished in time - if the repair errored out, Windows Updates are needed too.
+            # Finished in time. An error here (e.g. a version mismatch) doesn't mean winget is broken,
+            # so it's only printed - the re-check below decides whether Windows Updates are needed.
             try {
                 $repair.EndInvoke($handle) | Out-Null
             } catch {
-                Write-Host "Repair-WinGetPackageManager failed:" -ForegroundColor Red
+                Write-Host "Repair-WinGetPackageManager failed:" -ForegroundColor White -BackgroundColor DarkRed
                 Write-ErrorDetails $_
-                $repairFailed = $true
             } finally {
-                # The repair can report its error here instead of throwing - that counts as a failure too.
+                # The repair can report its error here instead of throwing.
                 foreach ($record in $repair.Streams.Error) {
-                    Write-Host "Repair-WinGetPackageManager reported an error:" -ForegroundColor Red
+                    Write-Host "Repair-WinGetPackageManager reported an error:" -ForegroundColor White -BackgroundColor DarkRed
                     Write-ErrorDetails $record
-                    $repairFailed = $true
                 }
                 $repair.Dispose()
             }
         } else {
-            Write-Host "Repair-WinGetPackageManager was still running after 3 minutes, stopping it." -ForegroundColor Red
+            Write-Host "Repair-WinGetPackageManager was still running after 3 minutes, stopping it." -ForegroundColor White -BackgroundColor DarkRed
             foreach ($record in $repair.Streams.Error) {
-                Write-Host "Repair-WinGetPackageManager reported an error:" -ForegroundColor Red
+                Write-Host "Repair-WinGetPackageManager reported an error:" -ForegroundColor White -BackgroundColor DarkRed
                 Write-ErrorDetails $record
             }
             $repair.BeginStop($null, $null) | Out-Null
             $repairFailed = $true
         }
 
-        # The repair can finish without errors and winget or msstore still not work - that needs
-        # Windows Updates too.
+        # Re-run the same check as the start: if winget or msstore still doesn't work after the
+        # repair, Windows Updates are needed.
         if (-not $repairFailed) {
             $step = "Verifying Winget"
-            try {
-                Assert-WinGetPackageManager -ErrorAction Stop
-            } catch {
-                Write-Host "Winget still isn't working after the repair:" -ForegroundColor Red
-                Write-ErrorDetails $_
+            Write-Host "Re-checking Winget and the msstore source..." -ForegroundColor Cyan
+            if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+                Write-Host "Winget still isn't installed after the repair." -ForegroundColor White -BackgroundColor DarkRed
                 $repairFailed = $true
             }
         }
         if (-not $repairFailed) {
             $step = "Verifying the msstore source"
             if (-not (Test-MsStoreSource)) {
-                Write-Host "The msstore source still isn't working after the repair." -ForegroundColor Red
+                Write-Host "The msstore source still isn't working after the repair." -ForegroundColor White -BackgroundColor DarkRed
                 $repairFailed = $true
             }
         }
@@ -2495,16 +2492,19 @@ function Repair-Winget {
         }
     }
     catch {
-        Write-Host "Winget repair FAILED at: $step" -ForegroundColor Red
+        Write-Host "Winget repair FAILED at: $step" -ForegroundColor White -BackgroundColor DarkRed
         Write-ErrorDetails $_
         # Rethrow so Run Selected stops instead of moving on to the next selection.
         throw
     }
 
     # Outside the try above so Update-Windows reports its own messages and errors.
-    Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor Red
-    Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor Red
+    Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor White -BackgroundColor DarkRed
+    Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor White -BackgroundColor DarkRed
     Update-Windows -AutoReboot
+    # -AutoReboot only restarts when an update asks for it, but App Installer needs a restart either way.
+    Write-Host "Restarting now to finish the App Installer update." -ForegroundColor White -BackgroundColor DarkRed
+    shutdown /f /t 0 /r
     # Still a failed repair - stop Run Selected from moving on to the next selection.
     throw "Winget repair failed."
 }
