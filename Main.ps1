@@ -780,14 +780,20 @@ function Invoke-BusyActionQueueAsync {
         param($Actions, $SelectedClient)
         $global:SelectedClient = $SelectedClient
         $sync.Main.Dispatcher.Invoke([action]{ Update-Status -State "Busy" })
+        $failed = $false
         foreach ($name in $Actions.Keys) {
-            try {
-                & ([scriptblock]::Create($Actions[$name]))
-            } finally {
-                $sync.Running.Remove($name)
-                if ($sync.Running.Count -eq 0) {
-                    $sync.Main.Dispatcher.Invoke([action]{ Update-Status -State "Ready" })
+            # After a failure, skip (and unlock) everything left in the queue.
+            if (-not $failed) {
+                try {
+                    & ([scriptblock]::Create($Actions[$name]))
+                } catch {
+                    $failed = $true
+                    Write-Host "`n'$name' failed - remaining selections were NOT run." -ForegroundColor Red
                 }
+            }
+            $sync.Running.Remove($name)
+            if ($sync.Running.Count -eq 0) {
+                $sync.Main.Dispatcher.Invoke([action]{ Update-Status -State "Ready" })
             }
         }
     }).AddParameter("Actions", $Actions).AddParameter("SelectedClient", $global:SelectedClient) | Out-Null

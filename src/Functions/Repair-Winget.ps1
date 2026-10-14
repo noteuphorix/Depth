@@ -21,100 +21,37 @@ function Repair-Winget {
         Import-Module Microsoft.WinGet.Client -ErrorAction Stop
 
         $step = "Repairing Winget"
-        Write-Host "Step 4/4: Repairing Winget and updating App Installer to the latest version..." -ForegroundColor Yellow
-        # Repair-WinGetPackageManager installs App Installer through synchronous Add-AppxPackage /
-        # Add-AppxProvisionedPackage calls with no cancellation, and the deployment itself runs inside
-        # AppXSvc. Killing a separate Start-Job process didn't stop that deployment, so App Installer
-        # kept installing while this function reported success and moved on. Instead the repair runs
-        # on a second runspace INSIDE this process, and this function blocks on it under a 3-minute
-        # timer (relaying verbose output live). If App Installer is stuck behind pending Windows
-        # Updates, the repair and the AppX deployment are both cancelled before Windows Update runs.
-        $deadline = (Get-Date).AddMinutes(3)
-
-        $handleStuck = {
-            Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor Red
-            # Stopping AppXSvc cancels the in-flight App Installer deployment; it restarts on demand.
-            try { Stop-Service -Name AppXSvc -Force -ErrorAction Stop } catch {}
-            Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor Red
-            Update-Windows -AutoReboot
-        }
-
-        $repair = [powershell]::Create()
-        $repair.AddScript({
+        Write-Host "Step 4/4: Repairing Winget and updating App Installer to the latest version (3 minute limit)..." -ForegroundColor Yellow
+        # A blocking cmdlet can't be timed out on its own thread, so the repair runs on a second
+        # PowerShell instance and we wait up to 3 minutes for it.
+        $repair = [powershell]::Create().AddScript({
             Import-Module Microsoft.WinGet.Client -ErrorAction Stop
-            Repair-WinGetPackageManager -AllUsers -Latest -Force -Verbose -ErrorAction Stop
-        }) | Out-Null
+            Repair-WinGetPackageManager -AllUsers -Latest -Force -ErrorAction Stop
+        })
         $handle = $repair.BeginInvoke()
 
-        # The repair runspace has no host, so relay its verbose, warning and information output to
-        # the terminal (the same streams Receive-Job used to show from the old job).
-        $relayed = 0
-        $relayedWarnings = 0
-        $relayedInfo = 0
-        $relayVerbose = {
-            while ($relayed -lt $repair.Streams.Verbose.Count) {
-                Write-Host $repair.Streams.Verbose[$relayed].Message
-                $relayed++
-            }
-            while ($relayedWarnings -lt $repair.Streams.Warning.Count) {
-                Write-Host "WARNING: $($repair.Streams.Warning[$relayedWarnings].Message)" -ForegroundColor Yellow
-                $relayedWarnings++
-            }
-            while ($relayedInfo -lt $repair.Streams.Information.Count) {
-                Write-Host $repair.Streams.Information[$relayedInfo].MessageData
-                $relayedInfo++
-            }
-        }
-
-        while (-not $handle.IsCompleted -and (Get-Date) -lt $deadline) {
-            . $relayVerbose
-            Start-Sleep -Seconds 2
-        }
-        . $relayVerbose
-
-        if (-not $handle.IsCompleted) {
-            # BeginStop rather than Stop/Dispose - Add-AppxPackage may not honour a stop request
-            # until AppXSvc is stopped, and a synchronous Stop would hang here.
+        if (-not $handle.AsyncWaitHandle.WaitOne([TimeSpan]::FromMinutes(3))) {
             $repair.BeginStop($null, $null) | Out-Null
-            & $handleStuck
-            return
+            Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor Red
+            Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor Red
+            $step = "Windows Update (after Winget repair timed out)"
+            Update-Windows -AutoReboot
+            throw "Winget repair timed out after 3 minutes. Windows Update was run - restart and run Repair Winget again."
         }
 
-        # Finished in time - a failure inside the repair is rethrown into the catch below.
-        try {
-            $repair.EndInvoke($handle) | Out-Null
-        } finally {
-            $repair.Dispose()
-        }
+        $repair.EndInvoke($handle) | Out-Null
+        $repair.Dispose()
 
-        # Don't report success until App Installer has actually settled and winget works, still
-        # bound by the same 3-minute timer.
         $step = "Verifying Winget"
-        while ($true) {
-            $appInstaller = @(Get-AppxPackage -Name Microsoft.DesktopAppInstaller -ErrorAction SilentlyContinue)
-            $settled = $appInstaller.Count -gt 0 -and -not ($appInstaller | Where-Object { $_.Status -ne 'Ok' })
-            if ($settled) {
-                try {
-                    Assert-WinGetPackageManager -ErrorAction Stop
-                    break
-                } catch {}
-            }
-
-            if ((Get-Date) -ge $deadline) {
-                & $handleStuck
-                return
-            }
-            Start-Sleep -Seconds 5
-        }
-
+        Assert-WinGetPackageManager -ErrorAction Stop
         Write-Host "Winget repair finished. Version: $(Get-WinGetVersion)" -ForegroundColor Green
     }
     catch {
         Write-Host "Winget repair FAILED at: $step" -ForegroundColor Red
-        # EndInvoke wraps errors from the repair runspace - show the underlying message.
         $err = $_.Exception
         while ($err.InnerException) { $err = $err.InnerException }
         Write-Host "Error: $($err.Message)" -ForegroundColor Red
-        Write-Host "Command: $($_.InvocationInfo.Line.Trim())" -ForegroundColor Red
+        # Rethrow so Run Selected stops instead of moving on to the next selection.
+        throw
     }
 }
