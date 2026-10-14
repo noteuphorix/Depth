@@ -837,10 +837,10 @@ $DeploymentActionMap = [ordered]@{
     # Apps panel (driver / vendor utilities)
     'Chk_InstallNVIDIAApp'        = 'Install-PassedWingetApp "TechPowerUp.NVCleanstall"'
     'Chk_InstallAMDApp'           = 'Start-Process "https://www.amd.com/en/support/download/drivers.html"'
-    # Dell's updater needs a current winget before it'll install cleanly, so this is the one app
-    # entry that upgrades winget first - it's bundled into this single action (and its own lock)
-    # rather than depending on the separate "Upgrade Winget" checkbox being checked too.
-    'Chk_InstallDellApp'          = "Upgrade-AllWinget`nInstall-PassedWingetApp `"Dell.CommandUpdate`""
+    # Dell's updater needs a current winget before it'll install cleanly - Install-PassedWingetApp
+    # runs the full upgrade first for Dell Command Update, so this doesn't depend on the separate
+    # "Upgrade Winget" checkbox being checked too.
+    'Chk_InstallDellApp'          = 'Install-PassedWingetApp "Dell.CommandUpdate"'
     'Chk_InstallLenovoApp'        = 'Install-PassedWingetApp "9NR5B8GVVM13"'
     'Chk_InstallHPApp'            = 'Start-Process "https://support.hp.com/us-en/help/hp-support-assistant"'
     'Chk_InstallSnapdragonApp'    = 'Start-Process "https://softwarecenter.qualcomm.com/api/download/software/tools/SnapdragonControlPanel/Windows/ARM64/2025.3.0.0/Snapdragon_Control_Panel_2025.3.0.0.zip"'
