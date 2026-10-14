@@ -780,20 +780,27 @@ function Invoke-BusyActionQueueAsync {
         param($Actions, $SelectedClient)
         $global:SelectedClient = $SelectedClient
         $sync.Main.Dispatcher.Invoke([action]{ Update-Status -State "Busy" })
-        $failed = $false
+        $repairWingetFailed = $false
         foreach ($name in $Actions.Keys) {
-            # After a failure, skip (and unlock) everything left in the queue.
-            if (-not $failed) {
-                try {
+            try {
+                if ($name -eq 'Chk_RepairWinget') {
+                    # Repair Winget is the only action that stops the queue when it fails (it has
+                    # already run Windows Update, and the device needs a restart before going on).
+                    # Remaining selections are skipped but still unlocked.
+                    try {
+                        & ([scriptblock]::Create($Actions[$name]))
+                    } catch {
+                        $repairWingetFailed = $true
+                        Write-Host "`n'$name' failed - remaining selections were NOT run." -ForegroundColor Red
+                    }
+                } elseif (-not $repairWingetFailed) {
                     & ([scriptblock]::Create($Actions[$name]))
-                } catch {
-                    $failed = $true
-                    Write-Host "`n'$name' failed - remaining selections were NOT run." -ForegroundColor Red
                 }
-            }
-            $sync.Running.Remove($name)
-            if ($sync.Running.Count -eq 0) {
-                $sync.Main.Dispatcher.Invoke([action]{ Update-Status -State "Ready" })
+            } finally {
+                $sync.Running.Remove($name)
+                if ($sync.Running.Count -eq 0) {
+                    $sync.Main.Dispatcher.Invoke([action]{ Update-Status -State "Ready" })
+                }
             }
         }
     }).AddParameter("Actions", $Actions).AddParameter("SelectedClient", $global:SelectedClient) | Out-Null
