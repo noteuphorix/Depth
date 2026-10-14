@@ -2411,9 +2411,34 @@ function Repair-Winget {
         }
     }
 
+    # `winget source update --name msstore` always reports success (msstore is queried live, so
+    # there's nothing to update), so instead look up App Installer's own Store ID on msstore. This
+    # fails exactly when installs without --source fail on msstore. Prints winget's output on failure.
+    function Test-MsStoreSource {
+        $output = winget show --id 9NBLGGH4NNS1 --source msstore --exact --accept-source-agreements --disable-interactivity 2>&1
+        if ($LASTEXITCODE -eq 0) { return $true }
+
+        Write-Host ("msstore source check failed (winget exit code 0x{0:X8}):" -f $LASTEXITCODE) -ForegroundColor Red
+        $output | ForEach-Object { "$_".Trim() } | Where-Object { $_ } | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+        return $false
+    }
+
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
     try {
+        # Only repair when it's actually needed: winget missing, or the msstore source failing.
+        $step = "Checking Winget"
+        $wingetInstalled = [bool](Get-Command winget -ErrorAction SilentlyContinue)
+        if ($wingetInstalled) {
+            Write-Host "Winget is installed. Checking the msstore source..." -ForegroundColor Cyan
+            if (Test-MsStoreSource) {
+                Write-Host "Winget and the msstore source are working, no repair needed. Version: $(winget --version)" -ForegroundColor Green
+                return
+            }
+        } else {
+            Write-Host "Winget is not installed." -ForegroundColor Red
+        }
+
         $step = "Closing blocking processes"
         Write-Host "Closing processes that can block the App Installer update..." -ForegroundColor Cyan
         Stop-BlockingInstallerProcesses
@@ -2429,6 +2454,15 @@ function Repair-Winget {
         $step = "Importing Microsoft.WinGet.Client module"
         Write-Host "Step 3/4: Importing Microsoft.WinGet.Client module..." -ForegroundColor Cyan
         Import-Module Microsoft.WinGet.Client -ErrorAction Stop
+
+        if (-not $wingetInstalled) {
+            # A plain repair (no -Latest) installs winget when it's missing.
+            $step = "Installing Winget"
+            Write-Host "Step 4/4: Installing Winget..." -ForegroundColor Yellow
+            Repair-WinGetPackageManager -AllUsers -ErrorAction Stop
+            Write-Host "Winget installed. Version: $(Get-WinGetVersion)" -ForegroundColor Green
+            return
+        }
 
         $step = "Repairing Winget"
         Write-Host "Step 4/4: Repairing Winget and updating App Installer to the latest version (3 minute limit)..." -ForegroundColor Yellow
@@ -2468,7 +2502,8 @@ function Repair-Winget {
             $repairFailed = $true
         }
 
-        # The repair can finish without errors and winget still not work - that needs Windows Updates too.
+        # The repair can finish without errors and winget or msstore still not work - that needs
+        # Windows Updates too.
         if (-not $repairFailed) {
             $step = "Verifying Winget"
             try {
@@ -2476,6 +2511,13 @@ function Repair-Winget {
             } catch {
                 Write-Host "Winget still isn't working after the repair:" -ForegroundColor Red
                 Write-ErrorDetails $_
+                $repairFailed = $true
+            }
+        }
+        if (-not $repairFailed) {
+            $step = "Verifying the msstore source"
+            if (-not (Test-MsStoreSource)) {
+                Write-Host "The msstore source still isn't working after the repair." -ForegroundColor Red
                 $repairFailed = $true
             }
         }
