@@ -2384,33 +2384,6 @@ else {
 function Repair-Winget {
     Show-FunctionBanner "Winget Repair"
 
-    # Prints everything an error carries: every wrapped exception (type, message, HResult), the
-    # command and line it came from, and the script stack trace.
-    function Write-ErrorDetails {
-        param([System.Management.Automation.ErrorRecord]$Record)
-
-        $ex = $Record.Exception
-        $depth = 0
-        while ($ex) {
-            $indent = '  ' * ($depth + 1)
-            Write-Host "$indent[$($ex.GetType().FullName)] $($ex.Message)" -ForegroundColor Red
-            Write-Host ("$indent  HResult: 0x{0:X8}" -f $ex.HResult) -ForegroundColor Red
-            if ($ex -is [System.Management.Automation.IContainsErrorRecord] -and $ex.ErrorRecord.InvocationInfo.MyCommand) {
-                Write-Host "$indent  Command: $($ex.ErrorRecord.InvocationInfo.MyCommand)" -ForegroundColor Red
-            }
-            $ex = $ex.InnerException
-            $depth++
-        }
-        Write-Host "  Category: $($Record.CategoryInfo)" -ForegroundColor Red
-        Write-Host "  Error ID: $($Record.FullyQualifiedErrorId)" -ForegroundColor Red
-        if ($Record.InvocationInfo.PositionMessage) {
-            Write-Host "  Position: $($Record.InvocationInfo.PositionMessage)" -ForegroundColor Red
-        }
-        if ($Record.ScriptStackTrace) {
-            Write-Host "  Stack trace:`n$($Record.ScriptStackTrace)" -ForegroundColor Red
-        }
-    }
-
     # `winget source update --name msstore` always reports success (msstore is queried live, so
     # there's nothing to update), so instead look up App Installer's own Store ID on msstore. This
     # fails exactly when installs without --source fail on msstore. Prints winget's output on failure.
@@ -2425,6 +2398,7 @@ function Repair-Winget {
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
+    $repairFailed = $false
     try {
         # Only repair when it's actually needed: winget missing, or the msstore source failing.
         $step = "Checking Winget"
@@ -2474,7 +2448,6 @@ function Repair-Winget {
         })
         $handle = $repair.BeginInvoke()
 
-        $repairFailed = $false
         if ($handle.AsyncWaitHandle.WaitOne([TimeSpan]::FromMinutes(3))) {
             # Finished in time - if the repair errored out, Windows Updates are needed too.
             try {
@@ -2522,15 +2495,10 @@ function Repair-Winget {
             }
         }
 
-        if ($repairFailed) {
-            Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor Red
-            Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor Red
-            $step = "Windows Update (after Winget repair failed)"
-            Update-Windows -AutoReboot
-            throw "Winget repair failed or timed out. Windows Update was run - restart and run Repair Winget again."
+        if (-not $repairFailed) {
+            Write-Host "Winget repair finished. Version: $(Get-WinGetVersion)" -ForegroundColor Green
+            return
         }
-
-        Write-Host "Winget repair finished. Version: $(Get-WinGetVersion)" -ForegroundColor Green
     }
     catch {
         Write-Host "Winget repair FAILED at: $step" -ForegroundColor Red
@@ -2538,6 +2506,13 @@ function Repair-Winget {
         # Rethrow so Run Selected stops instead of moving on to the next selection.
         throw
     }
+
+    # Outside the try above so Update-Windows reports its own messages and errors.
+    Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor Red
+    Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor Red
+    Update-Windows -AutoReboot
+    # Still a failed repair - stop Run Selected from moving on to the next selection.
+    throw "Winget repair failed."
 }
 
 
@@ -3087,27 +3062,46 @@ function Update-Windows {
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
-    Write-Host "Preparing PSWindowsUpdate module..." -ForegroundColor Cyan
-    if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
-        Write-Host "PSWindowsUpdate module not found, installing the NuGet provider and PSWindowsUpdate from PSGallery..." -ForegroundColor Red
-        Install-PackageProvider -Name NuGet -Force
-        Install-Module -Name PSWindowsUpdate -Force -Repository PSGallery
-        Write-Host "PSWindowsUpdate module installed." -ForegroundColor Green
+    # Windows Update can fail partway through (e.g. 0x80248007 when an update's data disappears
+    # mid-run) and a fresh run usually gets past it. Retry with the same flags up to 10 times,
+    # then force a restart.
+    $maxAttempts = 10
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        if ($attempt -gt 1) {
+            Write-Host "`nRetrying Windows Update (attempt $attempt/$maxAttempts)..." -ForegroundColor Yellow
+        }
+
+        try {
+            Write-Host "Preparing PSWindowsUpdate module..." -ForegroundColor Cyan
+            if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
+                Write-Host "PSWindowsUpdate module not found, installing the NuGet provider and PSWindowsUpdate from PSGallery..." -ForegroundColor Red
+                Install-PackageProvider -Name NuGet -Force
+                Install-Module -Name PSWindowsUpdate -Force -Repository PSGallery
+                Write-Host "PSWindowsUpdate module installed." -ForegroundColor Green
+            }
+            Import-Module PSWindowsUpdate
+
+            Write-Host "Checking for available updates..." -ForegroundColor Cyan
+            Get-WindowsUpdate -MicrosoftUpdate
+
+            Write-Host "Installing updates..." -ForegroundColor Cyan
+            if ($AutoReboot) {
+                Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot
+            } else {
+                Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot
+            }
+
+            Write-Host "Windows Update finished." -ForegroundColor Green
+            return
+        } catch {
+            Write-Host "Windows Update attempt $attempt/$maxAttempts failed: $($_.Exception.Message)" -ForegroundColor Red
+        }
     }
-    Import-Module PSWindowsUpdate
 
-    Write-Host "Checking for available updates..." -ForegroundColor Cyan
-    Get-WindowsUpdate -MicrosoftUpdate
-
-    Write-Host "Installing updates..." -ForegroundColor Cyan
-    if ($AutoReboot) {
-        Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot
-    } else {
-        Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot
-    }
-
-    Write-Host "Windows Update finished." -ForegroundColor Green
+    Write-Host "`nWindows Update failed $maxAttempts times in a row. Forcing a restart now." -ForegroundColor Red
+    shutdown /f /t 0 /r
 }
+
 
 # --- Source: src\functions\Upgrade-AllWinget.ps1 ---
 function Upgrade-AllWinget {
@@ -3126,6 +3120,35 @@ function Upgrade-AllWinget {
 
     return "Completed"
 }
+
+# --- Source: src\functions\Write-ErrorDetails.ps1 ---
+function Write-ErrorDetails {
+    # Prints everything an error carries: every wrapped exception (type, message, HResult), the
+    # command and line it came from, and the script stack trace.
+    param([System.Management.Automation.ErrorRecord]$Record)
+
+    $ex = $Record.Exception
+    $depth = 0
+    while ($ex) {
+        $indent = '  ' * ($depth + 1)
+        Write-Host "$indent[$($ex.GetType().FullName)] $($ex.Message)" -ForegroundColor Red
+        Write-Host ("$indent  HResult: 0x{0:X8}" -f $ex.HResult) -ForegroundColor Red
+        if ($ex -is [System.Management.Automation.IContainsErrorRecord] -and $ex.ErrorRecord.InvocationInfo.MyCommand) {
+            Write-Host "$indent  Command: $($ex.ErrorRecord.InvocationInfo.MyCommand)" -ForegroundColor Red
+        }
+        $ex = $ex.InnerException
+        $depth++
+    }
+    Write-Host "  Category: $($Record.CategoryInfo)" -ForegroundColor Red
+    Write-Host "  Error ID: $($Record.FullyQualifiedErrorId)" -ForegroundColor Red
+    if ($Record.InvocationInfo.PositionMessage) {
+        Write-Host "  Position: $($Record.InvocationInfo.PositionMessage)" -ForegroundColor Red
+    }
+    if ($Record.ScriptStackTrace) {
+        Write-Host "  Stack trace:`n$($Record.ScriptStackTrace)" -ForegroundColor Red
+    }
+}
+
 
 # --- Source: src\hd functions\HD_DISMFix.ps1 ---
 function DISMFix {

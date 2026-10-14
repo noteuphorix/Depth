@@ -1,33 +1,6 @@
 function Repair-Winget {
     Show-FunctionBanner "Winget Repair"
 
-    # Prints everything an error carries: every wrapped exception (type, message, HResult), the
-    # command and line it came from, and the script stack trace.
-    function Write-ErrorDetails {
-        param([System.Management.Automation.ErrorRecord]$Record)
-
-        $ex = $Record.Exception
-        $depth = 0
-        while ($ex) {
-            $indent = '  ' * ($depth + 1)
-            Write-Host "$indent[$($ex.GetType().FullName)] $($ex.Message)" -ForegroundColor Red
-            Write-Host ("$indent  HResult: 0x{0:X8}" -f $ex.HResult) -ForegroundColor Red
-            if ($ex -is [System.Management.Automation.IContainsErrorRecord] -and $ex.ErrorRecord.InvocationInfo.MyCommand) {
-                Write-Host "$indent  Command: $($ex.ErrorRecord.InvocationInfo.MyCommand)" -ForegroundColor Red
-            }
-            $ex = $ex.InnerException
-            $depth++
-        }
-        Write-Host "  Category: $($Record.CategoryInfo)" -ForegroundColor Red
-        Write-Host "  Error ID: $($Record.FullyQualifiedErrorId)" -ForegroundColor Red
-        if ($Record.InvocationInfo.PositionMessage) {
-            Write-Host "  Position: $($Record.InvocationInfo.PositionMessage)" -ForegroundColor Red
-        }
-        if ($Record.ScriptStackTrace) {
-            Write-Host "  Stack trace:`n$($Record.ScriptStackTrace)" -ForegroundColor Red
-        }
-    }
-
     # `winget source update --name msstore` always reports success (msstore is queried live, so
     # there's nothing to update), so instead look up App Installer's own Store ID on msstore. This
     # fails exactly when installs without --source fail on msstore. Prints winget's output on failure.
@@ -42,6 +15,7 @@ function Repair-Winget {
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
+    $repairFailed = $false
     try {
         # Only repair when it's actually needed: winget missing, or the msstore source failing.
         $step = "Checking Winget"
@@ -91,7 +65,6 @@ function Repair-Winget {
         })
         $handle = $repair.BeginInvoke()
 
-        $repairFailed = $false
         if ($handle.AsyncWaitHandle.WaitOne([TimeSpan]::FromMinutes(3))) {
             # Finished in time - if the repair errored out, Windows Updates are needed too.
             try {
@@ -139,15 +112,10 @@ function Repair-Winget {
             }
         }
 
-        if ($repairFailed) {
-            Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor Red
-            Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor Red
-            $step = "Windows Update (after Winget repair failed)"
-            Update-Windows -AutoReboot
-            throw "Winget repair failed or timed out. Windows Update was run - restart and run Repair Winget again."
+        if (-not $repairFailed) {
+            Write-Host "Winget repair finished. Version: $(Get-WinGetVersion)" -ForegroundColor Green
+            return
         }
-
-        Write-Host "Winget repair finished. Version: $(Get-WinGetVersion)" -ForegroundColor Green
     }
     catch {
         Write-Host "Winget repair FAILED at: $step" -ForegroundColor Red
@@ -155,4 +123,11 @@ function Repair-Winget {
         # Rethrow so Run Selected stops instead of moving on to the next selection.
         throw
     }
+
+    # Outside the try above so Update-Windows reports its own messages and errors.
+    Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor Red
+    Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor Red
+    Update-Windows -AutoReboot
+    # Still a failed repair - stop Run Selected from moving on to the next selection.
+    throw "Winget repair failed."
 }
