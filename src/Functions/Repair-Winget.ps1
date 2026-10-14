@@ -1,6 +1,33 @@
 function Repair-Winget {
     Show-FunctionBanner "Winget Repair"
 
+    # Prints everything an error carries: every wrapped exception (type, message, HResult), the
+    # command and line it came from, and the script stack trace.
+    function Write-ErrorDetails {
+        param([System.Management.Automation.ErrorRecord]$Record)
+
+        $ex = $Record.Exception
+        $depth = 0
+        while ($ex) {
+            $indent = '  ' * ($depth + 1)
+            Write-Host "$indent[$($ex.GetType().FullName)] $($ex.Message)" -ForegroundColor Red
+            Write-Host ("$indent  HResult: 0x{0:X8}" -f $ex.HResult) -ForegroundColor Red
+            if ($ex -is [System.Management.Automation.IContainsErrorRecord] -and $ex.ErrorRecord.InvocationInfo.MyCommand) {
+                Write-Host "$indent  Command: $($ex.ErrorRecord.InvocationInfo.MyCommand)" -ForegroundColor Red
+            }
+            $ex = $ex.InnerException
+            $depth++
+        }
+        Write-Host "  Category: $($Record.CategoryInfo)" -ForegroundColor Red
+        Write-Host "  Error ID: $($Record.FullyQualifiedErrorId)" -ForegroundColor Red
+        if ($Record.InvocationInfo.PositionMessage) {
+            Write-Host "  Position: $($Record.InvocationInfo.PositionMessage)" -ForegroundColor Red
+        }
+        if ($Record.ScriptStackTrace) {
+            Write-Host "  Stack trace:`n$($Record.ScriptStackTrace)" -ForegroundColor Red
+        }
+    }
+
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
     try {
@@ -36,16 +63,38 @@ function Repair-Winget {
             try {
                 $repair.EndInvoke($handle) | Out-Null
             } catch {
-                $err = $_.Exception
-                while ($err.InnerException) { $err = $err.InnerException }
-                Write-Host "Repair-WinGetPackageManager failed: $($err.Message)" -ForegroundColor Red
+                Write-Host "Repair-WinGetPackageManager failed:" -ForegroundColor Red
+                Write-ErrorDetails $_
                 $repairFailed = $true
             } finally {
+                # The repair can report its error here instead of throwing - that counts as a failure too.
+                foreach ($record in $repair.Streams.Error) {
+                    Write-Host "Repair-WinGetPackageManager reported an error:" -ForegroundColor Red
+                    Write-ErrorDetails $record
+                    $repairFailed = $true
+                }
                 $repair.Dispose()
             }
         } else {
+            Write-Host "Repair-WinGetPackageManager was still running after 3 minutes, stopping it." -ForegroundColor Red
+            foreach ($record in $repair.Streams.Error) {
+                Write-Host "Repair-WinGetPackageManager reported an error:" -ForegroundColor Red
+                Write-ErrorDetails $record
+            }
             $repair.BeginStop($null, $null) | Out-Null
             $repairFailed = $true
+        }
+
+        # The repair can finish without errors and winget still not work - that needs Windows Updates too.
+        if (-not $repairFailed) {
+            $step = "Verifying Winget"
+            try {
+                Assert-WinGetPackageManager -ErrorAction Stop
+            } catch {
+                Write-Host "Winget still isn't working after the repair:" -ForegroundColor Red
+                Write-ErrorDetails $_
+                $repairFailed = $true
+            }
         }
 
         if ($repairFailed) {
@@ -56,15 +105,11 @@ function Repair-Winget {
             throw "Winget repair failed or timed out. Windows Update was run - restart and run Repair Winget again."
         }
 
-        $step = "Verifying Winget"
-        Assert-WinGetPackageManager -ErrorAction Stop
         Write-Host "Winget repair finished. Version: $(Get-WinGetVersion)" -ForegroundColor Green
     }
     catch {
         Write-Host "Winget repair FAILED at: $step" -ForegroundColor Red
-        $err = $_.Exception
-        while ($err.InnerException) { $err = $err.InnerException }
-        Write-Host "Error: $($err.Message)" -ForegroundColor Red
+        Write-ErrorDetails $_
         # Rethrow so Run Selected stops instead of moving on to the next selection.
         throw
     }
