@@ -885,7 +885,7 @@ $Btn_SelectAll.Add_Click({
 })
 
 # Everything Select All checks, plus UAC / Taskbar / Unlock Win Updates / Update Windows from the Misc panel.
-$BrandonsSpecialChecks = @('Chk_ConfigUAC', 'Chk_ConfigTaskbar', 'Chk_UnlockWinUpdate', 'Chk_UpdateWindows') + $ActionsPanelChecks
+$BrandonsSpecialChecks = @('Chk_ConfigUAC', 'Chk_ConfigTaskbar') + $ActionsPanelChecks
 
 $Btn_BrandonsSpecial.Add_Click({
     foreach ($key in $BrandonsSpecialChecks) {

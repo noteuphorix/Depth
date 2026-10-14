@@ -2413,17 +2413,31 @@ function Repair-Winget {
         })
         $handle = $repair.BeginInvoke()
 
-        if (-not $handle.AsyncWaitHandle.WaitOne([TimeSpan]::FromMinutes(3))) {
+        $repairFailed = $false
+        if ($handle.AsyncWaitHandle.WaitOne([TimeSpan]::FromMinutes(3))) {
+            # Finished in time - if the repair errored out, Windows Updates are needed too.
+            try {
+                $repair.EndInvoke($handle) | Out-Null
+            } catch {
+                $err = $_.Exception
+                while ($err.InnerException) { $err = $err.InnerException }
+                Write-Host "Repair-WinGetPackageManager failed: $($err.Message)" -ForegroundColor Red
+                $repairFailed = $true
+            } finally {
+                $repair.Dispose()
+            }
+        } else {
             $repair.BeginStop($null, $null) | Out-Null
-            Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor Red
-            Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor Red
-            $step = "Windows Update (after Winget repair timed out)"
-            Update-Windows -AutoReboot
-            throw "Winget repair timed out after 3 minutes. Windows Update was run - restart and run Repair Winget again."
+            $repairFailed = $true
         }
 
-        $repair.EndInvoke($handle) | Out-Null
-        $repair.Dispose()
+        if ($repairFailed) {
+            Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor Red
+            Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor Red
+            $step = "Windows Update (after Winget repair failed)"
+            Update-Windows -AutoReboot
+            throw "Winget repair failed or timed out. Windows Update was run - restart and run Repair Winget again."
+        }
 
         $step = "Verifying Winget"
         Assert-WinGetPackageManager -ErrorAction Stop
@@ -3496,7 +3510,7 @@ $Btn_SelectAll.Add_Click({
 })
 
 # Everything Select All checks, plus UAC / Taskbar / Unlock Win Updates / Update Windows from the Misc panel.
-$BrandonsSpecialChecks = @('Chk_ConfigUAC', 'Chk_ConfigTaskbar', 'Chk_UnlockWinUpdate', 'Chk_UpdateWindows') + $ActionsPanelChecks
+$BrandonsSpecialChecks = @('Chk_ConfigUAC', 'Chk_ConfigTaskbar') + $ActionsPanelChecks
 
 $Btn_BrandonsSpecial.Add_Click({
     foreach ($key in $BrandonsSpecialChecks) {
