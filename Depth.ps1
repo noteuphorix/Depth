@@ -496,10 +496,10 @@ $mainXML = @"
 					<TextBlock x:Name="Lbl_Actions" Text="Actions" Style="{StaticResource SectionHeaderText}"/>
 					<Border Height="2" Width="28" Background="{StaticResource AccentBrush}" CornerRadius="1" HorizontalAlignment="Left" Margin="1,6,0,4"/>
 					<CheckBox x:Name="Chk_SetPowerOptions" Content="Set Power Options" Style="{StaticResource ActionCheckBox}"/>
+					<CheckBox x:Name="Chk_UninstallBloat" Content="Uninstall Bloat" Style="{StaticResource ActionCheckBox}"/>
 					<CheckBox x:Name="Chk_CopyShortcuts" Content="Copy Shortcuts" Style="{StaticResource ActionCheckBox}"/>
 					<CheckBox x:Name="Chk_InstallLocalApps" Content="Install Local Apps" Style="{StaticResource ActionCheckBox}"/>
 					<CheckBox x:Name="Chk_RepairWinget" Content="Repair Winget" Style="{StaticResource ActionCheckBox}"/>
-					<CheckBox x:Name="Chk_UninstallBloat" Content="Uninstall Bloat" Style="{StaticResource ActionCheckBox}"/>
 					<CheckBox x:Name="Chk_UninstallLanguagePacks" Content="Language Pack Killer" Style="{StaticResource ActionCheckBox}"/>
 					<CheckBox x:Name="Chk_UpgradeWinget" Content="Upgrade Winget" Style="{StaticResource ActionCheckBox}"/>
 					<CheckBox x:Name="Chk_InstallDefaultWinget" Content="Default Winget" Style="{StaticResource ActionCheckBox}"/>
@@ -3584,10 +3584,10 @@ $DeploymentActionMap = [ordered]@{
     # first, then cleanup, then winget upgrade, then installs). Run Selected dispatches checked
     # actions in this order (see Btn_RunSelected below).
     'Chk_SetPowerOptions'         = 'Set-CustomPowerOptions'
+    'Chk_UninstallBloat'          = 'Uninstall-Bloat'
     'Chk_CopyShortcuts'           = 'Copy-Shortcuts'
     'Chk_InstallLocalApps'        = 'Install-ClientCustomLocalApps'
     'Chk_RepairWinget'            = 'Repair-Winget'
-    'Chk_UninstallBloat'          = 'Uninstall-Bloat'
     'Chk_UninstallLanguagePacks'  = 'Uninstall-OfficeLanguagePacks'
     'Chk_UpgradeWinget'           = 'Upgrade-AllWinget'
     'Chk_InstallDefaultWinget'    = 'Install-DefaultWingetApps'
