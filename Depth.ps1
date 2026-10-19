@@ -2433,7 +2433,7 @@ function Repair-Winget {
         }
 
         $step = "Repairing Winget"
-        Write-Host "Step 4/4: Repairing Winget and updating App Installer to the latest version (3 minute limit)..." -ForegroundColor Yellow
+        Write-Host "Step 4/4: Repairing Winget and updating App Installer to the latest version (5 minute limit)..." -ForegroundColor Yellow
         # A blocking cmdlet can't be timed out on its own thread, so the repair runs on a second
         # PowerShell instance and we wait up to 5 minutes for it.
         $repair = [powershell]::Create().AddScript({
