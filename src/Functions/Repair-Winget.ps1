@@ -83,12 +83,9 @@ function Repair-Winget {
             }
         } else {
             Write-Host "Repair-WinGetPackageManager was still running after 3 minutes, stopping it." -ForegroundColor White -BackgroundColor DarkRed
-            foreach ($record in $repair.Streams.Error) {
-                Write-Host "Repair-WinGetPackageManager reported an error:" -ForegroundColor White -BackgroundColor DarkRed
-                Write-ErrorDetails $record
-            }
             $repair.BeginStop($null, $null) | Out-Null
-            $repairFailed = $true
+            # Don't mark the repair as failed yet. Fall through to the msstore re-check below. If that
+            # check also fails, the Windows Update and restart path runs.
         }
 
         # Re-run the same check as the start: if winget or msstore still doesn't work after the
