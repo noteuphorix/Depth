@@ -58,14 +58,14 @@ function Repair-Winget {
         $step = "Repairing Winget"
         Write-Host "Step 4/4: Repairing Winget and updating App Installer to the latest version (3 minute limit)..." -ForegroundColor Yellow
         # A blocking cmdlet can't be timed out on its own thread, so the repair runs on a second
-        # PowerShell instance and we wait up to 3 minutes for it.
+        # PowerShell instance and we wait up to 5 minutes for it.
         $repair = [powershell]::Create().AddScript({
             Import-Module Microsoft.WinGet.Client -ErrorAction Stop
             Repair-WinGetPackageManager -AllUsers -Latest -Force -ErrorAction Stop
         })
         $handle = $repair.BeginInvoke()
 
-        if ($handle.AsyncWaitHandle.WaitOne([TimeSpan]::FromMinutes(3))) {
+        if ($handle.AsyncWaitHandle.WaitOne([TimeSpan]::FromMinutes(5))) {
             # Finished in time. An error here (e.g. a version mismatch) doesn't mean winget is broken,
             # so it's only printed - the re-check below decides whether Windows Updates are needed.
             try {
