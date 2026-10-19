@@ -2382,7 +2382,15 @@ function Repair-Winget {
     # there's nothing to update), so instead look up App Installer's own Store ID on msstore. This
     # fails exactly when installs without --source fail on msstore. Prints winget's output on failure.
     function Test-MsStoreSource {
-        $output = winget show --id 9NBLGGH4NNS1 --source msstore --exact --accept-source-agreements --disable-interactivity 2>&1
+        # If winget.exe can't launch at all, PowerShell throws instead of setting an exit code.
+        # Treat that as a failed check so the repair still runs.
+        try {
+            $output = winget show --id 9NBLGGH4NNS1 --source msstore --exact --accept-source-agreements --disable-interactivity 2>&1
+        } catch {
+            Write-Host "msstore source check failed (winget couldn't be launched):" -ForegroundColor White -BackgroundColor DarkRed
+            Write-Host "  $($_.Exception.Message)" -ForegroundColor Red
+            return $false
+        }
         if ($LASTEXITCODE -eq 0) { return $true }
 
         Write-Host ("msstore source check failed (winget exit code 0x{0:X8}):" -f $LASTEXITCODE) -ForegroundColor White -BackgroundColor DarkRed
@@ -2438,7 +2446,7 @@ function Repair-Winget {
         # PowerShell instance and we wait up to 5 minutes for it.
         $repair = [powershell]::Create().AddScript({
             Import-Module Microsoft.WinGet.Client -ErrorAction Stop
-            Repair-WinGetPackageManager -AllUsers -Latest -Force -ErrorAction Stop
+            Repair-WinGetPackageManager -AllUsers -Force -ErrorAction Stop
         })
         $handle = $repair.BeginInvoke()
 
