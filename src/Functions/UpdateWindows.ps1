@@ -11,7 +11,7 @@ function Update-Windows {
     # Windows Update can fail partway through (e.g. 0x80248007 when an update's data disappears
     # mid-run) and a fresh run usually gets past it. Retry with the same flags up to 10 times,
     # then force a restart.
-    $maxAttempts = 10
+    $maxAttempts = 5
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
         if ($attempt -gt 1) {
             Write-Host "`nRetrying Windows Update (attempt $attempt/$maxAttempts)..." -ForegroundColor Yellow
