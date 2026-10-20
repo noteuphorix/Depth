@@ -3050,7 +3050,7 @@ function Update-Windows {
     Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
     # Windows Update can fail partway through (e.g. 0x80248007 when an update's data disappears
-    # mid-run) and a fresh run usually gets past it. Retry with the same flags up to 10 times,
+    # mid-run) and a fresh run usually gets past it. Retry with the same flags up to 5 times,
     # then force a restart.
     # Exception: "Value does not fall within the expected range." is a persistent error that
     # retrying doesn't fix, so it skips the remaining retries and goes straight to the restart.
