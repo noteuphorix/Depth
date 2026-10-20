@@ -3055,6 +3055,7 @@ function Update-Windows {
     # Exception: "Value does not fall within the expected range." is a persistent error that
     # retrying doesn't fix, so it skips the remaining retries and goes straight to the restart.
     $maxAttempts = 5
+    $maxRounds = 5
     $skipToRestart = $false
 
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
@@ -3072,17 +3073,32 @@ function Update-Windows {
             }
             Import-Module PSWindowsUpdate
 
-            Write-Host "Checking for available updates..." -ForegroundColor Cyan
-            Get-WindowsUpdate -MicrosoftUpdate
+            # Updates arrive in layers (servicing stack -> cumulative -> .NET etc.), so keep checking
+            # and installing until nothing is left. A pending reboot is checked first because
+            # Get-WindowsUpdate can come back empty while one is pending, which isn't "up to date".
+            for ($round = 1; $round -le $maxRounds; $round++) {
+                if (Get-WURebootStatus -Silent) {
+                    Write-Host "Restart required before more updates can be found. Restart and run Windows Update again." -ForegroundColor White -BackgroundColor DarkRed
+                    return
+                }
 
-            Write-Host "Installing updates..." -ForegroundColor Cyan
-            if ($AutoReboot) {
-                Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot
-            } else {
-                Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot
+                Write-Host "Checking for available updates (round $round/$maxRounds)..." -ForegroundColor Cyan
+                $updates = @(Get-WindowsUpdate -MicrosoftUpdate)
+                if ($updates.Count -eq 0) {
+                    Write-Host "Windows is up to date." -ForegroundColor Green
+                    return
+                }
+                $updates | Format-Table -AutoSize | Out-String | Write-Host
+
+                Write-Host "Installing $($updates.Count) update(s)..." -ForegroundColor Cyan
+                if ($AutoReboot) {
+                    Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot | Format-Table -AutoSize | Out-String | Write-Host
+                } else {
+                    Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot | Format-Table -AutoSize | Out-String | Write-Host
+                }
             }
 
-            Write-Host "Windows Update finished." -ForegroundColor Green
+            Write-Host "Still finding updates after $maxRounds rounds. Run Windows Update again." -ForegroundColor Yellow
             return
         } catch {
             $msg = $_.Exception.Message
