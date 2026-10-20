@@ -69,7 +69,7 @@ function Repair-Winget {
         # PowerShell instance and we wait up to 5 minutes for it.
         $repair = [powershell]::Create().AddScript({
             Import-Module Microsoft.WinGet.Client -ErrorAction Stop
-            Repair-WinGetPackageManager -AllUsers -Force -ErrorAction Stop
+            Repair-WinGetPackageManager -AllUsers -Force -Latest -ErrorAction Stop
         })
         $handle = $repair.BeginInvoke()
 
