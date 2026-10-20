@@ -784,8 +784,8 @@ function Invoke-BusyActionQueueAsync {
         foreach ($name in $Actions.Keys) {
             try {
                 if ($name -eq 'Chk_RepairWinget') {
-                    # Repair Winget is the only action that stops the queue when it fails (it has
-                    # already run Windows Update, and the device needs a restart before going on).
+                    # Repair Winget is the only action that stops the queue when it fails (the
+                    # device is restarting or needs a restart before going on).
                     # Remaining selections are skipped but still unlocked.
                     try {
                         & ([scriptblock]::Create($Actions[$name]))

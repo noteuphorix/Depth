@@ -2398,101 +2398,94 @@ function Repair-Winget {
         return $false
     }
 
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-
-    $repairFailed = $false
-    try {
-        # Only repair when it's actually needed: winget missing, or the msstore source failing.
-        $step = "Checking Winget"
-        $wingetInstalled = [bool](Get-Command winget -ErrorAction SilentlyContinue)
-        if ($wingetInstalled) {
-            Write-Host "Winget is installed. Checking the msstore source..." -ForegroundColor Cyan
-            if (Test-MsStoreSource) {
-                Write-Host "Winget and the msstore source are working, no repair needed. Version: $(winget --version)" -ForegroundColor Green
-                return
-            }
-        } else {
-            Write-Host "Winget is not installed." -ForegroundColor White -BackgroundColor DarkRed
-        }
-
-        $step = "Closing blocking processes"
+    # Only runs once winget is missing or msstore is failing.
+    function Install-WinGetClientModule {
         Write-Host "Closing processes that can block the App Installer update..." -ForegroundColor Cyan
         Stop-BlockingInstallerProcesses
-
-        $step = "Installing NuGet package provider"
-        Write-Host "Step 1/4: Installing NuGet package provider..." -ForegroundColor Cyan
+        Write-Host "Installing NuGet provider and Microsoft.WinGet.Client module..." -ForegroundColor Cyan
         Install-PackageProvider -Name NuGet -Force -ErrorAction Stop
-
-        $step = "Installing Microsoft.WinGet.Client module"
-        Write-Host "Step 2/4: Installing Microsoft.WinGet.Client module from PSGallery..." -ForegroundColor Cyan
         Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery -ErrorAction Stop
+    }
 
-        $step = "Importing Microsoft.WinGet.Client module"
-        Write-Host "Step 3/4: Importing Microsoft.WinGet.Client module..." -ForegroundColor Cyan
-        Import-Module Microsoft.WinGet.Client -ErrorAction Stop
+    # Runs Repair-WinGetPackageManager in a child PowerShell sharing this console, so its output and
+    # progress bar show the same as running it bare, and kills it after $Minutes (-AllUsers can hang).
+    # Returns $true if it finished in time, else $false.
+    function Invoke-WinGetRepair {
+        param([string]$Arguments, [int]$Minutes)
+        Write-Host "Running: Repair-WinGetPackageManager $Arguments ($Minutes minute limit)" -ForegroundColor Cyan
+        $command = "Import-Module Microsoft.WinGet.Client -ErrorAction Stop; Repair-WinGetPackageManager $Arguments -ErrorAction Stop"
+        $proc = Start-Process (Get-Process -Id $PID).Path -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', $command -NoNewWindow -PassThru
+        $null = $proc.Handle # Without this, ExitCode is empty after the process exits.
+        if (-not $proc.WaitForExit($Minutes * 60000)) {
+            Write-Host "Repair-WinGetPackageManager was still running after $Minutes minutes, stopping it." -ForegroundColor White -BackgroundColor DarkRed
+            $proc.Kill()
+            return $false
+        }
+        if ($proc.ExitCode -ne 0) {
+            # An error here (e.g. a version mismatch) doesn't mean winget is broken - the msstore
+            # check afterwards decides that.
+            Write-Host "Repair-WinGetPackageManager exited with code $($proc.ExitCode)." -ForegroundColor White -BackgroundColor DarkRed
+        }
+        return $true
+    }
 
-        if (-not $wingetInstalled) {
-            # A plain repair (no -Latest) installs winget when it's missing.
-            $step = "Installing Winget"
-            Write-Host "Step 4/4: Installing Winget..." -ForegroundColor Yellow
-            Repair-WinGetPackageManager -AllUsers -ErrorAction Stop
-            Write-Host "Winget installed. Version: $(Get-WinGetVersion)" -ForegroundColor Green
+    function Restart-ForRepair {
+        param([string]$Reason, [int]$Delay)
+        Write-Host "RESTART NEEDED: $Reason" -ForegroundColor White -BackgroundColor DarkRed
+        shutdown /f /t $Delay /r
+        # Stop Run Selected from moving on to the next selection.
+        throw "Winget repair needs a restart: $Reason"
+    }
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
+    # 1) Staged updates (e.g. an App Installer update waiting on other users) only apply after a restart.
+    $pendingKeys = @(
+        'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending',
+        'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired'
+    )
+    if ($pendingKeys | Where-Object { Test-Path $_ }) {
+        Restart-ForRepair "updates are pending a restart." 10
+    }
+
+    try {
+        $moduleReady = $false
+
+        # 2) Winget missing: install it.
+        $step = "Installing Winget"
+        if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+            Write-Host "Winget is not installed. Installing..." -ForegroundColor Yellow
+            Install-WinGetClientModule
+            $moduleReady = $true
+            if (-not (Invoke-WinGetRepair "-AllUsers -Force" 5)) {
+                Restart-ForRepair "the Winget install timed out." 0
+            }
+        }
+
+        # 3) Winget installed but msstore failing (App Installer out of date).
+        $step = "Checking the msstore source"
+        Write-Host "Checking the msstore source..." -ForegroundColor Cyan
+        if (Test-MsStoreSource) {
+            Write-Host "Winget and the msstore source are working. Version: $(winget --version)" -ForegroundColor Green
             return
         }
 
         $step = "Repairing Winget"
-        Write-Host "Step 4/4: Repairing Winget and updating App Installer to the latest version (5 minute limit)..." -ForegroundColor Yellow
-        # A blocking cmdlet can't be timed out on its own thread, so the repair runs on a second
-        # PowerShell instance and we wait up to 5 minutes for it.
-        $repair = [powershell]::Create().AddScript({
-            Import-Module Microsoft.WinGet.Client -ErrorAction Stop
-            Repair-WinGetPackageManager -Force -Latest -ErrorAction Stop
-        })
-        $handle = $repair.BeginInvoke()
+        if (-not $moduleReady) { Install-WinGetClientModule }
+        Write-Host "Updating App Installer to the latest version..." -ForegroundColor Yellow
+        # -AllUsers provisions the update but ignores -Force, so it can't close processes holding
+        # App Installer. The second run (current user, -Force) closes them and registers it now.
+        Invoke-WinGetRepair "-AllUsers -Latest" 5 | Out-Null
+        Invoke-WinGetRepair "-Latest -Force" 5 | Out-Null
 
-        if ($handle.AsyncWaitHandle.WaitOne([TimeSpan]::FromMinutes(5))) {
-            # Finished in time. An error here (e.g. a version mismatch) doesn't mean winget is broken,
-            # so it's only printed - the re-check below decides whether Windows Updates are needed.
-            try {
-                $repair.EndInvoke($handle) | Out-Null
-            } catch {
-                Write-Host "Repair-WinGetPackageManager failed:" -ForegroundColor White -BackgroundColor DarkRed
-                Write-ErrorDetails $_
-            } finally {
-                # The repair can report its error here instead of throwing.
-                foreach ($record in $repair.Streams.Error) {
-                    Write-Host "Repair-WinGetPackageManager reported an error:" -ForegroundColor White -BackgroundColor DarkRed
-                    Write-ErrorDetails $record
-                }
-                $repair.Dispose()
-            }
-        } else {
-            Write-Host "Repair-WinGetPackageManager was still running after 3 minutes, stopping it." -ForegroundColor White -BackgroundColor DarkRed
-            $repair.BeginStop($null, $null) | Out-Null
-            # Don't mark the repair as failed yet. Fall through to the msstore re-check below. If that
-            # check also fails, the Windows Update and restart path runs.
-        }
+        $step = "Resetting winget sources"
+        Write-Host "Running: winget source reset --force" -ForegroundColor Cyan
+        winget source reset --force
 
-        # Re-run the same check as the start: if winget or msstore still doesn't work after the
-        # repair, Windows Updates are needed.
-        if (-not $repairFailed) {
-            $step = "Verifying Winget"
-            Write-Host "Re-checking Winget and the msstore source..." -ForegroundColor Cyan
-            if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-                Write-Host "Winget still isn't installed after the repair." -ForegroundColor White -BackgroundColor DarkRed
-                $repairFailed = $true
-            }
-        }
-        if (-not $repairFailed) {
-            $step = "Verifying the msstore source"
-            if (-not (Test-MsStoreSource)) {
-                Write-Host "The msstore source still isn't working after the repair." -ForegroundColor White -BackgroundColor DarkRed
-                $repairFailed = $true
-            }
-        }
-
-        if (-not $repairFailed) {
-            Write-Host "Winget repair finished. Version: $(Get-WinGetVersion)" -ForegroundColor Green
+        $step = "Verifying the msstore source"
+        Write-Host "Re-checking the msstore source..." -ForegroundColor Cyan
+        if (Test-MsStoreSource) {
+            Write-Host "Winget repair finished. Version: $(winget --version)" -ForegroundColor Green
             return
         }
     }
@@ -2503,14 +2496,9 @@ function Repair-Winget {
         throw
     }
 
-    # Outside the try above so Update-Windows reports its own messages and errors.
-    Write-Host "WARNING: App Installer is stuck, Windows Updates are required!" -ForegroundColor White -BackgroundColor DarkRed
-    Write-Host "Running Windows Update now. The device will restart once updates finish installing." -ForegroundColor White -BackgroundColor DarkRed
-    Update-Windows -AutoReboot
-    # -AutoReboot only restarts when an update asks for it, but App Installer needs a restart either way.
-    Write-Host "Restarting now to finish the App Installer update." -ForegroundColor White -BackgroundColor DarkRed
-    shutdown /f /t 0 /r
-    # Still a failed repair - stop Run Selected from moving on to the next selection.
+    # Outside the try so this throw isn't reported as a failed step.
+    Write-Host "Repair failed, restart may be needed." -ForegroundColor White -BackgroundColor DarkRed
+    # Stop Run Selected from moving on to the next selection.
     throw "Winget repair failed."
 }
 
@@ -3553,8 +3541,8 @@ function Invoke-BusyActionQueueAsync {
         foreach ($name in $Actions.Keys) {
             try {
                 if ($name -eq 'Chk_RepairWinget') {
-                    # Repair Winget is the only action that stops the queue when it fails (it has
-                    # already run Windows Update, and the device needs a restart before going on).
+                    # Repair Winget is the only action that stops the queue when it fails (the
+                    # device is restarting or needs a restart before going on).
                     # Remaining selections are skipped but still unlocked.
                     try {
                         & ([scriptblock]::Create($Actions[$name]))
