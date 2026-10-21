@@ -52,6 +52,12 @@ function Update-Windows {
                 } else {
                     Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot | Format-Table -AutoSize | Out-String | Write-Host
                 }
+
+                # Give Windows Update time to settle before the next scan.
+                if ($round -lt $maxRounds) {
+                    Write-Host "Waiting 30 seconds before checking for more updates..." -ForegroundColor Cyan
+                    Start-Sleep -Seconds 30
+                }
             }
 
             Write-Host "Still finding updates after $maxRounds rounds. Run Windows Update again." -ForegroundColor Yellow
