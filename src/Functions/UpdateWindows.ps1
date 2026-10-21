@@ -66,6 +66,18 @@ function Update-Windows {
         } catch {
             Write-Host "Windows Update attempt $attempt/$maxAttempts failed: $($_.Exception.Message)" -ForegroundColor Red
             Write-ErrorDetails $_
+
+            # Some driver updates leave Windows Update in a state where the scan throws this every
+            # time. Resetting the Windows Update components clears it, so the next attempt can scan.
+            if ($_.Exception.Message -like "*Value does not fall within the expected range*" -and $attempt -lt $maxAttempts) {
+                Write-Host "Resetting Windows Update components before the next attempt..." -ForegroundColor Yellow
+                try {
+                    Reset-WUComponents -Verbose
+                } catch {
+                    Write-Host "Reset-WUComponents failed:" -ForegroundColor Red
+                    Write-ErrorDetails $_
+                }
+            }
         }
     }
 
