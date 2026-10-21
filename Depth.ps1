@@ -3050,12 +3050,10 @@ function Update-Windows {
     Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
     # Windows Update can fail partway through (e.g. 0x80248007 when an update's data disappears
-    # mid-run) and a fresh run usually gets past it. Retry with the same flags up to 5 times.
-    # Exception: "Value does not fall within the expected range." is a persistent error that
-    # retrying doesn't fix, so it skips the remaining retries.
+    # mid-run, or "Value does not fall within the expected range.") and a fresh run usually gets
+    # past it. Retry with the same flags up to 5 times.
     $maxAttempts = 5
     $maxRounds = 5
-    $skippedRetries = $false
 
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
         if ($attempt -gt 1) {
@@ -3100,26 +3098,13 @@ function Update-Windows {
             Write-Host "Still finding updates after $maxRounds rounds. Run Windows Update again." -ForegroundColor Yellow
             return
         } catch {
-            $msg = $_.Exception.Message
-            Write-Host "Windows Update attempt $attempt/$maxAttempts failed: $msg" -ForegroundColor Red
+            Write-Host "Windows Update attempt $attempt/$maxAttempts failed: $($_.Exception.Message)" -ForegroundColor Red
             Write-ErrorDetails $_
-
-            # -like with wildcards so a trailing period or extra text around the message still matches.
-            if ($msg -like "*Value does not fall within the expected range*") {
-                Write-Host "Detected 'Value does not fall within the expected range'. Skipping remaining retries." -ForegroundColor Yellow
-                $skippedRetries = $true
-                break
-            }
         }
     }
 
-    # Success returns inside the loop, so reaching this point means every attempt failed
-    # or we bailed out early on the non-retryable error.
-    if ($skippedRetries) {
-        Write-Host "`nWindows Update stopped on a non-retryable error (see above)." -ForegroundColor Red
-    } else {
-        Write-Host "`nWindows Update failed $maxAttempts times in a row (see errors above)." -ForegroundColor Red
-    }
+    # Success returns inside the loop, so reaching this point means every attempt failed.
+    Write-Host "`nWindows Update failed $maxAttempts times in a row (see errors above)." -ForegroundColor Red
 }
 
 # --- Source: src\functions\Upgrade-AllWinget.ps1 ---
