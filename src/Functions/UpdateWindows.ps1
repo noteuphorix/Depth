@@ -39,7 +39,8 @@ function Update-Windows {
                 }
 
                 Write-Host "Checking for available updates (round $round/$maxRounds)..." -ForegroundColor Cyan
-                $updates = @(Get-WindowsUpdate -MicrosoftUpdate)
+                # Get-WindowsUpdate outputs its results as one list object, so unroll it to count updates.
+                $updates = @(Get-WindowsUpdate -MicrosoftUpdate | ForEach-Object { $_ })
                 if ($updates.Count -eq 0) {
                     Write-Host "Windows is up to date." -ForegroundColor Green
                     return
