@@ -3075,7 +3075,8 @@ function Update-Windows {
             # Get-WindowsUpdate can come back empty while one is pending, which isn't "up to date".
             for ($round = 1; $round -le $maxRounds; $round++) {
                 if (Get-WURebootStatus -Silent) {
-                    Write-Host "Restart required before more updates can be found. Restart and run Windows Update again." -ForegroundColor White -BackgroundColor DarkRed
+                    Write-Host "Restart required before more updates can be found. Restarting in ten seconds." -ForegroundColor White -BackgroundColor DarkRed
+                    shutdown /f /t 10 /r
                     return
                 }
 
