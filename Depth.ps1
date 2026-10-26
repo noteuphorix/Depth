@@ -3109,12 +3109,12 @@ function Update-Windows {
             Write-Host "Windows Update attempt $attempt/$maxAttempts failed: $($_.Exception.Message)" -ForegroundColor Red
             Write-ErrorDetails $_
 
-            # Some driver updates leave Windows Update in a state where the scan throws this every
-            # time. Resetting the Windows Update components clears it, so the next attempt can scan.
-            if ($_.Exception.Message -like "*Value does not fall within the expected range*" -and $attempt -lt $maxAttempts) {
+            # Windows Update can get stuck in a state where every scan fails (e.g. after some driver
+            # updates). Resetting the Windows Update components clears it, so the next attempt can scan.
+            if ($attempt -lt $maxAttempts) {
                 Write-Host "Resetting Windows Update components before the next attempt..." -ForegroundColor Yellow
                 try {
-                    Reset-WUComponents -Verbose
+                    Reset-WUComponents
                 } catch {
                     Write-Host "Reset-WUComponents failed:" -ForegroundColor Red
                     Write-ErrorDetails $_
@@ -3124,7 +3124,10 @@ function Update-Windows {
     }
 
     # Success returns inside the loop, so reaching this point means every attempt failed.
+    # A restart often clears whatever is blocking Windows Update.
     Write-Host "`nWindows Update failed $maxAttempts times in a row (see errors above)." -ForegroundColor Red
+    Write-Host "Windows Update failing, restarting in ten seconds." -ForegroundColor White -BackgroundColor DarkRed
+    shutdown /f /t 10 /r
 }
 
 # --- Source: src\functions\Upgrade-AllWinget.ps1 ---
