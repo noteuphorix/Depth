@@ -35,12 +35,5 @@ function Check-Hardware {
     Start-Process "https://danwlker.github.io/KeyboardTestingPage/"
     Start-Process "https://www.speedtest.net/"
 
-    # --- WinSAT ---
-    Write-Host "`n=== Running WinSAT Formal (this may take a few minutes) ===" -ForegroundColor Yellow
-    & winsat formal
-    Start-Sleep -Seconds 3
-    Write-Host "`nWinSAT Results:" -ForegroundColor Cyan
-    Get-CimInstance Win32_WinSAT | Format-List *
-
     Write-Host "`n=== Check-Hardware Complete ===" -ForegroundColor Green
 }
