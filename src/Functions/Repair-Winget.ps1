@@ -68,7 +68,7 @@ function Repair-Winget {
         'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired'
     )
     if ($pendingKeys | Where-Object { Test-Path $_ }) {
-        Restart-ForRepair "updates are pending a restart." 10
+        Write-Host "Updates Pending: Please restart the computer if repair fails." -ForegroundColor White -BackgroundColor DarkRed
     }
 
     try {
