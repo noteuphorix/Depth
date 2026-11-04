@@ -3054,6 +3054,7 @@ function Update-Windows {
     # past it. Retry with the same flags up to 5 times.
     $maxAttempts = 5
     $maxRounds = 5
+    $sanityChecked = $false
 
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
         if ($attempt -gt 1) {
@@ -3085,6 +3086,14 @@ function Update-Windows {
                 $updates = @(Get-WindowsUpdate -MicrosoftUpdate | ForEach-Object { $_ })
                 if ($updates.Count -eq 0) {
                     Write-Host "Windows is up to date." -ForegroundColor Green
+                    # The first "up to date" can be premature, so scan once more. Resetting $round
+                    # restarts the rounds at 1, so any updates that scan finds go through the full loop.
+                    if (-not $sanityChecked) {
+                        $sanityChecked = $true
+                        Write-Host "Sanity Check! D:" -ForegroundColor Yellow
+                        $round = 0
+                        continue
+                    }
                     return
                 }
                 $updates | Format-Table -AutoSize | Out-String | Write-Host
