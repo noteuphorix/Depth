@@ -3295,8 +3295,8 @@ function Update-Windows {
 
         # Give Windows Update time to settle before the next scan.
         if ($pass -lt $maxPasses) {
-            Write-Host "Waiting 30 seconds before checking for more updates..." -ForegroundColor Cyan
-            Start-Sleep -Seconds 30
+            Write-Host "Waiting 10 seconds before checking for more updates..." -ForegroundColor Cyan
+            Start-Sleep -Seconds 10
         }
     }
 
