@@ -114,33 +114,45 @@ function Update-Windows {
             } | Format-Table -AutoSize | Out-String
             Write-Host "`n$($table.Trim())`n"
 
-            # Download everything for this pass in one go (downloads have no "install alone" rule),
-            # then install one at a time. Updates that fail to download are left out of the install.
+            # Download every update for this pass before installing, one update per call so each one's
+            # progress is printed (a single batched Download() call blocks with no output until all are done).
+            # Plain lines rather than Write-Progress: in Windows PowerShell 5.1 the progress bar is drawn
+            # over the top of the console and hides the update list.
+            # Updates that fail to download are left out of the install.
             $downloadFailed = @{}
-            $toDownload = New-Object -ComObject Microsoft.Update.UpdateColl
-            foreach ($u in $todo) { if (-not $u.IsDownloaded) { [void]$toDownload.Add($u) } }
+            $toDownload = @($todo | Where-Object { -not $_.IsDownloaded })
             if ($toDownload.Count -gt 0) {
                 Write-Host "Downloading $($toDownload.Count) update(s)..." -ForegroundColor Cyan
-                try {
-                    $downloader = $session.CreateUpdateDownloader()
-                    $downloader.Updates = $toDownload
-                    $downloader.Priority = 3   # dpHigh
-                    $dr = $downloader.Download()
-                    for ($k = 0; $k -lt $toDownload.Count; $k++) {
-                        $rc = [int]$dr.GetUpdateResult($k).ResultCode
-                        if ($rc -ne 2 -and $rc -ne 3) {
-                            $downloadFailed[$toDownload.Item($k).Identity.UpdateID] = $resultText[$rc]
+                $downloadErrors = 0
+                $n = 0
+                foreach ($u in $toDownload) {
+                    $n++
+                    Write-Host "[$n/$($toDownload.Count)] downloading $($u.Title)..."
+                    try {
+                        $c = New-Object -ComObject Microsoft.Update.UpdateColl
+                        [void]$c.Add($u)
+                        $downloader = $session.CreateUpdateDownloader()
+                        $downloader.Updates = $c
+                        $downloader.Priority = 3   # dpHigh
+                        $rc = [int]$downloader.Download().ResultCode
+                        if ($rc -eq 2 -or $rc -eq 3) {
+                            Write-Host "[$n/$($toDownload.Count)] downloaded - $($u.Title)" -ForegroundColor Green
+                        } else {
+                            $downloadFailed[$u.Identity.UpdateID] = $resultText[$rc]
+                            Write-Host "[$n/$($toDownload.Count)] download $($resultText[$rc]) - $($u.Title)" -ForegroundColor Red
                         }
+                    } catch {
+                        # If the download call itself blows up, the install loop below downloads it again on its own.
+                        $downloadErrors++
+                        Write-Host "[$n/$($toDownload.Count)] download error, will retry before installing: $($_.Exception.Message)" -ForegroundColor Yellow
                     }
-                    $downloadedCount = $toDownload.Count - $downloadFailed.Count
-                    if ($downloadFailed.Count -eq 0) {
-                        Write-Host "Downloaded $downloadedCount of $($toDownload.Count) update(s)." -ForegroundColor Green
-                    } else {
-                        Write-Host "Downloaded $downloadedCount of $($toDownload.Count) update(s), $($downloadFailed.Count) failed." -ForegroundColor Yellow
-                    }
-                } catch {
-                    # If the batch download itself blows up, each update is downloaded on its own below.
-                    Write-Host "Batch download failed, downloading one at a time instead: $($_.Exception.Message)" -ForegroundColor Yellow
+                }
+
+                $downloadedCount = $toDownload.Count - $downloadFailed.Count - $downloadErrors
+                if ($downloadFailed.Count -eq 0 -and $downloadErrors -eq 0) {
+                    Write-Host "Downloaded $downloadedCount of $($toDownload.Count) update(s)." -ForegroundColor Green
+                } else {
+                    Write-Host "Downloaded $downloadedCount of $($toDownload.Count) update(s), $($downloadFailed.Count) failed, $downloadErrors to retry." -ForegroundColor Yellow
                 }
             }
 
