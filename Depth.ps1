@@ -857,6 +857,7 @@ function Install-ClientCustomLocalApps {
 
     $WindowsAgentInstalled  = $InstalledApps -contains "Windows Agent"
     $GlobalProtectInstalled = $InstalledApps -contains "GlobalProtect"
+    $NinjaOneInstalled      = $InstalledApps -contains "NinjaRMMAgent"
 
     $AppFiles = Get-ChildItem -Path $FinalPath -File
     
@@ -868,7 +869,8 @@ function Install-ClientCustomLocalApps {
         }
 
         if (($App.Name -like "*WindowsAgentSetup*" -and $WindowsAgentInstalled) -or
-            ($App.Name -like "*GlobalProtect*"     -and $GlobalProtectInstalled)) {
+            ($App.Name -like "*GlobalProtect*"     -and $GlobalProtectInstalled) -or
+            ($App.Name -like "*NinjaOne*"          -and $NinjaOneInstalled)) {
             Write-Host "Skipping $($App.Name) - already installed." -ForegroundColor DarkYellow
             continue
         }
