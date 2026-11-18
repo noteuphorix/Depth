@@ -5,9 +5,14 @@ function Update-Windows {
     # whose details can't be read are skipped instead of failing the run (PSWindowsUpdate threw
     # "Value does not fall within the expected range." on those).
     # The monthly Windows cumulative/security update (e.g. "2026-11 Security Update (KB5132061)") is
-    # huge and slow, so it's skipped here and left for NinjaOne to patch later. It is only skipped in
-    # this function, not hidden or blocked in Windows Update. -IncludeWindowsCumulative installs it too.
-    param([switch]$IncludeWindowsCumulative)
+    # huge and slow, so it's skipped here and left for NinjaOne to patch later. The monthly Windows
+    # preview update (e.g. "2026-10 Preview Update (KB5127936)") is skipped the same way. They are only
+    # skipped in this function, not hidden or blocked in Windows Update. -IncludeWindowsCumulative and
+    # -IncludeWindowsPreview install them too.
+    param(
+        [switch]$IncludeWindowsCumulative,
+        [switch]$IncludeWindowsPreview
+    )
 
     Show-FunctionBanner "Windows Update"
 
@@ -20,10 +25,14 @@ function Update-Windows {
 
     $tries        = @{}
     $skippedList  = New-Object System.Collections.ArrayList
-    # Monthly Windows cumulative titles start with the year-month and then "Security Update" or
-    # "Cumulative Update" directly (.NET, Defender and driver titles don't). Drivers are never skipped.
-    $cumulativePattern = '^\d{4}-\d{2} (Security|Cumulative) Update\b'
-    $cumulativeSkipped = 0
+    # Updates skipped here and left for NinjaOne. To skip something new, add a row. Titles start with
+    # the year-month (any month) and then the kind of update. Only software updates (type 1) are
+    # matched - drivers are never skipped. Include = $true lets that kind install after all.
+    $skipRules = @(
+        @{ Name = 'Windows cumulative'; Pattern = '^\d{4}-\d{2} (Security|Cumulative) Update\b'; Include = $IncludeWindowsCumulative }
+        @{ Name = 'Windows preview';    Pattern = '^\d{4}-\d{2} Preview Update\b';               Include = $IncludeWindowsPreview }
+    )
+    $ruleSkipped = 0
     # Title -> $true. An update that fails and then succeeds on its retry is removed again.
     $failedList   = [ordered]@{}
     $okCount      = 0
@@ -88,18 +97,20 @@ function Update-Windows {
                     # Reading IsDownloaded throws on updates whose data can't be read - skip those.
                     $null = $u.IsDownloaded
 
-                    # Skip the monthly Windows cumulative (software only, type 1 - never a driver).
+                    # Skip anything matching a skip rule (software only, type 1 - never a driver).
                     # If its type or title can't be read, it's treated as a normal update.
-                    $isCumulative = $false
-                    if (-not $IncludeWindowsCumulative) {
-                        try { $isCumulative = ([int]$u.Type -eq 1) -and ($u.Title -match $cumulativePattern) } catch { }
-                    }
-                    if ($isCumulative) {
-                        $skipNote = "$($u.Title) (Windows cumulative, left for NinjaOne)"
+                    $skipRule = $null
+                    try {
+                        if ([int]$u.Type -eq 1) {
+                            $skipRule = $skipRules | Where-Object { -not $_.Include -and $u.Title -match $_.Pattern } | Select-Object -First 1
+                        }
+                    } catch { }
+                    if ($skipRule) {
+                        $skipNote = "$($u.Title) ($($skipRule.Name), left for NinjaOne)"
                         if (-not $skippedList.Contains($skipNote)) {
                             [void]$skippedList.Add($skipNote)
-                            $cumulativeSkipped++
-                            Write-Host "Skipping (Windows cumulative, left for NinjaOne): $($u.Title)" -ForegroundColor Yellow
+                            $ruleSkipped++
+                            Write-Host "Skipping ($($skipRule.Name), left for NinjaOne): $($u.Title)" -ForegroundColor Yellow
                         }
                         continue
                     }
@@ -117,8 +128,8 @@ function Update-Windows {
             if ($todo.Count -eq 0) {
                 if ($failedList.Count -gt 0) {
                     Write-Host "No updates left to install (failed ones have used their retry)." -ForegroundColor Yellow
-                } elseif ($cumulativeSkipped -gt 0) {
-                    Write-Host "Windows is up to date (except the skipped Windows cumulative update, left for NinjaOne)." -ForegroundColor Green
+                } elseif ($ruleSkipped -gt 0) {
+                    Write-Host "Windows is up to date (except the skipped updates, left for NinjaOne)." -ForegroundColor Green
                 } else {
                     Write-Host "Windows is up to date." -ForegroundColor Green
                 }
