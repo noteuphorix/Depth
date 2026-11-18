@@ -208,6 +208,7 @@ function Update-Windows {
             if ($rebootNeeded) {
                 & $writeSummary
                 Write-Host "Restart required to finish installing. Restarting in ten seconds." -ForegroundColor White -BackgroundColor DarkRed
+                Register-OneShot
                 shutdown /f /t 10 /r
                 return
             }
@@ -230,6 +231,7 @@ function Update-Windows {
     if ($passesFailed -eq $maxPasses) {
         Write-Host "`nWindows Update failed $passesFailed times in a row (see errors above)." -ForegroundColor Red
         Write-Host "Windows Update failing, restarting in ten seconds." -ForegroundColor White -BackgroundColor DarkRed
+        Register-OneShot
         shutdown /f /t 10 /r
         return
     }
