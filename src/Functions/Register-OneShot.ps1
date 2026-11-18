@@ -3,7 +3,7 @@ function Register-OneShot {
     # running it, so it fires a single time and can't repeat. The command expires 30 minutes after
     # it's registered, so a much later sign-in just clears it without opening Depth.
     $key     = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce'
-    $expires = (Get-Date).AddMinutes(30).ToString('s')
+    $expires = (Get-Date).AddMinutes(60).ToString('s')
     $command = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command `"if ((Get-Date) -lt [datetime]'$expires') { irm https://depth.narwal.llc | iex }`""
 
     # A failure here must never stop the restart that's about to happen.
