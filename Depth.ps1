@@ -3140,6 +3140,7 @@ function Update-Windows {
             if ((New-Object -ComObject Microsoft.Update.SystemInfo).RebootRequired) {
                 & $writeSummary
                 Write-Host "Restart required before more updates can be found. Restarting in ten seconds." -ForegroundColor White -BackgroundColor DarkRed
+                Register-OneShot
                 shutdown /f /t 10 /r
                 return
             }
