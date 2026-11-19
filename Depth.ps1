@@ -1169,7 +1169,10 @@ function Register-OneShot {
     $name    = 'Depth OneShot'
     $user    = [Security.Principal.WindowsIdentity]::GetCurrent().Name
     $expires = (Get-Date).AddMinutes(60)
-    $command = "Unregister-ScheduledTask -TaskName '$name' -Confirm:`$false; irm https://depth.narwal.llc | iex"
+    # schtasks.exe rather than Unregister-ScheduledTask: that cmdlet would load the ScheduledTasks module
+    # into this window, Depth would copy its functions into its runspaces without the module, and the
+    # next Register-OneShot would fail ("Cannot retrieve the dynamic parameters for the cmdlet").
+    $command = "schtasks.exe /Delete /TN '$name' /F | Out-Null; irm https://depth.narwal.llc | iex"
 
     # A failure here must never stop the restart that's about to happen.
     try {
