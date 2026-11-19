@@ -223,6 +223,7 @@ $mainXML = @"
 		<Style x:Key="ToolbarButton" TargetType="Button">
 			<Setter Property="Foreground" Value="{StaticResource AccentBrush2}"/>
 			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderBrush" Value="{StaticResource AccentBrush2}"/>
 			<Setter Property="FontFamily" Value="Segoe UI Semibold"/>
 			<Setter Property="FontSize" Value="12"/>
 			<Setter Property="Cursor" Value="Hand"/>
@@ -231,15 +232,19 @@ $mainXML = @"
 			<Setter Property="Template">
 				<Setter.Value>
 					<ControlTemplate TargetType="Button">
-						<Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{StaticResource AccentBrush2}" BorderThickness="1" CornerRadius="17">
-							<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+						<Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="17">
+							<Grid>
+								<!-- Hover/press tint in the outline's own color (same look as before for the default blue). -->
+								<Border x:Name="overlay" Background="{TemplateBinding BorderBrush}" CornerRadius="17" Opacity="0"/>
+								<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+							</Grid>
 						</Border>
 						<ControlTemplate.Triggers>
 							<Trigger Property="IsMouseOver" Value="True">
-								<Setter TargetName="border" Property="Background" Value="#2229B6F6"/>
+								<Setter TargetName="overlay" Property="Opacity" Value="0.13"/>
 							</Trigger>
 							<Trigger Property="IsPressed" Value="True">
-								<Setter TargetName="border" Property="Background" Value="#3829B6F6"/>
+								<Setter TargetName="overlay" Property="Opacity" Value="0.22"/>
 							</Trigger>
 						</ControlTemplate.Triggers>
 					</ControlTemplate>
@@ -487,6 +492,7 @@ $mainXML = @"
 					<Button x:Name="Btn_SelectWingetOnly" Content="Winget Apps Only" Style="{StaticResource ToolbarButton}" Margin="0,0,8,0"/>
 					<Button x:Name="Btn_BrandonsSpecial" Content="Brandon's Special" Style="{StaticResource ToolbarButton}" Margin="0,0,8,0"/>
 					<Button x:Name="Btn_ClearSelection" Content="Clear Selection" Style="{StaticResource ToolbarButton}"/>
+					<Button x:Name="Btn_PowerShellLogging" Content="Enable PowerShell Logging" Style="{StaticResource ToolbarButton}" Foreground="{StaticResource DangerBrush}" BorderBrush="{StaticResource DangerBrush}" Margin="8,0,0,0"/>
 				</StackPanel>
 				<Button x:Name="Btn_RunSelected" Content="Run Selected" Style="{StaticResource RunButton}" Width="150" Height="36" Grid.Column="1" Margin="0,0,12,0"/>
 			</Grid>
@@ -908,6 +914,15 @@ $Btn_ClearSelection.Add_Click({
     }
 })
 
+# Toggles PowerShell logging (off by default). The logging functions set the button's color and text.
+# Runs on the UI thread because the logging hooks this window's host, which the background
+# runspaces print through.
+$Btn_PowerShellLogging.Add_Click({
+    Invoke-BusyAction {
+        if ($global:DepthLoggingActive) { Stop-DeploymentLogging } else { Start-PowerShellLogging }
+    }
+})
+
 $Btn_SelectWingetOnly.Add_Click({
     foreach ($key in $DeploymentActionMap.Keys) {
         $cb = Get-CheckboxByName $key
@@ -1054,6 +1069,5 @@ $Main_Grid.Add_Loaded({
 # ============================================================
 $Tools_Grid.Visibility = "Collapsed"
 $FAQ_Grid.Visibility = "Collapsed"
-Start-PowerShellLogging
 $Main.ShowDialog() | Out-Null
 Write-Host "Goodbye!!!" -ForegroundColor Cyan
