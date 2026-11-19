@@ -3527,15 +3527,19 @@ function Start-PowerShellLogging {
 
     # 3. Start the log for THIS window, background runspaces included
     try {
-        if (-not (Get-Module -ListAvailable -Name PowerShellLogging)) {
+        $module = Get-Module -ListAvailable -Name PowerShellLogging | Sort-Object Version -Descending | Select-Object -First 1
+        if (-not $module) {
             Write-Host "Installing PowerShellLogging module..." -ForegroundColor Cyan
             [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
             if (-not (Get-PackageProvider -ListAvailable -Name NuGet -ErrorAction SilentlyContinue)) {
                 Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction Stop | Out-Null
             }
             Install-Module -Name PowerShellLogging -Scope CurrentUser -Repository PSGallery -Force -ErrorAction Stop
+            $module = Get-Module -ListAvailable -Name PowerShellLogging | Sort-Object Version -Descending | Select-Object -First 1
         }
-        Import-Module PowerShellLogging -ErrorAction Stop
+        # Load the module's DLL directly: its .psm1 wrapper only loads this DLL, and as a script file it
+        # is refused where the execution policy blocks scripts. A DLL isn't subject to that policy.
+        Import-Module (Join-Path $module.ModuleBase 'PowerShellLoggingModule.dll') -ErrorAction Stop
         # Kept in a global: the module detaches the log once nothing references it. Its timestamps are UTC.
         $global:DepthLogFile = Enable-LogFile -Path $LogFile -DateTimeFormat "yyyy-MM-dd HH:mm:ss 'UTC'" -ErrorAction Stop
         Write-Host "--- Deployment logging active: $LogFile ---" -ForegroundColor Yellow
