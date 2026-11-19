@@ -3506,31 +3506,62 @@ function Show-FunctionBanner {
 function Start-PowerShellLogging {
     <#
     .SYNOPSIS
-        Starts a transcript in the %TEMP% directory for the current session only.
-        Automatically cleans up if a transcript is already running.
+        Logs this window's output to Deployment_Output.txt in %TEMP%, each line timestamped.
+    .DESCRIPTION
+        Start-Transcript only records the runspace that started it, and every Run action executes on a
+        background runspace, so their output never reached the log. The PowerShellLogging module
+        instead hooks the host itself, which those runspaces all print through, and timestamps each
+        line. Output that native programs (winget etc.) write straight to the console isn't caught.
+        If the module can't be installed or loaded, it falls back to Start-Transcript (main thread only).
     #>
-    
+
     # 1. Target the %TEMP% directory
     $LogFile = Join-Path -Path $env:TEMP -ChildPath "Deployment_Output.txt"
 
-    # 2. Stop any existing transcript to prevent errors
+    # 2. Stop any existing transcript or log file to prevent errors
     try { Stop-Transcript | Out-Null } catch { }
+    if ($global:DepthLogFile) {
+        try { Disable-LogFile -InputObject $global:DepthLogFile } catch { }
+        $global:DepthLogFile = $null
+    }
 
-    # 3. Start the log for THIS window only
-    Start-Transcript -Path $LogFile -Append -Confirm:$false
-
-    Write-Host "--- Deployment logging active: $LogFile ---" -ForegroundColor Yellow
+    # 3. Start the log for THIS window, background runspaces included
+    try {
+        if (-not (Get-Module -ListAvailable -Name PowerShellLogging)) {
+            Write-Host "Installing PowerShellLogging module..." -ForegroundColor Cyan
+            [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+            if (-not (Get-PackageProvider -ListAvailable -Name NuGet -ErrorAction SilentlyContinue)) {
+                Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction Stop | Out-Null
+            }
+            Install-Module -Name PowerShellLogging -Scope CurrentUser -Repository PSGallery -Force -ErrorAction Stop
+        }
+        Import-Module PowerShellLogging -ErrorAction Stop
+        # Kept in a global: the module detaches the log once nothing references it. Its timestamps are UTC.
+        $global:DepthLogFile = Enable-LogFile -Path $LogFile -DateTimeFormat "yyyy-MM-dd HH:mm:ss 'UTC'" -ErrorAction Stop
+        Write-Host "--- Deployment logging active: $LogFile ---" -ForegroundColor Yellow
+    } catch {
+        Write-Host "PowerShellLogging unavailable ($($_.Exception.Message)). Logging the main thread only." -ForegroundColor Yellow
+        Start-Transcript -Path $LogFile -Append -Confirm:$false
+        Write-Host "--- Deployment logging active (main thread only): $LogFile ---" -ForegroundColor Yellow
+    }
 }
 
 # To stop it manually before the window closes:
 function Stop-DeploymentLogging {
-    try {
-        Stop-Transcript
+    $stopped = $false
+    if ($global:DepthLogFile) {
+        try { Disable-LogFile -InputObject $global:DepthLogFile; $stopped = $true } catch { }
+        $global:DepthLogFile = $null
+    }
+    try { Stop-Transcript | Out-Null; $stopped = $true } catch { }
+
+    if ($stopped) {
         Write-Host "--- Deployment logging stopped ---" -ForegroundColor Yellow
-    } catch {
-        Write-Warning "No active transcript found to stop."
+    } else {
+        Write-Warning "No active log found to stop."
     }
 }
+
 
 # --- Source: src\gui functions\Startup-Logo.ps1 ---
 function Startup-Logo{
