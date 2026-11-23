@@ -16,7 +16,7 @@ function Register-OneShot {
 
     # A failure here must never stop the restart that's about to happen.
     try {
-        $action    = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoExit -NoProfile -ExecutionPolicy Bypass -Command `"$command`""
+        $action    = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -Command `"$command`""
         $trigger   = New-ScheduledTaskTrigger -AtLogOn -User $user
         $trigger.EndBoundary = $expires.ToString('s')
         # Launching right at sign-in can fail with Access denied (0x80070005) before the session is ready.
