@@ -51,6 +51,10 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
     break
 }
 
+# Remove the one-shot task now that we're running elevated
+# See Register-OneShot.ps1 (needed as it does not run elevated)
+schtasks.exe /Delete /TN 'Depth OneShot' /F 2>$null | Out-Null
+
 # ============================================================
 # 2. XAML LOADER HELPER
 # Visual Studio's XAML designer writes attributes (x:Class, mc:Ignorable="d", d:DesignWidth, etc.)
