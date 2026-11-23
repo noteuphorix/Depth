@@ -1188,7 +1188,7 @@ function Register-OneShot {
         # Launching right at sign-in can fail with Access denied (0x80070005) before the session is ready.
         # Wait 10 seconds, and if the launch still fails, try once more a minute later (Windows' minimum).
         $trigger.Delay = 'PT10S'
-        $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Highest
+        $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
         # Tasks default to below-normal priority (7), which would slow Depth and everything it launches.
         $settings  = New-ScheduledTaskSettingsSet -DeleteExpiredTaskAfter (New-TimeSpan -Seconds 0) -Priority 4 -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 1 -RestartInterval (New-TimeSpan -Minutes 1)
         [void](Register-ScheduledTask -TaskName $name -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force)
