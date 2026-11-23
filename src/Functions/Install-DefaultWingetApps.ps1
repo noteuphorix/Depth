@@ -1,6 +1,6 @@
 function Install-DefaultWingetApps {
     Show-FunctionBanner "Install Default Winget Apps"
-    $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams")
+    $Apps = @("Google.Chrome", "Adobe.Acrobat.Reader.64-bit", "Intel.IntelDriverAndSupportAssistant", "Microsoft.Teams", "Microsoft.OneDrive")
 
     $IsIntelCpu = (Get-CimInstance -ClassName Win32_Processor).Manufacturer -contains "GenuineIntel"
 
