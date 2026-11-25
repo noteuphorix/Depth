@@ -101,7 +101,7 @@ $splashXML = @"
                 </LinearGradientBrush>
             </Border.Background>
         </Border>
-        <Label x:Name="LblSplash" Content="Euphoria LLC" Background="{x:Null}" Foreground="White" Margin="20,20,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="20" FontFamily="Segoe UI Light"/>
+        <Label x:Name="LblSplash" Content="Narwal LLC" Background="{x:Null}" Foreground="White" Margin="20,20,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="20" FontFamily="Segoe UI Light"/>
         <Label x:Name="LblProgramName" Content="Depth" Background="{x:Null}" Foreground="White" Margin="0,80,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="48" FontWeight="Bold"/>
         <Label x:Name="LblProgramPurpose" Content="Deployment Engine for Patching, Tools, and Hardening" Background="{x:Null}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="18" FontFamily="Segoe UI Light" Margin="0,167,0,0"/>
         <Label x:Name="LblCopyrightOne" Content="Copyright © 2025-2026 Brandon Swarek" Background="{x:Null}" Foreground="Black" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="13" FontFamily="Segoe UI Light" Margin="0,0,30,26"/>
